@@ -53,3 +53,15 @@ exports.getUserInterest = (req,res)=>{
       res.json({ interest: result[0] });
     })
 }
+
+exports.updateProfile = (req, res) => {
+  const { id } = req.params;
+  const { username, bio } = req.body;
+  const profile_image = req.file ? req.file.filename : null;
+
+  const sql = `UPDATE users SET username = ?, bio = ?, profile_image = ? WHERE U_ID = ?`;
+  db.query(sql, [username, bio, profile_image, id], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Profile updated successfully' });
+  });
+};
