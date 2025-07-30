@@ -1,13 +1,13 @@
 const db = require('../db');
 const jwt = require('jsonwebtoken');
-
 function generateOTP() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return Math.floor(1000 + Math.random() * 9000).toString();
 }
 
 exports.register = (req, res) => {
   const { name, phone_num } = req.body;
-  if (!name || !phone_num) return res.status(400).json({ message: 'Name and phone required' });
+  if (!name || !phone_num)
+    return res.status(400).json({ message: 'Name and phone required' });
 
   db.query('SELECT * FROM users WHERE phone_num = ?', [phone_num], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -17,17 +17,24 @@ exports.register = (req, res) => {
     }
 
     const otp = generateOTP();
+    const defaultNotificationSettings = '1,2,3,4,5';
+    const defaultUserInterests = '1,2,3';
+
     db.query(
-      'INSERT INTO users (name, phone_num, otp, otp_created_at) VALUES (?, ?, ?, NOW())',
-      [name, phone_num, otp],
+      `INSERT INTO users (name, phone_num, otp, otp_created_at, allow_notification, notification_settings, user_interest) 
+       VALUES (?, ?, ?, NOW(), TRUE, ?, ?)`,
+      [name, phone_num, otp, defaultNotificationSettings, defaultUserInterests],
       (err2) => {
         if (err2) return res.status(500).json({ error: err2.message });
-        console.log(`OTP for ${phone_num}: ${otp}`);
+
+        console.log(`📲 OTP for ${phone_num}: ${otp}`);
         res.json({ message: 'Registered. OTP sent.' });
       }
     );
   });
 };
+
+
 
 exports.login = (req, res) => {
   const { phone_num } = req.body;
@@ -121,6 +128,7 @@ exports.verifyOtp = (req, res) => {
         phone_num: user.phone_num,
       },
     });
+    
   });
 };
 
@@ -234,6 +242,3 @@ exports.restoreUser = (req, res) => {
     return res.json({ message: 'User account restored successfully.' });
   });
 };
-
-
-

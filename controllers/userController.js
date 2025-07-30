@@ -1,58 +1,39 @@
 const db = require('../db');
 
-exports.setUserInterest = (req,res)=>{
-  const{ U_ID , interest_id } = req.body;
 
-  if (!U_ID) {
-    return res.status(400).json({ message: 'User ID is required' });
+exports.updateUserInterest = (req, res) => {
+  const userId = req.params.id;
+  let { user_interest } = req.body;
+
+  if (Array.isArray(user_interest)) {
+    user_interest = user_interest.join(',');
   }
 
-  if(!interest_id) {
-    db.query(`DELETE FROM user_interests WHERE U_ID = ?` , [U_ID] , (err)=>{
-      if (err) return res.status(500).json({ error: err.message });
-      return res.json({ message: 'Interest skipped successfully' });
-    });
+  if (!user_interest || user_interest.trim() === '') {
+    user_interest = '1,2,3';
   }
-  else{
-    db.query(`select * from interests where interest_id = ?`, [interest_id] , (err,result)=>{
-        
-        
-      if (err) return res.status(500).json({ error: err.message });
 
-      if (result.length === 0) {
-        return res.status(400).json({ message: 'Invalid interest selected' });
-      }
+  const query = `UPDATE users SET user_interest = ? WHERE U_ID = ?`;
+  db.query(query, [user_interest, userId], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
 
-      db.query(`delete from user_interests where U_ID=? `,[U_ID],(err2)=>{
-        if (err2) return res.status(500).json({ error: err2.message });
+    return res.json({ message: 'User interest updated successfully.' });
+  });
+};
 
-        db.query(`insert into user_interests (U_ID , interest_id) values(?,?)`,[U_ID , interest_id],(err3)=>{
-          if (err3) return res.status(500).json({ error: err3.message });
 
-          return res.json({ message: 'Interest saved successfully' });
-        });
-      });
-    });
-  }
-}
-
-exports.getUserInterest = (req,res)=>{
+exports.getUserInterest = (req, res) => {
   const { U_ID } = req.params;
 
-  db.query(` select i.interest_id , i.name from user_interests ui 
-    join interests i ON ui.interest_id = i.interest_id
-    WHERE ui.U_ID = ? `,
-  [U_ID],
-    (err, result) =>{
-      if (err) return res.status(500).json({ error: err.message });
+  db.query(`SELECT user_interest FROM users WHERE U_ID = ?`, [U_ID], (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (result.length === 0) return res.status(404).json({ message: 'User not found' });
 
-      if (result.length === 0) {
-        return res.json({ interest: null });
-      }
+    const interests = result[0].user_interest; 
+    res.json({ user_interest: interests });
+  });
+};
 
-      res.json({ interest: result[0] });
-    })
-}
 
 exports.updateProfile = (req, res) => {
   const { id } = req.params;
@@ -218,3 +199,7 @@ exports.getBlockedUsers = (req, res) => {
     res.json(results);
   });
 };
+
+
+
+
