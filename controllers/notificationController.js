@@ -1,50 +1,55 @@
 const db = require('../db');
 
-exports.getNotificationSettings = (req, res) => {
-  const userId = req.params.id;
+exports.getNotificationSettings = async (req, res) => {
+  try {
+    const { user_id } = req.body;
 
-  const query = `SELECT allow_notification, notification_settings FROM users WHERE U_ID = ?`;
+    const [result] = await db.query(
+      `SELECT allow_notification, notification_settings FROM users WHERE U_ID = ?`,
+      [user_id]
+    );
 
-  db.query(query, [userId], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (result.length === 0) return res.status(404).json({ message: 'User not found' });
+    if (result.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
     const user = result[0];
-    const ids = user.notification_settings ? user.notification_settings.split(',').map(Number) : [];
+    const ids = user.notification_settings ? user.notification_settings.split(',') : [];
 
     res.json({
       allow_notification: !!user.allow_notification,
       notification_ids: ids,
     });
-  });
+
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
+  }
 };
 
+exports.updateNotificationSettings = async (req, res) => {
+  try {
+    const { user_id, allow_notification, notification_ids } = req.body;
 
-exports.updateNotificationSettings = (req, res) => {
-  const userId = req.params.id;
-  const { allow_notification, notification_ids } = req.body;
+    if (allow_notification === false) {
+      await db.query(
+        `UPDATE users SET allow_notification = FALSE, notification_settings = NULL WHERE U_ID = ?`,
+        [user_id]
+      );
+      return res.json({ message: 'All notifications disabled.' });
+    }
 
-  if (allow_notification === false) {
-    db.query(
-      `UPDATE users SET allow_notification = FALSE, notification_settings = NULL WHERE U_ID = ?`,
-      [userId],
-      (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'All notifications disabled.' });
-      }
-    );
-  } else {
-    const settings = (Array.isArray(notification_ids) && notification_ids.length > 0)
+    const settings = Array.isArray(notification_ids)
       ? notification_ids.join(',')
-      : '1,2,3,4,5';
+      : '1,2,3,4,5'; // default fallback if needed
 
-    db.query(
+    await db.query(
       `UPDATE users SET allow_notification = TRUE, notification_settings = ? WHERE U_ID = ?`,
-      [settings, userId],
-      (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Notification settings updated.' });
-      }
+      [settings, user_id]
     );
+
+    res.json({ message: 'Notification settings updated.' });
+
+  } catch (err) {
+    return res.status(500).json({ error: err.message });
   }
 };

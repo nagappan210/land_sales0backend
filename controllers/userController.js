@@ -1,82 +1,92 @@
 const db = require('../db');
 
+exports.updateUserInterest = async (req, res) => {
+  try {
+    let { user_interest, user_id } = req.body;
 
-exports.updateUserInterest = (req, res) => {
-  const userId = req.params.id;
-  let { user_interest } = req.body;
+    if (Array.isArray(user_interest)) {
+      user_interest = user_interest.join(',');
+    }
 
-  if (Array.isArray(user_interest)) {
-    user_interest = user_interest.join(',');
+    if (!user_interest || user_interest.trim() === '') {
+      user_interest = '1,2,3';
+    }
+
+    await db.query(`UPDATE users SET user_interest = ? WHERE U_ID = ?`, [user_interest, user_id]);
+    res.json({ message: 'User interest updated successfully.' });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  if (!user_interest || user_interest.trim() === '') {
-    user_interest = '1,2,3';
-  }
-
-  const query = `UPDATE users SET user_interest = ? WHERE U_ID = ?`;
-  db.query(query, [user_interest, userId], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-
-    return res.json({ message: 'User interest updated successfully.' });
-  });
 };
 
+exports.getUserInterest = async (req, res) => {
+  try {
+    const { U_ID } = req.params;
 
-exports.getUserInterest = (req, res) => {
-  const { U_ID } = req.params;
+    const [result] = await db.query(`SELECT user_interest FROM users WHERE U_ID = ?`, [U_ID]);
 
-  db.query(`SELECT user_interest FROM users WHERE U_ID = ?`, [U_ID], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (result.length === 0) return res.status(404).json({ message: 'User not found' });
+    if (result.length === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
 
-    const interests = result[0].user_interest; 
-    res.json({ user_interest: interests });
-  });
+    res.json({ user_interest: result[0].user_interest });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
+exports.updateProfile = async (req, res) => {
+  try {
+    const { username, bio, user_id } = req.body;
+    const profile_image = req.file ? req.file.filename : null;
 
-exports.updateProfile = (req, res) => {
-  const { id } = req.params;
-  const { username, bio } = req.body;
-  const profile_image = req.file ? req.file.filename : null;
+    await db.query(
+      `UPDATE users SET username = ?, bio = ?, profile_image = ? WHERE U_ID = ?`,
+      [username, bio, profile_image, user_id]
+    );
 
-  const sql = `UPDATE users SET username = ?, bio = ?, profile_image = ? WHERE U_ID = ?`;
-  db.query(sql, [username, bio, profile_image, id], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
     res.json({ message: 'Profile updated successfully' });
-  });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.followUser = (req,res)=>{
+exports.followUser = async (req, res) => {
+  try {
     const { follower_id, following_id } = req.body;
 
     if (follower_id === following_id) {
-        return res.status(400).json({ message: "You can't follow yourself." });
+      return res.status(400).json({ message: "You can't follow yourself." });
     }
 
-    db.query(`select * from followers where follower_id = ? and following_id =?`,[follower_id,following_id],(err,result)=>{
-        if (err) return res.status(500).json({ error: err.message });
+    const [result] = await db.query(
+      `SELECT * FROM followers WHERE follower_id = ? AND following_id = ?`,
+      [follower_id, following_id]
+    );
 
-        if (result.length > 0){
-
-            db.query(`DELETE FROM followers WHERE follower_id = ? AND following_id = ?`,[follower_id, following_id],(err2)=>{
-                if (err2) return res.status(500).json({ error: err2.message });
-                return res.json({ message: 'Unfollowed successfully' });
-            });
-        }
-        else{
-            db.query(
-          'INSERT INTO followers (follower_id, following_id) VALUES (?, ?)',
-          [follower_id, following_id],
-          (err3) => {
-            if (err3) return res.status(500).json({ error: err3.message });
-            return res.json({ message: 'Followed successfully' });
-          });
+    if (result.length > 0) {
+      await db.query(
+        `DELETE FROM followers WHERE follower_id = ? AND following_id = ?`,
+        [follower_id, following_id]
+      );
+      return res.json({ message: 'Unfollowed successfully' });
+    } else {
+      await db.query(
+        `INSERT INTO followers (follower_id, following_id) VALUES (?, ?)`,
+        [follower_id, following_id]
+      );
+      return res.json({ message: 'Followed successfully' });
     }
-    });
-}
 
-exports.getProfileStats = (req, res) => {
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getProfileStats = async (req, res) => {
   const userId = req.params.id;
 
   const query = `
@@ -91,113 +101,138 @@ exports.getProfileStats = (req, res) => {
     WHERE u.U_ID = ?
   `;
 
-  db.query(query, [userId], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const [results] = await db.query(query, [userId]);
     if (results.length === 0) return res.status(404).json({ message: 'User not found' });
 
     res.json(results[0]);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.getcontact = (req, res) => {
+exports.getContact = async (req, res) => {
   const userId = req.params.id;
 
-  const query = `SELECT phone_num, whatsapp_num, email FROM users WHERE U_ID = ?`;
+  try {
+    const [result] = await db.query(
+      `SELECT phone_num, whatsapp_num, email FROM users WHERE U_ID = ?`,
+      [userId]
+    );
 
-  db.query(query, [userId], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
-
-    if (result.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    if (result.length === 0) return res.status(404).json({ message: 'User not found' });
 
     res.json(result[0]);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.getFollowers = (req,res)=>{
-    const user_id = req.params.id;
+exports.getFollowers = async (req, res) => {
+  const user_id = req.params.id;
 
-    const query = `select u.U_ID,u.username,u.profile_image FROM followers f JOIN users u ON f.follower_id = u.U_ID 
-    WHERE f.following_id = ?`;
-
-    db.query(query, [user_id], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const [results] = await db.query(
+      `SELECT u.U_ID, u.username, u.profile_image 
+       FROM followers f 
+       JOIN users u ON f.follower_id = u.U_ID 
+       WHERE f.following_id = ?`,
+      [user_id]
+    );
     res.json(results);
-  });
-}
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
-exports.getFollowing = (req, res) => {
+exports.getFollowing = async (req, res) => {
   const userId = req.params.id;
 
-  const query = `
-    SELECT u.U_ID, u.username, u.profile_image 
-    FROM followers f 
-    JOIN users u ON f.following_id = u.U_ID 
-    WHERE f.follower_id = ?
-  `;
-
-  db.query(query, [userId], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const [results] = await db.query(
+      `SELECT u.U_ID, u.username, u.profile_image 
+       FROM followers f 
+       JOIN users u ON f.following_id = u.U_ID 
+       WHERE f.follower_id = ?`,
+      [userId]
+    );
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.blockUser = (req, res) => {
+
+exports.blockUser = async (req, res) => {
   const { blocker_id, blocked_id } = req.body;
 
   if (blocker_id === blocked_id) {
     return res.status(400).json({ message: "You can't block yourself." });
   }
 
-  const checkQuery = `SELECT * FROM blocks WHERE blocker_id = ? AND blocked_id = ?`;
-  db.query(checkQuery, [blocker_id, blocked_id], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const [result] = await db.query(
+      `SELECT * FROM blocks WHERE blocker_id = ? AND blocked_id = ?`,
+      [blocker_id, blocked_id]
+    );
+
     if (result.length > 0) {
       return res.status(400).json({ message: "User is already blocked." });
     }
 
-    const insertQuery = `INSERT INTO blocks (blocker_id, blocked_id) VALUES (?, ?)`;
-    db.query(insertQuery, [blocker_id, blocked_id], (err2) => {
-      if (err2) return res.status(500).json({ error: err2.message });
-      return res.json({ message: "User blocked successfully." });
-    });
-  });
+    await db.query(
+      `INSERT INTO blocks (blocker_id, blocked_id) VALUES (?, ?)`,
+      [blocker_id, blocked_id]
+    );
+    res.json({ message: "User blocked successfully." });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.unblockUser = (req, res) => {
+
+exports.unblockUser = async (req, res) => {
   const { blocker_id, blocked_id } = req.body;
 
-  const checkQuery = `SELECT * FROM blocks WHERE blocker_id = ? AND blocked_id = ?`;
-  db.query(checkQuery, [blocker_id, blocked_id], (err, result) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const [result] = await db.query(
+      `SELECT * FROM blocks WHERE blocker_id = ? AND blocked_id = ?`,
+      [blocker_id, blocked_id]
+    );
 
     if (result.length === 0) {
       return res.status(404).json({ message: "User is not blocked." });
     }
 
-    const deleteQuery = `DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?`;
-    db.query(deleteQuery, [blocker_id, blocked_id], (err2) => {
-      if (err2) return res.status(500).json({ error: err2.message });
-      return res.json({ message: "User unblocked successfully." });
-    });
-  });
+    await db.query(
+      `DELETE FROM blocks WHERE blocker_id = ? AND blocked_id = ?`,
+      [blocker_id, blocked_id]
+    );
+
+    res.json({ message: "User unblocked successfully." });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-exports.getBlockedUsers = (req, res) => {
+
+exports.getBlockedUsers = async (req, res) => {
   const userId = req.params.id;
 
-  const query = `
-    SELECT u.U_ID, u.username, u.profile_image, b.blocked_at
-    FROM blocks b
-    JOIN users u ON b.blocked_id = u.U_ID
-    WHERE b.blocker_id = ?
-  `;
-
-  db.query(query, [userId], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const [results] = await db.query(
+      `SELECT u.U_ID, u.username, u.profile_image, b.blocked_at
+       FROM blocks b
+       JOIN users u ON b.blocked_id = u.U_ID
+       WHERE b.blocker_id = ?`,
+      [userId]
+    );
     res.json(results);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
 
