@@ -101,3 +101,22 @@ exports.createPostStep6 = async (req, res) => {
     return res.status(500).json({ success: false, message: 'Server error', error: err.message });
   }
 };
+
+exports.publishPost = async (req, res) => {
+  const { user_id } = req.body;
+
+  try {
+    const [result] = await db.query(
+      `UPDATE user_posts SET status = 'published', updated_at = NOW() WHERE U_ID = ?`,
+      [user_id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: 'Post not found.' });
+    }
+
+    res.json({ message: 'Post published successfully.' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

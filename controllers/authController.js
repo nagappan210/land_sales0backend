@@ -1,7 +1,26 @@
 const db = require('../db');
 const jwt = require('jsonwebtoken');
-function generateOTP() {
+const nodemailer = require('nodemailer');
+
+const generateOTP = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
+};
+
+const sendOTPEmail = async (to, otp) =>{
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    }
+  });
+
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to,
+    subject: 'Your OTP Verification Code',
+    text: `Your OTP is: ${otp}. It is valid for 30 seconds.`
+  });
 }
 
 exports.register = async (req, res) => {
@@ -10,7 +29,6 @@ exports.register = async (req, res) => {
     if (!name || !phone_num)
       return res.status(400).json({ message: 'Name and phone required' });
 
-    // ✅ Await SELECT query
     const [existingUsers] = await db.query(
       'SELECT * FROM users WHERE phone_num = ?',
       [phone_num]
@@ -39,10 +57,10 @@ exports.register = async (req, res) => {
   }
 };
 
-exports.login = async (req, res) => {
+exports.handleLoginOtp = async (req, res) => {
   try {
-    const { phone_num } = req.body;
-    if (!phone_num) return res.status(400).json({ message: 'Phone number required' });
+    const { action, phone_num } = req.body;
+    if (!phone_num) return res.status(400).json({ message: 'Phone number is required' });
 
     const [users] = await db.query('SELECT * FROM users WHERE phone_num = ?', [phone_num]);
 
@@ -51,38 +69,14 @@ exports.login = async (req, res) => {
     }
 
     const otp = generateOTP();
+
     await db.query(
       'UPDATE users SET otp = ?, otp_created_at = NOW() WHERE phone_num = ?',
       [otp, phone_num]
     );
 
-    console.log(`📲 OTP for ${phone_num}: ${otp}`);
-    res.json({ message: 'OTP sent for login.' });
-
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-};
-
-exports.resendOtp = async (req, res) => {
-  try {
-    const { phone_num } = req.body;
-    if (!phone_num) return res.status(400).json({ message: 'Phone number required' });
-
-    const [users] = await db.query('SELECT * FROM users WHERE phone_num = ?', [phone_num]);
-
-    if (users.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const newOtp = generateOTP();
-    await db.query(
-      'UPDATE users SET otp = ?, otp_created_at = NOW() WHERE phone_num = ?',
-      [newOtp, phone_num]
-    );
-
-    console.log(`Resent OTP for ${phone_num}: ${newOtp}`);
-    res.json({ message: 'OTP resent successfully.' });
+    console.log(`${action === 'resend' ? ' Resent' : 'Sent'} OTP for ${phone_num}: ${otp}`);
+    res.json({ message: `OTP ${action === 'resend' ? 'resent' : 'sent'} successfully.` });
 
   } catch (err) {
     return res.status(500).json({ error: err.message });
@@ -90,34 +84,48 @@ exports.resendOtp = async (req, res) => {
 };
 
 exports.verifyOtp = async (req, res) => {
-  
-  
   try {
-    
-    const { phone_num, otp } = req.body;
-    console.log('hit');
-    if (!phone_num || !otp)
-      return res.status(400).json({ message: 'Phone number and OTP required' });
+    const { phone_num, whatsapp_num, email, otp } = req.body;
 
-    const [users] = await db.query('SELECT * FROM users WHERE phone_num = ?', [phone_num]);
-    if (users.length === 0) return res.status(404).json({ message: 'User not found' });
+    if (!otp) return res.status(400).json({ message: 'OTP is required.' });
+
+    let query = '';
+    let value = '';
+
+    if (whatsapp_num) {
+      query = 'SELECT * FROM users WHERE whatsapp_num = ?';
+      value = whatsapp_num;
+    } else if (phone_num) {
+      query = 'SELECT * FROM users WHERE phone_num = ?';
+      value = phone_num;
+    } else if (email) {
+      query = 'SELECT * FROM users WHERE email = ?';
+      value = email;
+    } else {
+      return res.status(400).json({ message: 'Phone number, WhatsApp number, or Email is required.' });
+    }
+
+    const [users] = await db.query(query, [value]);
+    if (!users.length) return res.status(404).json({ message: 'User not found.' });
 
     const user = users[0];
+    const storedOtp = user.otp;
+    const createdAt = user.otp_created_at;
 
-    if (!user.otp || !user.otp_created_at) {
+    if (!storedOtp || !createdAt) {
       return res.status(400).json({ message: 'No OTP generated. Please request again.' });
     }
 
     const now = new Date();
-    const created = new Date(user.otp_created_at);
+    const created = new Date(createdAt);
     const diff = Math.floor((now - created) / 1000);
 
-    if (diff > 30) {
+    if (diff > 300) {
       return res.status(400).json({ message: 'OTP expired. Please resend.' });
     }
 
-    if (user.otp !== otp) {
-      return res.status(401).json({ message: 'Invalid OTP' });
+    if (storedOtp !== otp) {
+      return res.status(401).json({ message: 'Invalid OTP.' });
     }
 
     const token = jwt.sign(
@@ -126,22 +134,22 @@ exports.verifyOtp = async (req, res) => {
       { expiresIn: '30d' }
     );
 
-    await db.query(
-      'UPDATE users SET otp = NULL, otp_created_at = NULL WHERE U_ID = ?',
-      [user.U_ID]
-    );
+    await db.query(`UPDATE users SET otp = NULL, otp_created_at = NULL WHERE U_ID = ?`, [user.U_ID]);
 
-    res.json({
-      message: 'OTP verified. Login successful.',
+    return res.json({
+      message: 'OTP verified successfully.',
       token,
       user: {
         id: user.U_ID,
         name: user.name,
         phone_num: user.phone_num,
-      },
+        whatsapp_num: user.whatsapp_num,
+        email: user.email
+      }
     });
 
   } catch (err) {
+    console.error('Verify OTP error:', err);
     return res.status(500).json({ error: err.message });
   }
 };
@@ -150,79 +158,35 @@ exports.contact = async (req, res) => {
   try {
     const { email, whatsapp_num, user_id } = req.body;
 
-    if (whatsapp_num) {
-      const otp = generateOTP();
+    if (!user_id) {
+      return res.status(400).json({ message: 'user_id is required.' });
+    }
+    const otp = generateOTP();
 
+    if (whatsapp_num || email) {
       await db.query(
         `UPDATE users 
-         SET whatsapp_num = ?, whatsapp_otp = ?, whatsapp_otp_created_at = NOW(), email = ? 
+         SET whatsapp_num = ?, otp = ?, otp_created_at = NOW(), email = ? 
          WHERE U_ID = ?`,
-        [whatsapp_num, otp, email || null, user_id]
+        [whatsapp_num || null, otp, email || null, user_id]
       );
 
-      console.log(`WhatsApp OTP for ${whatsapp_num}: ${otp}`);
+     
+
+      if (email) {
+        await sendOTPEmail(email, otp);
+      }
+       console.log(`Generated OTP: ${otp}`);
+
       return res.json({
-        message: 'WhatsApp OTP sent and email updated (if provided). Please verify OTP within 30 seconds.'
+        message: 'OTP sent to email (if provided) and WhatsApp number updated.'
       });
     } else {
-      await db.query(`UPDATE users SET email = ? WHERE U_ID = ?`, [email, user_id]);
-      return res.json({ message: 'Email updated successfully.' });
+      return res.status(400).json({ message: 'whatsapp_num or email is required to send OTP.' });
     }
 
   } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-};
-
-exports.sendWhatsappOtp = async (req, res) => {
-  try {
-    const { otp, user_id } = req.body;
-
-    if (!otp) {
-      return res.status(400).json({ message: 'OTP is required' });
-    }
-
-    const [users] = await db.query(
-      `SELECT whatsapp_otp, whatsapp_otp_created_at, whatsapp_num FROM users WHERE U_ID = ?`,
-      [user_id]
-    );
-
-    if (users.length === 0) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const user = users[0];
-
-    if (!user.whatsapp_otp || !user.whatsapp_otp_created_at) {
-      return res.status(400).json({ message: 'No OTP found. Please request again.' });
-    }
-
-    const now = new Date();
-    const created = new Date(user.whatsapp_otp_created_at);
-    const diffInSeconds = Math.floor((now - created) / 1000);
-
-    if (diffInSeconds > 30) {
-      await db.query(
-        `UPDATE users SET whatsapp_num = NULL, whatsapp_otp = NULL, whatsapp_otp_created_at = NULL WHERE U_ID = ?`,
-        [user_id]
-      );
-      return res.status(400).json({
-        message: 'OTP expired. WhatsApp number removed. Please try again.'
-      });
-    }
-
-    if (user.whatsapp_otp !== otp) {
-      return res.status(401).json({ message: 'Invalid OTP' });
-    }
-
-    await db.query(
-      `UPDATE users SET whatsapp_otp = NULL, whatsapp_otp_created_at = NULL WHERE U_ID = ?`,
-      [user_id]
-    );
-
-    return res.json({ message: 'WhatsApp number verified successfully.' });
-
-  } catch (err) {
+    console.error('Contact error:', err);
     return res.status(500).json({ error: err.message });
   }
 };
