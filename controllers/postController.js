@@ -1,22 +1,22 @@
 const db = require('../db');
 
 
-exports.getAllLandTypes = async (req, res) => {
-  try {
-    const [results] = await db.query('SELECT * FROM land_types');
-    res.json({ result: 1, data: results, message: 'Data fetched' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
+// exports.getAllLandTypes = async (req, res) => {
+//   try {
+//     const [results] = await db.query('SELECT * FROM land_types');
+//     res.json({ result: 1, data: results, message: 'Data fetched' });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// };
 
 exports.getCategoriesByLandType = async (req, res) => {
-  const land_type_id = req.params.id;
+const {status} = req.body;
 
   try {
     const [results] = await db.query(
-      'SELECT * FROM land_categories WHERE land_type_id = ?',
-      [land_type_id]
+      'SELECT land_categorie_id , name FROM land_categories WHERE land_type_id = ?',
+      [status]
     );
     res.json({ result: 1, data: results, message: 'Data fetched' });
   } catch (err) {
@@ -25,56 +25,98 @@ exports.getCategoriesByLandType = async (req, res) => {
 };
 
 exports.createPostStep1 = async (req, res) => {
-  const { U_ID, user_type } = req.body;
+  const { user_id, user_type } = req.body;
 
-  if (!U_ID || !user_type) {
-    return res.status(400).json({ message: 'U_ID and user_type are required.' });
+  if (!user_id || !user_type) {
+    return res.status(400).json({
+      result: "0",
+      error: "user_id and user_type are required.",
+      data: []
+    });
   }
 
-  if (!['owner', 'broker'].includes(user_type)) {
-    return res.status(400).json({ message: 'Invalid user_type. Must be "owner" or "broker".' });
+  if (!['owner', 'broker'].includes(user_type.toLowerCase())) {
+    return res.status(400).json({
+      result: "0",
+      error: 'Invalid user_type. Must be "owner" or "broker".',
+      data: []
+    });
   }
 
   try {
     const [result] = await db.query(
       `INSERT INTO user_posts (U_ID, user_type, status) VALUES (?, ?, 'draft')`,
-      [U_ID, user_type]
+      [user_id, user_type]
     );
 
-    res.status(201).json({
-      message: 'Step 1 completed: User type saved.',
-      post_id: result.insertId
+    return res.status(201).json({
+      result: "1",
+      error: "",
+      message: "Step 1 completed: User type saved.",
+      data: {
+        post_id: result.insertId
+      }
     });
+
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("Create Post Step 1 Error:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Internal server error",
+      data: []
+    });
   }
 };
 
 exports.createPostStep2 = async (req, res) => {
-  const { user_id, land_type_id, land_categorie_id } = req.body;
-  if (!user_id || !land_type_id || !land_categorie_id) {
-    return res.status(400).json({ message: 'user_post_id, land_type_id, and land_categorie_id are required.' });
+  const { user_id, status, land_categorie_id } = req.body;
+  if (!user_id || !status || !land_categorie_id) {
+    return res.status(400).json({ 
+      result : "0",
+      error : "user_post_id, status, and land_categorie_id are required.",
+      data : []
+     });
   }
 
   try {
     const [result] = await db.query(`
       UPDATE user_posts 
       SET land_type_id = ?, land_categorie_id = ?, updated_at = NOW() 
-      WHERE U_ID = ? AND is_deleted = 0
-    `, [land_type_id, land_categorie_id, user_id]);
+      WHERE U_ID = ? AND deleted_at is null
+    `, [status, land_categorie_id, user_id]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Post not found or already deleted.' });
+      return res.status(404).json({ 
+        result : "0",
+        error : "Post not found or already deleted.",
+        data : []
+       });
     }
 
-    res.json({ message: 'Step 2 completed: Land type and category updated.' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.json({ 
+      result : "1",
+      error : "Step 2 completed: Land type and category updated.",
+      data : []
+    });
+} 
+  catch (err) {
+    res.status(500).json({ 
+      result : "0",
+      error: err.message,
+      data : []
+     });
   }
 };
 
 exports.createPostStep3 = async (req, res) => {
   const { user_id, country, state, city, locality } = req.body;
+
+  if(!user_id , !country , !state , !city , !locality){
+    return res.status(400).json({
+      result : "0",
+      error : " All fields are require"
+    });
+  }
 
   try {
     await db.query(`
@@ -83,9 +125,17 @@ exports.createPostStep3 = async (req, res) => {
       WHERE U_ID = ?
     `, [country, state, city, locality, user_id]);
 
-    res.json({ message: 'Step 3 completed: Location saved.' });
+    res.json({ 
+      result : "1",
+      error : "Step 3 completed: Location saved.",
+      data : []
+     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ 
+      result : "0",
+      error: err.message,
+      data :[]
+     });
   }
 };
 

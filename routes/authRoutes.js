@@ -45,39 +45,52 @@ const uploads = multer({
   { name: 'images', maxCount: 10 }
 ]);
 
+// const land_categories = multer.diskStorage({
+//   destination: function (req, file, cb) {
+//     cb(null, path.join(__dirname, '../uploaded/land_categoies'));
+//   },
+//   filename: function (req, file, cb) {
+//     const ext = path.extname(file.originalname);
+//     const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9) + ext;
+//     cb(null, uniqueName);
+//   }
+// });
+
+// const land_categoies_upload = multer({ storage: land_categories });
+
 router.post('/register', authController.register);
-router.post('/handle_login', authController.handleLoginOtp);
+router.post('/login', authController.handleLoginOtp);
 router.post('/verify', authController.verifyOtp);
 
 router.post('/location',userController.post_user_details);
 
-router.post('/user-interest', userController.updateUserInterest);
-router.get('/get-interest/:id', userController.getUserInterest);
+// router.post('/add_land_category',land_categoies_upload.single('image'),userController.add_land_category)
+router.post('/getInterest',userController.getInterest);
 
-router.post('/update-profile', upload.single('profile_image'), userController.updateProfile);
+router.post('/user_interest', userController.updateUserInterest);
+router.post('/get_user_interest', userController.getUserInterest);
+
+router.post('/update_profile', upload.single('profile_image'), userController.updateProfile);
 
 router.post('/follow', userController.followUser);
-router.get('/profile-status/:id', userController.getProfileStats);
+router.post('/profile_status', userController.getProfileStats);
 
 router.post('/contact', authController.contact);
 
-router.get('/getcontact/:id',userController.getContact);
+// router.get('/getcontact/:id',userController.getContact);
 
-router.get('/followers/:id', userController.getFollowers);
-router.get('/following/:id', userController.getFollowing);
+router.post('/getFollowData', userController.getFollowData);
 
-router.post('/block-user', userController.blockUser);
-router.post('/unblock-user', userController.unblockUser);
-router.get('/blocked_list/:id', userController.getBlockedUsers);
+router.post('/block', userController.blockOrUnblockUser);
+router.post('/blocked_list', userController.getBlockedList);
 
-router.put('/deactivate', authController.softDeleteUser);
-router.put('/reactivate', authController.restoreUser);
+router.post('/deactivate_or_restore_user', authController.deactivate_or_restore_user);
 
-router.get('/notifications', notificationController.getNotificationSettings);
-router.put('/notifications', notificationController.updateNotificationSettings);
+router.post('/get_notification', notificationController.getNotificationSettings);
+router.post('/update_notification', notificationController.updateNotificationSettings);
 
-router.get('/land-types', landTypeController.getAllLandTypes);
-router.get('/land-categories/:id', landTypeController.getCategoriesByLandType);
+// router.get('/land-types', landTypeController.getAllLandTypes);
+router.post('/land_categories', landTypeController.getCategoriesByLandType);
 
 router.post('/poststep1',landTypeController.createPostStep1);
 router.post('/poststep2',landTypeController.createPostStep2);
@@ -88,13 +101,11 @@ router.post('/poststep5',landTypeController.createPostStep5);
 router.post('/poststep6', uploads,  videoController.createPostStep6);
 router.post('/publishpost',videoController.publishPost);
 
-router.post('/save_property', userController.saveProperty);
-router.post('/unsave_property', userController.unsaveProperty);
+router.post('/save_property', userController.save_property);
 router.get('/saved_properties/:U_ID', userController.getSavedProperties);
 
-router.put('/mark_sold', userController.markAsSold);
-router.put('/remove_sold', userController.unsoldProperty);
-
+router.put('/sold_status', userController.sold_status);
+router.post('/getDraftPosts',userController.getDraftPosts)
 router.get('/land_categories',enquireController.land_categories);
 router.post('/save_enquire',enquireController.enquire);
 router.get('/getEnquiriesReceived/:user_id',enquireController.getEnquiriesReceived);
@@ -104,5 +115,12 @@ router.get("/declined", enquireController.getDeclinedEnquiries);
 
 router.put('/delete_post', userController.delete_post);
 router.post('/get_reels', userController.getReels);
+
+router.post('/post_like',userController.post_like);
+router.post('/getpost_like_count',userController.getPostLikeCount);
+router.post('/add_firstcomment',userController.add_firstcomment);
+router.post('/getcomment',userController.getcomment);
+router.post('/getreplay_comment',userController.getreplay_comment);
+router.post('/likeComment',userController.likeComment);
 
 module.exports = router;
