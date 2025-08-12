@@ -7,7 +7,6 @@ const generateOTP = () => {
   return Math.floor(1000 + Math.random() * 9000).toString();
 };
 
-
 const sendOTPEmail = async (to, otp) => {
 
   const transporter = nodemailer.createTransport({
@@ -84,7 +83,7 @@ exports.register = async (req, res) => {
   }
 };
 
-exports.handleLoginOtp = async (req, res) => {
+exports.login = async (req, res) => {
   try {
     const { action, phone_num } = req.body;
 
@@ -149,16 +148,20 @@ exports.verifyOtp = async (req, res) => {
 
     let query = '';
     let value = '';
+    let fieldToClear = '';
 
     if (whatsapp_num) {
       query = 'SELECT * FROM users WHERE whatsapp_num = ?';
       value = whatsapp_num;
+      fieldToClear = 'whatsapp_num';
     } else if (phone_num) {
       query = 'SELECT * FROM users WHERE phone_num = ?';
       value = phone_num;
+      fieldToClear = 'phone_num';
     } else if (email) {
       query = 'SELECT * FROM users WHERE email = ?';
       value = email;
+      fieldToClear = 'email';
     } else {
       return res.status(400).json({
         result: "0",
@@ -191,12 +194,17 @@ exports.verifyOtp = async (req, res) => {
 
     const now = new Date();
     const created = new Date(createdAt);
-    const diff = Math.floor((now - created) / 1000); // in seconds
+    const diff = Math.floor((now - created) / 1000); 
 
-    if (diff > 300) {
+    if (diff > 30) {
+      await db.query(
+        `UPDATE users SET ${fieldToClear} = NULL, otp = NULL, otp_created_at = NULL WHERE U_ID = ?`,
+        [user.U_ID]
+      );
+
       return res.status(400).json({
         result: "0",
-        error: "OTP expired. Please resend.",
+        error: `${fieldToClear} removed because OTP expired.`,
         data: []
       });
     }
@@ -204,15 +212,17 @@ exports.verifyOtp = async (req, res) => {
     if (storedOtp !== otp) {
       return res.status(401).json({
         result: "0",
-        error: "Invalid OTP.",
+        error: "Invalid OTP Or resent",
         data: []
       });
     }
 
-    // Clear OTP after successful verification
-    await db.query(`UPDATE users SET otp = NULL, otp_created_at = NULL WHERE U_ID = ?`, [user.U_ID]);
+   
+    await db.query(
+      `UPDATE users SET otp = NULL, otp_created_at = NULL WHERE U_ID = ?`,
+      [user.U_ID]
+    );
 
-    // Helper to normalize null fields
     const normalizeUser = (userData) => ({
       user_id: userData.U_ID ?? 0,
       name: userData.name ?? "",
@@ -222,7 +232,6 @@ exports.verifyOtp = async (req, res) => {
       token: userData.token ?? ""
     });
 
-    // If phone_num used, return token
     if (phone_num) {
       const token = jwt.sign(
         { id: user.U_ID, phone: user.phone_num },
@@ -233,13 +242,11 @@ exports.verifyOtp = async (req, res) => {
       return res.json({
         result: "1",
         data: [normalizeUser({ ...user, token })],
-        error: ""
       });
     } else {
       return res.json({
         result: "1",
         data: [normalizeUser({ ...user, token: "" })],
-        error: ""
       });
     }
 
@@ -252,7 +259,6 @@ exports.verifyOtp = async (req, res) => {
     });
   }
 };
-
 
 exports.contact = async (req, res) => {
   try {
@@ -406,5 +412,3 @@ exports.deactivate_or_restore_user = async (req, res) => {
     });
   }
 };
-
-

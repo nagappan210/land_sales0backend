@@ -8,7 +8,7 @@ ffmpeg.setFfmpegPath('C:/ffmpeg/bin/ffmpeg.exe');
 
 exports.createPostStep6 = async (req, res) => {
   try {
-    const { user_id, post_type } = req.body;
+    const { user_id, user_post_id, post_type } = req.body;
     const files = req.files;
 
     if (!files || (!files.video && !files.images)) {
@@ -19,13 +19,15 @@ exports.createPostStep6 = async (req, res) => {
       const videoPath = files.video[0].path;
 
       await db.query(
-        'UPDATE user_posts SET video = ?, post_type = ?, image_ids = NULL WHERE U_ID = ?',
-        [videoPath, post_type, user_id]
+        `UPDATE user_posts 
+         SET video = ?, post_type = ?, image_ids = NULL, status = 'published', updated_at = NOW()
+         WHERE U_ID = ? AND user_post_id = ?`,
+        [videoPath, post_type, user_id, user_post_id]
       );
 
       return res.json({
         success: true,
-        message: 'Video uploaded successfully.',
+        message: 'Video uploaded successfully and post published.',
         video: videoPath
       });
     }
@@ -37,8 +39,7 @@ exports.createPostStep6 = async (req, res) => {
 
       const resizedPaths = [];
       const insertedImageIds = [];
-
-      // Step 1: Resize and save images
+      
       for (let i = 0; i < imageFiles.length; i++) {
         const destPath = path.join(tempDir, `img_${String(i).padStart(3, '0')}.jpg`);
 
@@ -49,15 +50,13 @@ exports.createPostStep6 = async (req, res) => {
 
         resizedPaths.push(destPath);
 
-        // Save original uploaded image path to post_images table
         const [result] = await db.query(
-          'INSERT INTO post_images (U_ID, image_path) VALUES (?, ?)',
-          [user_id, imageFiles[i].path]
+          `INSERT INTO post_images (U_ID, user_post_id, image_path) VALUES (?, ?, ?)`,
+          [user_id, user_post_id, imageFiles[i].path]
         );
         insertedImageIds.push(result.insertId);
       }
 
-      // Step 2: Convert images into video
       const outputVideoPath = `uploaded/posts/post_${Date.now()}.mp4`;
 
       ffmpeg()
@@ -72,13 +71,15 @@ exports.createPostStep6 = async (req, res) => {
           const imageIdsStr = insertedImageIds.join(',');
 
           await db.query(
-            'UPDATE user_posts SET video = ?, image_ids = ?, post_type = ? WHERE U_ID = ?',
-            [outputVideoPath, imageIdsStr, post_type, user_id]
+            `UPDATE user_posts 
+             SET video = ?, image_ids = ?, post_type = ?, status = 'published', updated_at = NOW()
+             WHERE U_ID = ? AND user_post_id = ?`,
+            [outputVideoPath, imageIdsStr, post_type, user_id, user_post_id]
           );
 
           return res.json({
             success: true,
-            message: 'Images converted to video and saved.',
+            message: 'Images converted to video, post published.',
             video: outputVideoPath,
             image_ids: insertedImageIds
           });
@@ -99,24 +100,5 @@ exports.createPostStep6 = async (req, res) => {
   } catch (err) {
     console.error('Server error:', err);
     return res.status(500).json({ success: false, message: 'Server error', error: err.message });
-  }
-};
-
-exports.publishPost = async (req, res) => {
-  const { user_id } = req.body;
-
-  try {
-    const [result] = await db.query(
-      `UPDATE user_posts SET status = 'published', updated_at = NOW() WHERE U_ID = ?`,
-      [user_id]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: 'Post not found.' });
-    }
-
-    res.json({ message: 'Post published successfully.' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
   }
 };

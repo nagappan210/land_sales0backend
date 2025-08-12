@@ -59,9 +59,8 @@ const uploads = multer({
 // const land_categoies_upload = multer({ storage: land_categories });
 
 router.post('/register', authController.register);
-router.post('/login', authController.handleLoginOtp);
+router.post('/login', authController.login);
 router.post('/verify', authController.verifyOtp);
-
 router.post('/location',userController.post_user_details);
 
 // router.post('/add_land_category',land_categoies_upload.single('image'),userController.add_land_category)
@@ -99,19 +98,23 @@ router.post('/poststep4',landTypeController.createPostStep4);
 router.post('/poststep5',landTypeController.createPostStep5);
 
 router.post('/poststep6', uploads,  videoController.createPostStep6);
-router.post('/publishpost',videoController.publishPost);
+// router.post('/publishpost',videoController.publishPost);
 
 router.post('/save_property', userController.save_property);
-router.get('/saved_properties/:U_ID', userController.getSavedProperties);
+router.post('/saved_properties', userController.getSavedProperties);
 
-router.put('/sold_status', userController.sold_status);
+router.post('/sold_status', userController.sold_status);
+router.post('/getsold_status' , userController.getsold_status);
 router.post('/getDraftPosts',userController.getDraftPosts)
+
 router.get('/land_categories',enquireController.land_categories);
-router.post('/save_enquire',enquireController.enquire);
-router.get('/getEnquiriesReceived/:user_id',enquireController.getEnquiriesReceived);
-router.get('/getMyEnquiries/:user_id',enquireController.getMyEnquiries);
+router.post('/land_categories_para',enquireController.land_categories_para)
+
+router.post('/enquire',enquireController.enquire);
+router.post('/my_leads',enquireController.my_leads);
+router.post('/self_enquiry',enquireController.self_enquiry);
 router.post("/decline", enquireController.declineEnquiry);
-router.get("/declined", enquireController.getDeclinedEnquiries);
+router.post("/getdeclined", enquireController.getDeclinedEnquiries);
 
 router.put('/delete_post', userController.delete_post);
 router.post('/get_reels', userController.getReels);
@@ -122,5 +125,11 @@ router.post('/add_firstcomment',userController.add_firstcomment);
 router.post('/getcomment',userController.getcomment);
 router.post('/getreplay_comment',userController.getreplay_comment);
 router.post('/likeComment',userController.likeComment);
+
+router.post('/search',userController.search);
+router.post('/getInterestedSearchers',userController.getInterestedSearchers);
+
+router.get('/declineForm',enquireController.declineForm);
+router.post('/declineFormpara',enquireController.declineFormpara);
 
 module.exports = router;

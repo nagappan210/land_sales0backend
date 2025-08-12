@@ -69,11 +69,11 @@ exports.createPostStep1 = async (req, res) => {
 };
 
 exports.createPostStep2 = async (req, res) => {
-  const { user_id, status, land_categorie_id } = req.body;
-  if (!user_id || !status || !land_categorie_id) {
+  const { user_id, user_post_id, status, land_categorie_id } = req.body;
+  if (!user_id || ! user_post_id || !status || !land_categorie_id) {
     return res.status(400).json({ 
       result : "0",
-      error : "user_post_id, status, and land_categorie_id are required.",
+      error : "user_post_id, user_post_id,  status, and land_categorie_id are required.",
       data : []
      });
   }
@@ -82,8 +82,8 @@ exports.createPostStep2 = async (req, res) => {
     const [result] = await db.query(`
       UPDATE user_posts 
       SET land_type_id = ?, land_categorie_id = ?, updated_at = NOW() 
-      WHERE U_ID = ? AND deleted_at is null
-    `, [status, land_categorie_id, user_id]);
+      WHERE U_ID = ? AND user_post_id = ? AND deleted_at is null
+    `, [status, land_categorie_id, user_id , user_post_id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ 
@@ -109,9 +109,9 @@ exports.createPostStep2 = async (req, res) => {
 };
 
 exports.createPostStep3 = async (req, res) => {
-  const { user_id, country, state, city, locality } = req.body;
+  const { user_id,user_post_id, country, state, city, locality , latitude , longitude } = req.body;
 
-  if(!user_id , !country , !state , !city , !locality){
+  if(!user_id , !country , !state , !city , !locality ,!user_post_id , !latitude , !longitude){
     return res.status(400).json({
       result : "0",
       error : " All fields are require"
@@ -119,17 +119,22 @@ exports.createPostStep3 = async (req, res) => {
   }
 
   try {
+    
     await db.query(`
       UPDATE user_posts 
-      SET country = ?, state = ?, city = ?, locality = ?, updated_at = NOW() 
-      WHERE U_ID = ?
-    `, [country, state, city, locality, user_id]);
+      SET country = ?, state = ?, city = ?, locality = ?, latitude = ? , longitude = ? , updated_at = NOW() 
+      WHERE U_ID = ? and user_post_id = ? 
+    `, [country, state, city, locality, latitude , longitude, user_id , user_post_id ]);
 
+
+    
     res.json({ 
       result : "1",
       error : "Step 3 completed: Location saved.",
       data : []
      });
+     
+     
   } catch (err) {
     res.status(500).json({ 
       result : "0",
@@ -141,7 +146,7 @@ exports.createPostStep3 = async (req, res) => {
 
 exports.createPostStep4 = async (req, res) => {
   const {
-    user_id, land_type_id, property_name, bhk_type, property_area, area_length, area_width,
+    user_id, user_post_id, land_type_id, property_name, bhk_type, property_area, area_length, area_width,
     total_floors, property_floor, is_boundary_wall, furnishing,
     parking_available, ownership_type, availability_status,
 
@@ -155,107 +160,100 @@ exports.createPostStep4 = async (req, res) => {
     shop_location, kind_of_office, floors_allowed
   } = req.body;
 
+  if (!user_id || !user_post_id) {
+    return res.status(400).json({ message: "user_id and user_post_id are required." });
+  }
+
   try {
+
     const [landTypeResult] = await db.query(
-      `SELECT land_type_id FROM user_posts WHERE U_ID = ? LIMIT 1`,
-      [user_id]
+      `SELECT land_type_id FROM user_posts WHERE U_ID = ? AND user_post_id = ? LIMIT 1`,
+      [user_id, user_post_id]
     );
 
     if (!landTypeResult.length) {
-      return res.status(404).json({ message: 'Post not found for given U_ID.' });
+      return res.status(404).json({ message: 'Post not found for given user_id and user_post_id.' });
     }
 
-    const land_type_id = landTypeResult[0].land_type_id;
+    const land_type_id_from_db = landTypeResult[0].land_type_id;
     let updateQuery = '';
     let updateValues = [];
     let landTypeName = '';
 
-    switch (land_type_id) {
+    switch (land_type_id_from_db) {
       case 1:
+        landTypeName = "Residential";
         updateQuery = `
           UPDATE user_posts SET 
             property_name = ?, bhk_type = ?, property_area = ?, area_length = ?, area_width = ?,
-            total_floors = ?, property_floor = ?,  furnishing = ?, 
+            total_floors = ?, property_floor = ?, furnishing = ?, 
             parking_available = ?, ownership_type = ?, availability_status = ?, 
             description = ?, amenities = ?, open_sides = ?, construction_done = ?, is_boundary_wall = ?,
-            water_source = ?, flooring_type = ?
-            updated_at = NOW()
-          WHERE U_ID = ?
+            water_source = ?, flooring_type = ?, updated_at = NOW()
+          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL
         `;
         updateValues = [
           property_name || null, bhk_type || null, property_area || null, area_length || null, area_width || null,
-          total_floors || null, property_floor || null, is_boundary_wall || null , furnishing || null,
+          total_floors || null, property_floor || null, furnishing || null,
           parking_available || null, ownership_type || null, availability_status || null,
-          description || null, amenities || null, open_sides || null, construction_done || null,
-          water_source || null, flooring_type ,
-          user_id
+          description || null, amenities || null, open_sides || null, construction_done || null, is_boundary_wall || null,
+          water_source || null, flooring_type || null,
+          user_id, user_post_id
         ];
         break;
 
       case 2: 
+        landTypeName = "Commercial";
         updateQuery = `
           UPDATE user_posts SET 
-            property_name = ?,
-             property_area = ?,
-              area_length = ?,
-               area_width = ?, 
-               total_floors = ?, 
-            property_floor = ?,
-             furnishing = ?,
-              parking_available = ?,
-               ownership_type = ?, 
-            availability_status = ?,
-             description = ?,
-              amenities = ?, 
-               pre_rented=?,
-              open_sides = ?, 
-
-            construction_done = ?,
-             authority_approved = ?, 
-             facing_direction = ?, 
-             office_setup = ?, 
-            shop_facade_size = ?, washroom_details = ?, available_features = ?, fire_safety_measures = ?, 
-            landmark_nearby = ?, staircase_count = ?, lift_available = ?, fire_noc_certified = ?, 
-            occupancy_certificate = ?, previously_used_for = ?, location_advantages = ?, 
-            suitable_for_business = ?, other_features = ?, road_width = ?, property_dimension = ?, 
-            industry_type_approved = ?, flooring_type = ?, pantry_cafeteria = ?, 
+            property_name = ?, property_area = ?, area_length = ?, area_width = ?, 
+            total_floors = ?, property_floor = ?, furnishing = ?, parking_available = ?, 
+            ownership_type = ?, availability_status = ?, description = ?, amenities = ?, 
+            pre_rented = ?, open_sides = ?, construction_done = ?, authority_approved = ?, 
+            facing_direction = ?, office_setup = ?, shop_facade_size = ?, washroom_details = ?, 
+            available_features = ?, fire_safety_measures = ?, landmark_nearby = ?, staircase_count = ?, 
+            lift_available = ?, fire_noc_certified = ?, occupancy_certificate = ?, previously_used_for = ?, 
+            location_advantages = ?, suitable_for_business = ?, other_features = ?, road_width = ?, 
+            property_dimension = ?, industry_type_approved = ?, flooring_type = ?, pantry_cafeteria = ?, 
             shop_location = ?, kind_of_office = ?, updated_at = NOW()
-          WHERE U_ID = ?
+          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL
         `;
         updateValues = [
-          property_name || null, property_area || null, area_length || null, area_width || null, total_floors || null,
-          property_floor || null, furnishing || null, parking_available || null, ownership_type || null,
-          availability_status || null, description || null, amenities || null, pre_rented || null, open_sides || null,
-          construction_done ||  null, authority_approved || null, facing_direction || null, office_setup || null,
-          shop_facade_size || null, washroom_details || null, available_features || null, fire_safety_measures || null,
-          landmark_nearby || null, staircase_count || null, lift_available || null, fire_noc_certified || null,
-          occupancy_certificate || null, previously_used_for || null, location_advantages || null,
-          suitable_for_business || null, other_features || null, road_width || null, property_dimension || null,
-          industry_type_approved || null, flooring_type || null, pantry_cafeteria || null,
-          shop_location || null, kind_of_office || null, user_id
+          property_name || null, property_area || null, area_length || null, area_width || null, 
+          total_floors || null, property_floor || null, furnishing || null, parking_available || null, 
+          ownership_type || null, availability_status || null, description || null, amenities || null, 
+          pre_rented || null, open_sides || null, construction_done || null, authority_approved || null, 
+          facing_direction || null, office_setup || null, shop_facade_size || null, washroom_details || null, 
+          available_features || null, fire_safety_measures || null, landmark_nearby || null, staircase_count || null, 
+          lift_available || null, fire_noc_certified || null, occupancy_certificate || null, previously_used_for || null, 
+          location_advantages || null, suitable_for_business || null, other_features || null, road_width || null, 
+          property_dimension || null, industry_type_approved || null, flooring_type || null, pantry_cafeteria || null, 
+          shop_location || null, kind_of_office || null,
+          user_id, user_post_id
         ];
         break;
 
-      case 3: 
+      case 3:
+        landTypeName = "Industrial";
         updateQuery = `
           UPDATE user_posts SET 
-            property_name = ?, property_area = ?,bhk_type = ?, area_length = ?, area_width = ?, 
+            property_name = ?, property_area = ?, bhk_type = ?, area_length = ?, area_width = ?, 
             is_boundary_wall = ?, furnishing = ?, parking_available = ?, 
             ownership_type = ?, availability_status = ?, description = ?, 
             amenities = ?, open_sides = ?, construction_done = ?, 
             authority_approved = ?, facing_direction = ?, flooring_type = ?, 
             road_width = ?, property_dimension = ?, industry_type_approved = ?, 
             updated_at = NOW()
-          WHERE U_ID = ?
+          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL
         `;
         updateValues = [
           property_name || null, property_area || null, bhk_type || null, area_length || null, area_width || null,
-          is_boundary_wall ? 1 : 0, furnishing || null, parking_available ? 1 : 0,
+          is_boundary_wall || null, furnishing || null, parking_available || null,
           ownership_type || null, availability_status || null, description || null,
-          amenities || null, open_sides || null, construction_done ? 1 : 0,
+          amenities || null, open_sides || null, construction_done || null,
           authority_approved || null, facing_direction || null, flooring_type || null,
           road_width || null, property_dimension || null, industry_type_approved || null,
-          user_id
+          user_id, user_post_id
         ];
         break;
 
@@ -266,10 +264,11 @@ exports.createPostStep4 = async (req, res) => {
     const [updateResult] = await db.query(updateQuery, updateValues);
 
     if (updateResult.affectedRows === 0) {
-      return res.status(404).json({ message: 'Update failed: Post not found.' });
+      return res.status(404).json({ message: 'Update failed: Post not found or already deleted.' });
     }
 
     res.json({ success: true, message: `Step 4 completed for ${landTypeName} property.` });
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -277,12 +276,12 @@ exports.createPostStep4 = async (req, res) => {
 };
 
 exports.createPostStep5 = async (req, res) => {
-  const { user_id, price } = req.body;
+  const { user_id,user_post_id, price } = req.body;
 
   try {
     const [result] = await db.query(
-      `UPDATE user_posts SET price = ?, updated_at = NOW() WHERE U_ID = ?`,
-      [price || 0, user_id]
+      `UPDATE user_posts SET price = ?, updated_at = NOW() WHERE U_ID = ? and user_post_id =?`,
+      [price || 0, user_id , user_post_id]
     );
 
     if (result.affectedRows === 0) {

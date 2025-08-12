@@ -44,7 +44,7 @@ const db = require('../db');
 
 exports.post_user_details = async (req, res) => {
   try {
-    const { user_id, country, state, cities, pincode } = req.body;
+    const { user_id, country, state, cities, pincode , latitude , longitude } = req.body;
 
     if (!user_id) {
       return res.status(400).json({
@@ -55,15 +55,13 @@ exports.post_user_details = async (req, res) => {
     }
 
     await db.query(
-      `UPDATE users SET country = ?, state = ?, cities = ?, pincode = ? WHERE U_ID = ?`,
-      [country || "", state || "", cities || "", pincode || "", user_id]
+      `UPDATE users SET country = ?, state = ?, cities = ?, pincode = ? , latitude = ? , longitude = ? WHERE U_ID = ?`,
+      [country || "", state || "", cities || "", pincode || "", latitude || "" , longitude || "" , user_id]
     );
 
     res.json({
       result: "1",
       message: "Location saved successfully",
-      error: "",
-      data: []
     });
 
   } catch (err) {
@@ -152,7 +150,6 @@ exports.updateUserInterest = async (req, res) => {
     return res.json({
       result: "1",
       message: "User interest updated successfully.",
-      error: ""
     });
 
   } catch (err) {
@@ -197,7 +194,6 @@ exports.getUserInterest = async (req, res) => {
           user_interest: result[0].user_interest
         }
       ],
-      error: ""
     });
 
   } catch (err) {
@@ -269,8 +265,6 @@ exports.updateProfile = async (req, res) => {
     res.json({
       result: "1",
       message: "Profile updated successfully",
-      error: "",
-      data: []
     });
 
   } catch (err) {
@@ -404,8 +398,6 @@ exports.followUser = async (req, res) => {
         result: "1",
         message: "Followed successfully",
         status: 1,
-        error: "",
-        data: []
       });
     }
 
@@ -432,8 +424,6 @@ exports.followUser = async (req, res) => {
         result: "1",
         message: "Unfollowed successfully",
         status: 2,
-        error: "",
-        data: []
       });
     }
 
@@ -541,114 +531,257 @@ exports.getFollowData = async (req, res) => {
 };
 
 exports.save_property = async (req, res) => {
-  const { U_ID, user_post_id, status } = req.body;
+  const { user_id, user_post_id, status } = req.body;
 
-  if (!U_ID || !user_post_id || typeof status === 'undefined') {
+  if (!user_id || !user_post_id || typeof status === 'undefined') {
     return res.status(400).json({
-      success: false,
-      message: 'U_ID, user_post_id, and status are required.'
+      result : "0",
+      error: 'U_ID, user_post_id, and status are required.',
+      data : []
     });
   }
 
   try {
     if (status == 1) {
-      // Save property
       await db.query(
         'INSERT IGNORE INTO saved_properties (U_ID, user_post_id) VALUES (?, ?)',
-        [U_ID, user_post_id]
+        [user_id, user_post_id]
       );
-      return res.json({ success: true, message: 'Property saved successfully.' });
+      return res.json({ result : "1", 
+        message: 'Property saved successfully.',
+      });
 
     } else if (status == 2) {
-      // Unsave property
       const [result] = await db.query(
         'DELETE FROM saved_properties WHERE U_ID = ? AND user_post_id = ?',
-        [U_ID, user_post_id]
+        [user_id, user_post_id]
       );
-      return res.json({ success: true, message: 'Property unsaved successfully.' });
+      return res.json({ result: "1", 
+        message: 'Property unsaved successfully.',
+      });
 
     } else {
       return res.status(400).json({
-        success: false,
-        message: 'Invalid status. Use 1 for save, 0 for unsave.'
+        success: "0",
+        error: 'Invalid status. Use 1 for save, 2 for unsave.',
+        data :[]
       });
     }
   } catch (err) {
     return res.status(500).json({
-      success: false,
-      error: err.message
+      result : "0",
+      error: err.message,
+      data : []
     });
   }
 };
 
-
 exports.getSavedProperties = async (req, res) => {
-  const { U_ID } = req.params;
+  const { user_id, page = 1 } = req.body;
+  const  limit = 10
+  const notnull = (property) => ({
+    property_name: property.property_name ?? "",
+    city: property.city ?? "",
+    locality: property.locality ?? "",
+    property_area: property.property_area ?? "",
+    price: property.price ?? "",
+    description: property.description ?? "",
+    amenities: property.amenities ?? "",
+    facing_direction: property.facing_direction ?? "",
+    video: property.video ?? "",
+    image_ids: property.image_ids ?? "",
+    created_at: property.created_at ?? ""
+  });
+
+  if (!user_id) {
+    return res.json({
+      result: "0",
+      error: "user_id is required",
+      data: []
+    });
+  }
 
   try {
-    const [rows] = await db.query(`
-      SELECT p.*
+    const offset = (page - 1) * limit;
+
+    const [[{ total }]] = await db.query(`
+      SELECT COUNT(*) AS total
       FROM saved_properties sp
       JOIN user_posts p ON sp.user_post_id = p.user_post_id
       WHERE sp.U_ID = ?
-    `, [U_ID]);
+    `, [user_id]);
 
-    return res.json({ success: true, data: rows });
+    const [rows] = await db.query(`
+      SELECT 
+        p.property_name,
+        p.city,
+        p.locality,
+        p.property_area,
+        p.price,
+        p.description,
+        p.amenities,
+        p.facing_direction,
+        p.video,
+        p.image_ids,
+        p.created_at
+      FROM saved_properties sp
+      JOIN user_posts p ON sp.user_post_id = p.user_post_id
+      WHERE sp.U_ID = ?
+      LIMIT ? OFFSET ?
+    `, [user_id, parseInt(limit), parseInt(offset)]);
+
+    const normalizedData = rows.map(notnull);
+
+    return res.json({
+      result: "1",
+      data: normalizedData,
+      pagination: {
+        total,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+
   } catch (err) {
-    return res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({
+      result: "0",
+      error: err.message,
+      data: []
+    });
   }
 };
 
 exports.sold_status = async (req, res) => {
-  const { post_id, status } = req.body;
+  const { user_id, user_post_id, status } = req.body;
 
-  if (!post_id || !status) {
+  if (!user_id || !user_post_id || !status) {
     return res.status(400).json({
-      success: false,
-      message: 'post_id and status are required.'
+      result: "0",
+      error: "user_id, user_post_id, and status are required.",
+      data: [],
     });
   }
 
   try {
-    let query = '';
-    let message = '';
+    let query = "";
+    let message = "";
 
-    if (status == 1) {
-      // Unsold
-      query = `UPDATE user_posts SET is_sold = 0, sold_at = NULL WHERE user_post_id = ?`;
-      message = 'Property marked as unsold.';
-    } else if (status == 2) {
-      // Sold
-      query = `UPDATE user_posts SET is_sold = 1, sold_at = NOW() WHERE user_post_id = ?`;
-      message = 'Property marked as sold.';
+    if (status == 2) {
+      query = `UPDATE user_posts 
+               SET is_sold = 0, sold_at = NULL 
+               WHERE user_post_id = ? AND U_ID = ?`;
+      message = "Property marked as unsold.";
+    } else if (status == 1) {
+      query = `UPDATE user_posts 
+               SET is_sold = 1, sold_at = NOW() 
+               WHERE user_post_id = ? AND U_ID = ?`;
+      message = "Property marked as sold.";
     } else {
       return res.status(400).json({
-        success: false,
-        message: 'Invalid status. Use 1 for unsold, 2 for sold.'
+        result: "0",
+        error: "Invalid status. Use 1 for unsold, 2 for sold.",
+        data: [],
       });
     }
 
-    const [result] = await db.query(query, [post_id]);
+    const [result] = await db.query(query, [user_post_id, user_id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({
-        success: false,
-        message: 'Property not found or status already set.'
+        result: "0",
+        error: "Property not found or status already set.",
+        data: [],
       });
     }
 
-    return res.json({ success: true, message });
+    return res.json({
+      result: "1",
+      message: message,
+    });
   } catch (err) {
     return res.status(500).json({
-      success: false,
-      error: err.message
+      result: "0",
+      error: err.message,
+      data: [],
+    });
+  }
+};
+
+exports.getsold_status = async (req, res) => {
+  const { user_id, page = 1 } = req.body; 
+  const limit = 10
+  if (!user_id) {
+    return res.json({
+      result: "0",
+      error: "user_id is required",
+      data: []
+    });
+  }
+
+  const offset = (page - 1) * limit;
+  try {
+
+    const [countResult] = await db.query(
+      `SELECT COUNT(*) AS total FROM user_posts WHERE U_ID = ? AND is_sold = 1`,
+      [user_id]
+    );
+    const total = countResult[0].total;
+    const totalPages = Math.ceil(total / limit);
+
+    const [rows] = await db.query(`
+      SELECT 
+        property_name,
+        city,
+        locality,
+        property_area,
+        price,
+        description,
+        amenities,
+        facing_direction,
+        video,
+        created_at
+      FROM user_posts
+      WHERE U_ID = ? AND is_sold = 1
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `, [user_id, parseInt(limit), parseInt(offset)]);
+
+    const normalizedData = rows.map((property) => ({
+      property_name: property.property_name ?? "",
+      city: property.city ?? "",
+      locality: property.locality ?? "",
+      property_area: property.property_area ?? "",
+      price: property.price ?? "",
+      description: property.description ?? "",
+      amenities: property.amenities ?? "",
+      facing_direction: property.facing_direction ?? "",
+      video: property.video ?? "",
+      created_at: property.created_at ?? ""
+    }));
+
+    return res.json({
+      result: "1",
+      data: normalizedData,
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total,
+      totalPages
+      
+    });
+  } catch (err) {
+    console.error("Error fetching sold status:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Database query failed",
+      details: err.message
     });
   }
 };
 
 exports.getDraftPosts = async (req, res) => {
-  const { user_id } = req.body;
-
+  const { user_id, page = 1 } = req.body;
+  const limit = 10
   if (!user_id) {
     return res.status(400).json({
       result: "0",
@@ -657,22 +790,59 @@ exports.getDraftPosts = async (req, res) => {
     });
   }
 
+  const offset = (page - 1) * limit;
+
   try {
-    const [posts] = await db.query(
-      `SELECT 
-         *
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) as total
        FROM user_posts
        WHERE U_ID = ? 
-         AND status = 'draft' 
-         AND deleted_at IS NULL
-       ORDER BY created_at DESC`,
+         AND status = 'draft'
+         AND deleted_at IS NULL`,
       [user_id]
     );
 
+    const [rows] = await db.query(
+      `SELECT 
+        property_name,
+        city,
+        locality,
+        property_area,
+        price,
+        description,
+        amenities,
+        facing_direction,
+        video,
+        created_at
+      FROM user_posts
+      WHERE U_ID = ?
+        AND status = 'draft' 
+        AND deleted_at IS NULL
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?`,
+      [user_id, Number(limit), Number(offset)]
+    );
+
+    const normalizedData = rows.map(post => ({
+      property_name: post.property_name ?? "",
+      city: post.city ?? "",
+      locality: post.locality ?? "",
+      property_area: post.property_area ?? "",
+      price: post.price ?? "",
+      description: post.description ?? "",
+      amenities: post.amenities ?? "",
+      facing_direction: post.facing_direction ?? "",
+      video: post.video ?? "",
+      created_at: post.created_at ?? ""
+    }));
+
     res.json({
       result: "1",
-      error: "",
-      data: posts
+      data: normalizedData,
+      total, 
+      page: Number(page),
+      limit: Number(limit),
+      totalPages: Math.ceil(total / limit)
     });
 
   } catch (err) {
@@ -684,8 +854,6 @@ exports.getDraftPosts = async (req, res) => {
     });
   }
 };
-
-
 
 exports.blockOrUnblockUser = async (req, res) => {
   const { user_id, blocker_id, status } = req.body;
@@ -713,7 +881,6 @@ exports.blockOrUnblockUser = async (req, res) => {
     );
 
     if (status === 1) {
-      // BLOCK USER
       if (existing.length > 0) {
         return res.status(400).json({
           result: "0",
@@ -875,46 +1042,79 @@ exports.delete_post = async (req, res) => {
 };
 
 exports.getReels = async (req, res) => {
-  const { user_id } = req.body;
+  const { user_id, page = 1 } = req.body;
+  const limit = 10;
 
   if (!user_id) {
-    return res.status(400).json({ message: "user_id is required" });
+    return res.status(400).json({ result: "0", error: "user_id is required", data: [] });
   }
 
+  const offset = (parseInt(page) - 1) * limit;
+
   try {
-    const [userRow] = await db.query(
-      "SELECT user_interest FROM users WHERE U_ID = ?",
+    const [user] = await db.query(
+      "SELECT user_interest FROM users WHERE U_ID = ? AND deleted_at IS NULL",
       [user_id]
     );
 
-    if (userRow.length === 0) {
-      return res.status(404).json({ message: "User not found" });
+    if (!user.length) {
+      return res.status(404).json({ result: "0", error: "User not found", data: [] });
     }
 
-    const interestStr = userRow[0].user_interest;
-    const interests = interestStr
-      ? interestStr.split(',').map(i => i.trim())
-      : [];
+    const interestIds = user[0].user_interest ? user[0].user_interest.split(",") : [];
 
-    const interestConditions = interests.map(() => 'user_type = ?').join(' OR ');
+    if (interestIds.length === 0) {
+      return res.status(200).json({ result: "1", data: [], total: 0 });
+    }
 
-    const sql = `
-      SELECT * FROM user_posts
-      WHERE video IS NOT NULL
-        AND deleted_at IS NULL
-        AND status = 'published'
-        AND is_sold = 0
-        AND (${interestConditions})
-      ORDER BY RAND()
-      LIMIT 10
-    `;
+    const [countRows] = await db.query(
+      `SELECT COUNT(*) AS total
+       FROM user_posts
+       WHERE FIND_IN_SET(land_categorie_id, ?)
+         AND status = 'published'
+         AND video IS NOT NULL
+         AND deleted_at IS NULL`,
+      [interestIds.join(",")]
+    );
 
-    const [reels] = await db.query(sql, interests);
+    const total = countRows[0].total;
 
-    res.json(reels);
-  } catch (error) {
-    console.error("Error in getReels:", error);
-    res.status(500).json({ message: "Internal server error" });
+    const [reels] = await db.query(
+      `SELECT 
+         up.user_post_id,
+         up.video,
+         up.property_name,
+         up.land_categorie_id,
+         u.name AS owner_name,
+         COALESCE(pl.total_likes, 0) AS total_likes
+       FROM user_posts up
+       JOIN users u ON u.U_ID = up.U_ID
+       LEFT JOIN (
+         SELECT user_post_id, COUNT(*) AS total_likes
+         FROM post_likes
+         GROUP BY user_post_id
+       ) pl ON pl.user_post_id = up.user_post_id
+       WHERE FIND_IN_SET(up.land_categorie_id, ?)
+         AND up.status = 'published'
+         AND up.video IS NOT NULL
+         AND up.deleted_at IS NULL
+       ORDER BY up.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [interestIds.join(","), limit, offset]
+    );
+
+    return res.status(200).json({
+      result: "1",
+      data: reels,
+      page: parseInt(page),
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit)
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ result: "0", error: "Server error", data: [] });
   }
 };
 
@@ -1019,38 +1219,36 @@ exports.getPostLikeCount = async (req, res) => {
 };
 
 exports.add_firstcomment = async (req, res) => {
-  const { user_id, user_post_id, comment, replies_comment_id = null } = req.body;
+  let { user_id, user_post_id, comment, replies_comment_id = null } = req.body;
 
   if (!user_id || !user_post_id || !comment) {
     return res.status(400).json({
       result: "0",
-      error: "user_id, user_post_id, and comment are required",
-      data: []
+      error: "user_id, user_post_id, and comment are required"
     });
   }
 
+  if (!replies_comment_id || replies_comment_id === "0" || replies_comment_id === 0) {
+    replies_comment_id = null;
+  }
+
   try {
-    await db.query(
-      `INSERT INTO post_comments (user_id, user_post_id, comment, replies_comment_id) VALUES (?, ?, ?, ?)`,
+    const [insertResult] = await db.query(
+      `INSERT INTO post_comments (user_id, user_post_id, comment, replies_comment_id) 
+       VALUES (?, ?, ?, ?)`,
       [user_id, user_post_id, comment, replies_comment_id]
     );
 
     return res.json({
       result: "1",
-      error: "",
-      data: [
-        {
-          replies_comment_id: replies_comment_id ?? "0"
-        }
-      ]
+      comment_id: insertResult.insertId
     });
 
   } catch (err) {
     console.error("Add Comment Error:", err);
     res.status(500).json({
       result: "0",
-      error: "Internal server error",
-      data: []
+      error: "Internal server error"
     });
   }
 };
@@ -1213,6 +1411,179 @@ exports.likeComment = async (req, res) => {
     return res.status(500).json({
       result: "0",
       error: "Internal server error",
+      data: []
+    });
+  }
+};
+
+exports.search = async (req, res) => {
+  const { land_type, locality, min_price, max_price, user_id } = req.body;
+
+  try {
+    const [userExists] = await db.query(
+      `SELECT U_ID FROM users WHERE U_ID = ?`,
+      [user_id]
+    );
+
+    if (userExists.length === 0) {
+      return res.status(404).json({
+        result: "0",
+        error: "User not found",
+        data: []
+      });
+    }
+
+    const [existing] = await db.query(
+      `SELECT search_id FROM search WHERE user_id = ? AND land_type_id = ?`,
+      [user_id, land_type]
+    );
+
+    if (existing.length === 0) {
+      await db.query(
+        `INSERT INTO search (user_id, land_type_id, create_at) VALUES (?, ?, NOW())`,
+        [user_id, land_type]
+      );
+    }
+
+        const [rows] = await db.query(
+      `SELECT  
+          u.username, u.U_ID, u.profile_image, 
+          p.user_post_id, p.land_type_id, p.property_name, p.locality, 
+          p.price, p.video, p.created_at,
+          COUNT(DISTINCT l.like_id) AS like_count,
+          COUNT(DISTINCT c.comment_id) AS comment_count
+        FROM users u
+        JOIN user_posts p ON u.U_ID = p.U_ID
+        LEFT JOIN post_likes l ON p.user_post_id = l.user_post_id
+        LEFT JOIN post_comments c ON p.user_post_id = c.user_post_id
+        WHERE p.land_type_id = ?
+          AND p.price BETWEEN ? AND ?
+          AND p.locality LIKE ?
+        GROUP BY 
+          u.username, u.U_ID, u.profile_image,
+          p.user_post_id, p.land_type_id, p.property_name, 
+          p.locality, p.price, p.video, p.created_at
+        ORDER BY p.user_post_id DESC`,
+      [land_type, min_price, max_price, `%${locality}%`]
+    );
+
+
+    if (rows.length === 0) {
+      return res.status(200).json({
+        result: "0",
+        data: []
+      });
+    }
+
+     const sanitizedRows = rows.map(row => {
+      const newRow = {};
+      for (const key in row) {
+        newRow[key] = row[key] === null ? "" : row[key];
+      }
+      return newRow;
+    });
+
+    res.status(200).json({
+      result: "1",
+      data: sanitizedRows
+    });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      result: "0",
+      error: "Database query failed",
+      data: []
+    });
+  }
+};
+
+exports.getInterestedSearchers = async (req, res) => {
+  const { user_id } = req.body;
+
+  if (!user_id) {
+    return res.status(400).json({
+      result: "0",
+      error: "user_id is required",
+      data: []
+    });
+  }
+
+  try {
+    const [posts] = await db.query(
+      `SELECT user_post_id, land_type_id, latitude, longitude 
+       FROM user_posts
+       WHERE U_ID = ?`, 
+      [user_id]
+    );
+
+    if (!posts || posts.length === 0) {
+      return res.status(404).json({
+        result: "0",
+        error: "No posts found for this user",
+        data: []
+      });
+    }
+
+    const results = [];
+    const seenUserIds = new Set();
+
+    for (const post of posts) {
+      const { user_post_id, land_type_id, latitude, longitude } = post;
+
+      const [searchers] = await db.query(
+        `SELECT 
+            u.U_ID, 
+            u.username, 
+            u.email, 
+            s.land_type_id, 
+            u.latitude, 
+            u.longitude, 
+            s.create_at,
+            (6371 * acos(
+              cos(radians(?)) * cos(radians(u.latitude)) *
+              cos(radians(u.longitude) - radians(?)) +
+              sin(radians(?)) * sin(radians(u.latitude))
+            )) AS distance
+         FROM search s
+         JOIN users u ON s.user_id = u.U_ID
+         WHERE s.land_type_id = ?
+           AND s.user_id != ? 
+         HAVING distance <= 30
+         ORDER BY distance ASC`,
+        [latitude, longitude, latitude, land_type_id, user_id]
+      );
+
+      const uniqueSearchers = searchers.filter(s => {
+        if (seenUserIds.has(s.U_ID)) {
+          return false;
+        } else {
+          seenUserIds.add(s.U_ID);
+          return true;
+        }
+      });
+
+      if (uniqueSearchers.length > 0) {
+        results.push({
+          user_post_id,
+          land_type_id,
+          latitude,
+          longitude,
+          searchers: uniqueSearchers
+        });
+      }
+    }
+
+    return res.json({
+      result: "1",
+      data: results
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      result: "0",
+      error: "Internal Server Error",
       data: []
     });
   }

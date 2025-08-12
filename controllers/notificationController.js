@@ -64,7 +64,32 @@ exports.updateNotificationSettings = async (req, res) => {
       });
     }
 
-    const settings = typeof notification_ids === 'string' ? notification_ids : '1,2,3,4,5';
+    let settingsArray = [];
+    if (typeof notification_ids === "string") {
+      settingsArray = notification_ids.split(",").map(id => parseInt(id.trim(), 10));
+    } else if (Array.isArray(notification_ids)) {
+      settingsArray = notification_ids.map(id => parseInt(id, 10));
+    }
+
+    const validNumbers = [1, 2, 3, 4, 5];
+    const isValid = settingsArray.every(num => validNumbers.includes(num));
+
+
+    if (!isValid) {
+      return res.status(400).json({
+        result: "0",
+        error: "Invalid notification_ids. Allowed values are 1,2,3,4,5 only.",
+        data: []
+      });
+    }
+
+    settingsArray = [...new Set(settingsArray)];
+
+    if(settingsArray.length === 0){
+      settingsArray = validNumbers;
+    }
+     
+    const settings = settingsArray.join(",");
 
     await db.query(
       `UPDATE users SET allow_notification = TRUE, notification_settings = ? WHERE U_ID = ?`,
@@ -73,7 +98,6 @@ exports.updateNotificationSettings = async (req, res) => {
 
     res.json({
       result: "1",
-      error: "",
       data: [{ message: "Notification settings updated." }]
     });
 
@@ -85,6 +109,4 @@ exports.updateNotificationSettings = async (req, res) => {
     });
   }
 };
-
-
 
