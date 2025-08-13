@@ -65,21 +65,17 @@ router.post('/location',userController.post_user_details);
 
 // router.post('/add_land_category',land_categoies_upload.single('image'),userController.add_land_category)
 router.post('/getInterest',userController.getInterest);
-
 router.post('/user_interest', userController.updateUserInterest);
 router.post('/get_user_interest', userController.getUserInterest);
 
 router.post('/update_profile', upload.single('profile_image'), userController.updateProfile);
-
 router.post('/follow', userController.followUser);
 router.post('/profile_status', userController.getProfileStats);
-
 router.post('/contact', authController.contact);
 
 // router.get('/getcontact/:id',userController.getContact);
 
 router.post('/getFollowData', userController.getFollowData);
-
 router.post('/block', userController.blockOrUnblockUser);
 router.post('/blocked_list', userController.getBlockedList);
 
@@ -96,7 +92,6 @@ router.post('/poststep2',landTypeController.createPostStep2);
 router.post('/poststep3',landTypeController.createPostStep3);
 // router.post('/poststep4',landTypeController.createPostStep4);
 router.post('/poststep5',landTypeController.createPostStep5);
-
 router.post('/poststep6', uploads,  videoController.createPostStep6);
 // router.post('/publishpost',videoController.publishPost);
 
