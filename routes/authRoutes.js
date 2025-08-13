@@ -94,7 +94,7 @@ router.post('/land_categories', landTypeController.getCategoriesByLandType);
 router.post('/poststep1',landTypeController.createPostStep1);
 router.post('/poststep2',landTypeController.createPostStep2);
 router.post('/poststep3',landTypeController.createPostStep3);
-router.post('/poststep4',landTypeController.createPostStep4);
+// router.post('/poststep4',landTypeController.createPostStep4);
 router.post('/poststep5',landTypeController.createPostStep5);
 
 router.post('/poststep6', uploads,  videoController.createPostStep6);
@@ -107,7 +107,7 @@ router.post('/sold_status', userController.sold_status);
 router.post('/getsold_status' , userController.getsold_status);
 router.post('/getDraftPosts',userController.getDraftPosts)
 
-router.get('/land_categories',enquireController.land_categories);
+router.post('/land_categories_name',enquireController.land_categories);
 router.post('/land_categories_para',enquireController.land_categories_para)
 
 router.post('/enquire',enquireController.enquire);
@@ -129,7 +129,7 @@ router.post('/likeComment',userController.likeComment);
 router.post('/search',userController.search);
 router.post('/getInterestedSearchers',userController.getInterestedSearchers);
 
-router.get('/declineForm',enquireController.declineForm);
+router.post('/declineForm',enquireController.declineForm);
 router.post('/declineFormpara',enquireController.declineFormpara);
 
 module.exports = router;

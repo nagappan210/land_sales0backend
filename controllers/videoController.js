@@ -11,6 +11,23 @@ exports.createPostStep6 = async (req, res) => {
     const { user_id, user_post_id, post_type } = req.body;
     const files = req.files;
 
+    if(!user_id || isNaN(user_id) || !user_post_id || isNaN(user_post_id)){
+      return res.status(400).json({
+        result : "0",
+        error : "User_id and user_post_id is required and it must be an Integer",
+        data : []
+      })
+    }
+
+    const [exist_user] = await db.query (`select * from users where U_ID = ?`,[user_id]);
+    if(exist_user.length === 0){
+      return res.status(400).json({
+        result : "0",
+        error : "User does not existing in database",
+        data : []
+      })
+    }
+
     if (!files || (!files.video && !files.images)) {
       return res.status(400).json({ success: false, message: 'No valid media files uploaded.' });
     }
@@ -18,12 +35,20 @@ exports.createPostStep6 = async (req, res) => {
     if (post_type === '1' && files.video && files.video.length > 0) {
       const videoPath = files.video[0].path;
 
-      await db.query(
+      const [video] = await db.query(
         `UPDATE user_posts 
          SET video = ?, post_type = ?, image_ids = NULL, status = 'published', updated_at = NOW()
          WHERE U_ID = ? AND user_post_id = ?`,
         [videoPath, post_type, user_id, user_post_id]
       );
+      if(video.affectedRows === 0){
+        return res.status(400).json({
+        result : "0",
+        error : "User_id or user_post_id is not existing in database",
+        data : []
+      })
+      }
+
 
       return res.json({
         success: true,
@@ -70,15 +95,23 @@ exports.createPostStep6 = async (req, res) => {
         .on('end', async () => {
           const imageIdsStr = insertedImageIds.join(',');
 
+          const [image] = 
           await db.query(
             `UPDATE user_posts 
              SET video = ?, image_ids = ?, post_type = ?, status = 'published', updated_at = NOW()
              WHERE U_ID = ? AND user_post_id = ?`,
             [outputVideoPath, imageIdsStr, post_type, user_id, user_post_id]
           );
+          if(image.affectedRows === 0){
+        return res.status(400).json({
+        result : "0",
+        error : "User_id or user_post_id is not existing in database",
+        data : []
+      })
+      }
 
           return res.json({
-            success: true,
+            result : "1",
             message: 'Images converted to video, post published.',
             video: outputVideoPath,
             image_ids: insertedImageIds

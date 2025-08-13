@@ -44,11 +44,20 @@ exports.updateNotificationSettings = async (req, res) => {
   try {
     const { user_id, allow_notification, notification_ids } = req.body;
 
-    if (!user_id) {
+    if (!user_id || isNaN(user_id)) {
       return res.status(400).json({
         result: "0",
-        error: "user_id is required",
+        error: "user_id is required and it must be a Integer",
         data: []
+      });
+    }
+
+    const [exist_user] = await db.query(`select * from users where U_ID =?`,[user_id]);
+    if(exist_user.length === 0){
+      return res.status(400).json({
+        result : "0",
+        error : "User does not exist in database",
+        data : []
       });
     }
 

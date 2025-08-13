@@ -1,6 +1,20 @@
 const db = require ('../db')
 
 exports.land_categories = async (req, res) => {
+  let { page = 1 } = req.body;
+  const limit = 10;
+
+  if (!Number.isInteger(Number(page)) || Number(page) < 1) {
+    return res.status(400).json({
+      result: "0",
+      error: "page must be a positive integer",
+      data: []
+    });
+  }
+  page = Number(page);
+  const offset = (page - 1) * limit;
+
+
   try {
     const [rows] = await db.query(`
       SELECT 
@@ -12,12 +26,38 @@ exports.land_categories = async (req, res) => {
         land_categories lc
       JOIN 
         land_types lt ON lc.land_type_id = lt.land_type_id
-    `);
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
 
-    res.json({ success: true, categories: rows });
+    const [[{ total }]] = await db.query(`SELECT COUNT(*) AS total FROM land_categories`);
+    const totalPages = Math.ceil(total / limit);
+
+    if (rows.length === 0) {
+      return res.json({
+        success: "0",
+        error: "No data in database",
+        data: [],
+        currentPage: page,
+        totalPages,
+        totalRecords: total
+      });
+    }
+
+    res.json({
+      success: "1",
+      error: "",
+      categories: rows,
+      currentPage: page,
+      totalPages,
+      totalRecords: total
+    });
   } catch (err) {
     console.error('Server error:', err);
-    res.status(500).json({ success: false, message: 'Server error.' });
+    res.status(500).json({
+      success: "0",
+      error: "Server error.",
+      data: []
+    });
   }
 };
 
@@ -61,7 +101,7 @@ exports.enquire = async (req, res) => {
   const {
     user_id,
     recever_posts_id,
-    land_type_id , 
+    land_type_id,
     land_categorie_id,
     name,
     phone_num,
@@ -73,11 +113,45 @@ exports.enquire = async (req, res) => {
   if (!user_id || !recever_posts_id || !land_categorie_id || !name || !land_type_id) {
     return res.status(400).json({
       success: false,
-      message: 'Required fields: user_id, recever_posts_id, land_categorie_id, and name.'
+      message: 'Required fields: user_id, recever_posts_id, land_type_id, land_categorie_id, and name.'
+    });
+  }
+
+  if (phone_num && (!Number.isInteger(Number(phone_num)) || Number(phone_num) <= 0)) {
+    return res.status(400).json({
+      success: false,
+      message: 'phone_num must be a positive integer.'
+    });
+  }
+  if (whatsapp_num && (!Number.isInteger(Number(whatsapp_num)) || Number(whatsapp_num) <= 0)) {
+    return res.status(400).json({
+      success: false,
+      message: 'whatsapp_num must be a positive integer.'
     });
   }
 
   try {
+    const [[user]] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+    if (!user) return res.status(404).json({ success: "0", 
+      error: 'User not found.',
+    data : [] });
+
+    const [[post]] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ?`, [recever_posts_id]);
+    if (!post) return res.status(404).json({ success: "0", 
+      error: 'Post not found.',
+    data : [] });
+
+    const [[landType]] = await db.query(`SELECT * FROM land_types WHERE land_type_id = ?`, [land_type_id]);
+    if (!landType) return res.status(404).json({ success: "0", 
+      error: 'Land type not found',
+      data : []});
+
+    const [[landCat]] = await db.query(`SELECT * FROM land_categories WHERE land_categorie_id = ?`, [land_categorie_id]);
+    if (!landCat) return res.status(404).json({ success: "0", 
+      error: 'Land category not found.',
+      data : []});
+
+  
     const [existing] = await db.query(
       `SELECT enquire_id FROM enquiries WHERE user_id = ? AND recever_posts_id = ?`,
       [user_id, recever_posts_id]
@@ -90,20 +164,21 @@ exports.enquire = async (req, res) => {
       });
     }
 
+    // Insert enquiry
     await db.query(
       `INSERT INTO enquiries
-        (user_id, recever_posts_id,land_type_id, land_categorie_id, name, phone_number, whatsapp_num, email, land_category_para)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ? ,?)`,
+        (user_id, recever_posts_id, land_type_id, land_categorie_id, name, phone_number, whatsapp_num, email, land_category_para)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         user_id,
         recever_posts_id,
-        land_categorie_id,
         land_type_id,
+        land_categorie_id,
         name.trim(),
-        phone_num,
+        phone_num || null,
         whatsapp_num || null,
         email || null,
-        land_category_para
+        land_category_para || null
       ]
     );
 
@@ -118,9 +193,26 @@ exports.enquire = async (req, res) => {
 exports.my_leads = async (req, res) => {
   const user_id = req.body.user_id || req.query.user_id;
 
-  if (!user_id) {
-    return res.status(400).json({ success: false, message: 'User ID is required.' });
+  if (!user_id || isNaN(user_id)) {
+    return res.status(400).json({ 
+    result: "0",
+    error : 'User ID is required and it must be an Integer',
+    data : [] });
   }
+  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+    if (exist_user.length === 0) 
+    {return res.status(404).json({ success: "0", 
+    error: 'User not found.',
+    data : [] });}
+
+    const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE recever_posts_id = ?`, [user_id]);
+    if (exist_enquire.length === 0) 
+    {return res.status(404).json({ success: "0", 
+    error: 'User Enquire is not found.',
+    data : [] });}
+
+
+
 
   console.log("Fetching leads for user_id:", user_id);
 
@@ -152,23 +244,38 @@ exports.my_leads = async (req, res) => {
     console.log(`Found ${rows.length} leads for user_id ${user_id}`);
 
     return res.json({
-      success: true,
+      result: "1",
       count: rows.length,
-      enquiries: rows
+      data : rows
     });
 
   } catch (err) {
     console.error('Get received enquiries error:', err);
-    return res.status(500).json({ success: false, message: 'Server error.' });
+    return res.status(500).json({ result: "0", 
+    error : 'Server error.',
+    data : [] });
   }
 };
 
 exports.self_enquiry = async (req, res) => {
   const { user_id } = req.body;
 
-  if (!user_id) {
-    return res.status(400).json({ success: false, message: 'User ID is required.' });
+  if (!user_id || isNaN(user_id)) {
+    return res.status(400).json({ result : "0", error: 'User ID is required and it must be an Integer.' , data : [] });
   }
+
+  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+    if (exist_user.length === 0) 
+    {return res.status(404).json({ success: "0", 
+    error: 'User not found.',
+    data : [] });}
+
+    const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE user_id = ?`, [user_id]);
+    if (exist_enquire.length === 0) 
+    {return res.status(404).json({ success: "0", 
+    error: 'You Enquiry is not found.',
+    data : [] });}
+
 
   try {
     const [rows] = await db.query(
@@ -194,9 +301,9 @@ exports.self_enquiry = async (req, res) => {
     );
 
     return res.json({
-      success: true,
+      success: "1",
       count: rows.length,
-      enquiries: rows
+      data : rows
     });
 
   } catch (err) {
@@ -207,14 +314,61 @@ exports.self_enquiry = async (req, res) => {
 
 exports.declineForm = async (req, res) => {
   try {
-    const [rows] = await db.query(`
-      SELECT declining_enquire_id, name 
-      FROM declining_enquire
+    let { page = 1 } = req.body;
+    let limit = 10;
+
+    if(isNaN(page)){
+      return res.status(400).json({
+        result : "0",
+        error : "error page is only in Integer",
+        data : []
+      })
+    }
+
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
+
+    const offset = (page - 1) * limit;
+    const [[{ total }]] = await db.query(`
+      SELECT COUNT(*) as total FROM declining_enquire
     `);
+
+    const totalPages = Math.ceil(total / limit);
+    if (total === 0) {
+      return res.json({
+        result: "0",
+        error: "No records found",
+        data: [],
+        current_page: page,
+        per_page: limit,
+        total_records: total,
+        total_pages: totalPages
+      });
+    }
+    if (page > totalPages) {
+      return res.json({
+        result: "0",
+        error: "Page not found",
+        data: [],
+        current_page: page,
+        per_page: limit,
+        total_records: total,
+        total_pages: totalPages
+      });
+    }
+    const [rows] = await db.query(`
+      SELECT declining_enquire_id, name
+      FROM declining_enquire
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
 
     return res.json({
       result: "1",
-      data: rows
+      data: rows,
+      current_page: page,
+      per_page: limit,
+      total_records: total,
+      total_pages: totalPages
     });
 
   } catch (err) {
@@ -228,23 +382,24 @@ exports.declineForm = async (req, res) => {
 };
 
 exports.declineFormpara = async (req, res) => {
-  const { name } = req.body;
-  if (!name) {
-    return res.status(400).json({
-      result: "0",
-      error: "Name is required",
-      data: []
-    });
-  }
-
   try {
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({
+        result: "0",
+        error: "Name is required",
+        data: []
+      });
+    }
+
     const [rows] = await db.query(
       `SELECT para FROM declining_enquire WHERE name = ?`,
       [name]
     );
 
     if (!rows.length) {
-      return res.status(404).json({
+      return res.json({
         result: "0",
         error: "No matching record found",
         data: []
@@ -257,10 +412,10 @@ exports.declineFormpara = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Decline Form error:", err);
+    console.error("Decline Form Para error:", err);
     return res.status(500).json({
       result: "0",
-      error: err.message,
+      error: "Server error: " + err.message,
       data: []
     });
   }
@@ -269,12 +424,17 @@ exports.declineFormpara = async (req, res) => {
 exports.declineEnquiry = async (req, res) => {
   const { enquire_id, user_posts_id, custom_para } = req.body;
 
-  if (!enquire_id) {
+  if (!enquire_id || isNaN(enquire_id)) {
     return res.status(400).json({
       success: false,
-      message: "enquire_id is required."
+      message: "enquire_id is required and it must be an Integer."
     });
   }
+  const [exist_user_post] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ?`, [user_posts_id]);
+    if (exist_user_post.length === 0) 
+    {return res.status(404).json({ success: "0", 
+    error: 'User post is not found.',
+    data : [] });}
 
   try {
     const [check] = await db.query("SELECT enquire_id FROM enquiries WHERE enquire_id = ?",
@@ -282,8 +442,9 @@ exports.declineEnquiry = async (req, res) => {
     );
     if (check.length === 0) {
       return res.status(404).json({
-        success: false,
-        message: "Enquiry not found."
+        success: "0",
+        error: "Enquiry not found.",
+        data : []
       });
     }
 
@@ -292,8 +453,9 @@ exports.declineEnquiry = async (req, res) => {
     );
     if (alreadyDeclined.length > 0) {
       return res.status(400).json({
-        success: false,
-        message: "You have already declined this enquiry."
+        result: "0",
+        error: "You have already declined this enquiry.",
+        data : []
       });
     }
 
@@ -303,8 +465,9 @@ exports.declineEnquiry = async (req, res) => {
       );
       if (postCheck.length === 0) {
         return res.status(404).json({
-          success: false,
-          message: "User post not found."
+          result: "0",
+          error: "User post not found.",
+          data : []
         });
       }
     }
@@ -313,7 +476,8 @@ exports.declineEnquiry = async (req, res) => {
       [enquire_id, user_posts_id, custom_para]
     );
 
-    res.json({ success: true, message: "Enquiry declined successfully." });
+    res.json({ result: "1",
+       message: "Enquiry declined successfully." });
 
   } catch (err) {
     console.error("Decline Enquiry Error:", err);
