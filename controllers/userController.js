@@ -99,16 +99,7 @@ exports.getInterest = async (req, res) => {
     limit = parseInt(10);
     const offset = (page - 1) * limit;
 
-    if (totalCount === 0 || page > totalPages) {
-      return res.json({
-        result: "0",
-        error: "No records found",
-        data: [],
-        totalPages,
-        nxtpage: 0,
-        recCnt: totalCount
-      });
-    }
+    
 
     const [results] = await db.query(`
       SELECT land_categorie_id, land_type_id, name, image 
@@ -120,6 +111,16 @@ exports.getInterest = async (req, res) => {
     const totalCount = countResult[0].total;
     const totalPages = Math.ceil(totalCount / limit);
     const nextPage = page < totalPages ? page + 1 : 0;
+    if (totalCount === 0 || page > totalPages) {
+      return res.json({
+        result: "0",
+        error: "No records found",
+        data: [],
+        totalPages,
+        nxtpage: 0,
+        recCnt: totalCount
+      });
+    }
 
     res.json({
       result: "1",
