@@ -99,8 +99,6 @@ exports.getInterest = async (req, res) => {
     limit = parseInt(10);
     const offset = (page - 1) * limit;
 
-    
-
     const [results] = await db.query(`
       SELECT land_categorie_id, land_type_id, name, image 
       FROM land_categories 
@@ -1757,15 +1755,14 @@ exports.search = async (req, res) => {
       [land_type_id, min_price, max_price, `%${locality}%`]
     );
 
-    // If no posts found
-    if (!rows.length) {
+    if (rows.length === 0) {
       return res.status(200).json({
-        result: "1", // Keep 1 for success
+        result: "0",
+        error : "No data are fount",
         data: []
       });
     }
 
-    // Replace null with empty string
     const sanitizedRows = rows.map(row => {
       const cleanRow = {};
       for (const key in row) {

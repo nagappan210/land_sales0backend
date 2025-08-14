@@ -37,14 +37,6 @@ exports.register = async (req, res) => {
       });
     }
 
-    if (isNaN(phone_num)) {
-      return res.status(400).json({
-        result: "0",
-        error: "phone_num must be an integer",
-        data: []
-      });
-    }
-
     const [existingUsers] = await db.query(
       'SELECT * FROM users WHERE phone_num = ?',
       [phone_num]
@@ -306,13 +298,6 @@ exports.contact = async (req, res) => {
       });
     }
 
-    if (whatsapp_num && isNaN(whatsapp_num)) {
-      return res.status(400).json({
-        result: "0",
-        error: "whatsapp_num must be a number.",
-        data: []
-      });
-    }
 
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({
