@@ -3694,7 +3694,7 @@
   });
 
   // UPDATE NOTIFICATION SETTINGS
-  const  update_notificationForm = document.getElementById('update_notification');
+  const update_notificationForm = document.getElementById('update_notification');
   update_notificationForm.addEventListener('submit', async function (e) {
     e.preventDefault();
 
@@ -3702,7 +3702,15 @@
     const data = {};
 
     formData.forEach((value, key) => {
-      if (value) data[key] = value;
+      if (key === 'allow_notification') {
+        if (value.toLowerCase() === 'true') {
+          data[key] = true;
+        } else if (value.toLowerCase() === 'false') {
+          data[key] = false;
+        }
+      } else {
+        if (value) data[key] = value;
+      }
     });
 
     try {
@@ -3715,7 +3723,6 @@
       });
 
       const json = await res.json();
-
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
       window.location.href = 'response.html';
     } catch (err) {

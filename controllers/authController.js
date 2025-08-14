@@ -27,22 +27,22 @@ const sendOTPEmail = async (to, otp) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, phone_num, device_id , device_type, device_token } = req.body;
+    const { name, phone_num, device_id, device_type, device_token } = req.body;
 
     if (!name || !phone_num || !device_id || !device_token || !device_type) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         result: "0",
-        error: "Name,phone_num,device_id,device_token and device_type are required",
+        error: "Name, phone_num, device_id, device_token and device_type are required",
         data: []
       });
     }
 
     if (isNaN(phone_num)) {
-    return res.status(400).json({
+      return res.status(400).json({
         result: "0",
-        error: "phone_num must be a Integer",
+        error: "phone_num must be an integer",
         data: []
-    });
+      });
     }
 
     const [existingUsers] = await db.query(
@@ -51,7 +51,7 @@ exports.register = async (req, res) => {
     );
 
     if (existingUsers.length > 0) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         result: "0",
         error: "User already exists. Please login.",
         data: []
@@ -65,20 +65,19 @@ exports.register = async (req, res) => {
     const [insertResult] = await db.query(
       `INSERT INTO users (name, phone_num, otp, otp_created_at, allow_notification, notification_settings, user_interest, device_id, device_type, device_token) 
        VALUES (?, ?, ?, NOW(), TRUE, ?, ?, ?, ?, ?)`,
-      [name, phone_num, otp, defaultNotificationSettings, defaultUserInterests, device_id , device_type, device_token]
+      [name, phone_num, otp, defaultNotificationSettings, defaultUserInterests, device_id, device_type, device_token]
     );
 
-    console.log(`OTP for ${phone_num}: ${otp}`);
-
-    res.json({ 
+    res.json({
       result: "1",
-      error : "",
+      error: "",
       data: [
         {
           user_id: insertResult.insertId,
           name,
           phone_num,
-          otp_sent: true
+          otp_sent: true,
+          otp 
         }
       ]
     });
@@ -104,11 +103,11 @@ exports.login = async (req, res) => {
       });
     }
     if (isNaN(phone_num)) {
-    return res.status(400).json({
+      return res.status(400).json({
         result: "0",
-        error: "phone_num must be a Integer",
+        error: "phone_num must be an integer",
         data: []
-    });
+      });
     }
 
     const [users] = await db.query('SELECT * FROM users WHERE phone_num = ?', [phone_num]);
@@ -128,15 +127,14 @@ exports.login = async (req, res) => {
       [otp, phone_num]
     );
 
-    console.log(`${action === 'resend' ? 'Resent' : 'Sent'} OTP for ${phone_num}: ${otp}`);
-
     res.json({
       result: "1",
       error: "",
       data: [
         {
           phone_num,
-          otp_sent: true
+          otp_sent: true,
+          otp 
         }
       ]
     });
@@ -291,7 +289,6 @@ exports.contact = async (req, res) => {
       });
     }
 
-
     const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (existing_user.length === 0) {
       return res.status(400).json({
@@ -325,7 +322,6 @@ exports.contact = async (req, res) => {
       });
     }
 
-    // Duplicate check for WhatsApp number
     if (whatsapp_num) {
       const [existingWhatsApp] = await db.query(
         "SELECT U_ID FROM users WHERE whatsapp_num = ? AND U_ID != ?",
@@ -340,7 +336,6 @@ exports.contact = async (req, res) => {
       }
     }
 
-    // Duplicate check for email
     if (email) {
       const [existingEmail] = await db.query(
         "SELECT U_ID FROM users WHERE email = ? AND U_ID != ?",
@@ -402,7 +397,8 @@ exports.contact = async (req, res) => {
           user_id,
           whatsapp_num: whatsapp_num || "",
           email: email || "",
-          otp_sent: true
+          otp_sent: true,
+          otp 
         }
       ]
     });
@@ -416,8 +412,6 @@ exports.contact = async (req, res) => {
     });
   }
 };
-
-
 
 exports.deactivate_or_restore_user = async (req, res) => {
   try {
