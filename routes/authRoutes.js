@@ -11,6 +11,8 @@ const landTypeController = require('../controllers/postController');
 const videoController = require('../controllers/videoController');
 const enquireController = require('../controllers/enquireController');
 
+const adminController = require('../admin conrollers/userlist');
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploaded/profile_images');
@@ -93,6 +95,8 @@ router.post('/poststep3',landTypeController.createPostStep3);
 // router.post('/poststep4',landTypeController.createPostStep4);
 router.post('/poststep5',landTypeController.createPostStep5);
 router.post('/poststep6', uploads,  videoController.createPostStep6);
+router.post('/poststep7',videoController.createPostStep7);
+router.post('/laststep',videoController.laststep);
 // router.post('/publishpost',videoController.publishPost);
 
 router.post('/save_property', userController.save_property);
@@ -126,5 +130,7 @@ router.post('/getInterestedSearchers',userController.getInterestedSearchers);
 
 router.post('/declineForm',enquireController.declineForm);
 router.post('/declineFormpara',enquireController.declineFormpara);
+
+router.get('/getusertable',adminController.getusertable);
 
 module.exports = router;

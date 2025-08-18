@@ -42,12 +42,12 @@ exports.getNotificationSettings = async (req, res) => {
 
 exports.updateNotificationSettings = async (req, res) => {
   try {
-    const { user_id, allow_notification, notification_ids } = req.body;
+    let { user_id, allow_notification, notification_ids } = req.body;
 
     if (!user_id || isNaN(user_id)) {
       return res.status(400).json({
         result: "0",
-        error: "user_id is required and it must be an Integer",
+        error: "user_id is required and must be an integer",
         data: []
       });
     }
@@ -60,16 +60,8 @@ exports.updateNotificationSettings = async (req, res) => {
         data: []
       });
     }
-
-    if (typeof allow_notification !== "boolean") {
-      return res.status(400).json({
-        result: "0",
-        error: "allow_notification must be a boolean value: true or false",
-        data: []
-      });
-    }
-
-    if (allow_notification === false) {
+    allow_notification = parseInt(allow_notification, 10);
+    if (allow_notification === 0) {
       await db.query(
         `UPDATE users SET allow_notification = FALSE, notification_settings = NULL WHERE U_ID = ?`,
         [user_id]
@@ -80,39 +72,47 @@ exports.updateNotificationSettings = async (req, res) => {
         data: [{ message: "All notifications disabled." }]
       });
     }
+    if (allow_notification === 1) {
+      let settingsArray = [];
 
-    let settingsArray = [];
-    if (typeof notification_ids === "string" && notification_ids.trim()) {
-      settingsArray = notification_ids.split(",").map(id => parseInt(id.trim(), 10));
-    } else if (Array.isArray(notification_ids)) {
-      settingsArray = notification_ids.map(id => parseInt(id, 10));
-    }
+      if (typeof notification_ids === "string" && notification_ids.trim()) {
+        settingsArray = notification_ids.split(",").map(id => parseInt(id.trim(), 10));
+      } else if (Array.isArray(notification_ids)) {
+        settingsArray = notification_ids.map(id => parseInt(id, 10));
+      }
 
-    const validNumbers = [1, 2, 3, 4, 5];
+      const validNumbers = [1, 2, 3, 4, 5];
 
-    if (settingsArray.length === 0) {
-      settingsArray = validNumbers;
-    }
+      if (settingsArray.length === 0) {
+        settingsArray = validNumbers;
+      }
+      if (!settingsArray.every(num => validNumbers.includes(num))) {
+        return res.status(400).json({
+          result: "0",
+          error: "Invalid notification_ids. Allowed values are 1,2,3,4,5 only.",
+          data: []
+        });
+      }
 
-    if (!settingsArray.every(num => validNumbers.includes(num))) {
-      return res.status(400).json({
-        result: "0",
-        error: "Invalid notification_ids. Allowed values are 1,2,3,4,5 only.",
-        data: []
+      settingsArray = [...new Set(settingsArray)];
+      const settings = settingsArray.join(",");
+
+      await db.query(
+        `UPDATE users SET allow_notification = TRUE, notification_settings = ? WHERE U_ID = ?`,
+        [settings, user_id]
+      );
+
+      return res.json({
+        result: "1",
+        error: "",
+        data: [{ message: "Notification settings updated.", settings: settingsArray }]
       });
     }
 
-    settingsArray = [...new Set(settingsArray)];
-    const settings = settingsArray.join(",");
-
-    await db.query(
-      `UPDATE users SET allow_notification = TRUE, notification_settings = ? WHERE U_ID = ?`,
-      [settings, user_id]
-    );
-
-    return res.json({
-      result: "1",
-      data: [{ message: "Notification settings updated." }]
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid allow_notification value. Use 0 or 1 only.",
+      data: []
     });
 
   } catch (err) {
@@ -123,5 +123,6 @@ exports.updateNotificationSettings = async (req, res) => {
     });
   }
 };
+
 
 

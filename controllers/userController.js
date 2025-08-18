@@ -114,9 +114,9 @@ exports.getInterest = async (req, res) => {
         result: "0",
         error: "No records found",
         data: [],
-        totalPages,
+        totalPages : 0,
         nxtpage: 0,
-        recCnt: totalCount
+        recCnt: 0
       });
     }
 
@@ -150,7 +150,8 @@ exports.updateUserInterest = async (req, res) => {
       return res.status(400).json({
         result: "0",
         error: "user_id is required and must be a valid number.",
-        message: "Failed to update interest."
+        message: "Failed to update interest.",
+        data : []
       });
     }
 
@@ -170,7 +171,8 @@ exports.updateUserInterest = async (req, res) => {
       return res.status(400).json({
         result: "0",
         error: "Invalid interest values provided.",
-        message: "Failed to update interest."
+        message: "Failed to update interest.",
+        data : []
       });
     }
 
@@ -187,7 +189,8 @@ exports.updateUserInterest = async (req, res) => {
       return res.status(404).json({
         result: "0",
         error: "User not found.",
-        message: "No update occurred."
+        message: "No update occurred.",
+        data : []
       });
     }
 
@@ -201,7 +204,8 @@ exports.updateUserInterest = async (req, res) => {
     return res.status(500).json({
       result: "0",
       error: err.message,
-      message: "Server error occurred."
+      message: "Server error occurred.",
+      data : []
     });
   }
 };
@@ -381,7 +385,6 @@ exports.getProfileStats = async (req, res) => {
 
     return res.json({
       result: "1",
-      error: "",
       data: [normalizeProfile(profile)]
     });
 
@@ -562,7 +565,10 @@ exports.getFollowData = async (req, res) => {
       return res.status(400).json({
         result: "0",
         error: "Invalid status. Use 1 for followers or 2 for following.",
-        data: []
+        data: [] ,
+        recCnt : 0,
+      totalPages : 0,
+      nxtpage
       });
     }
 
@@ -583,7 +589,6 @@ exports.getFollowData = async (req, res) => {
 
     res.json({
       result: "1",
-      error: "",
       data,
       recCnt: totalCount,
       totalPages,
@@ -594,7 +599,10 @@ exports.getFollowData = async (req, res) => {
     res.status(500).json({
       result: "0",
       error: err.message,
-      data: []
+      data: [],
+      recCnt : 0,
+      totalPages : 0,
+      nxtpage
     });
   }
 };
@@ -934,17 +942,7 @@ exports.getDraftPosts = async (req, res) => {
     );
 
     const [rows] = await db.query(
-      `SELECT 
-        property_name,
-        city,
-        locality,
-        property_area,
-        price,
-        description,
-        amenities,
-        facing_direction,
-        video,
-        created_at
+      `SELECT  user_post_id, property_name, city, locality, property_area, price, description, amenities, facing_direction, video, created_at , draft
       FROM user_posts
       WHERE U_ID = ?
         AND status = 'draft' 
@@ -957,6 +955,7 @@ exports.getDraftPosts = async (req, res) => {
     
 
     const normalizedData = rows.map(post => ({
+      user_post_id : post.user_post_id ?? "",
       property_name: post.property_name ?? "",
       city: post.city ?? "",
       locality: post.locality ?? "",
@@ -966,7 +965,9 @@ exports.getDraftPosts = async (req, res) => {
       amenities: post.amenities ?? "",
       facing_direction: post.facing_direction ?? "",
       video: post.video ?? "",
-      created_at: post.created_at ?? ""
+      created_at: post.created_at ?? "",
+      draft : post.draft ?? ""
+
     }));
 
     if(rows.length === 0){
@@ -1469,7 +1470,8 @@ exports.add_firstcomment = async (req, res) => {
 };
 
 exports.getcomment = async (req, res) => {
-  const { user_post_id } = req.body;
+  const { user_post_id, page = 1 } = req.body;
+  const limit = 10;
 
   if (!user_post_id) {
     return res.status(400).json({
@@ -1478,27 +1480,41 @@ exports.getcomment = async (req, res) => {
       data: []
     });
   }
-  
-  const [exist_post] = await db.query (`select * from user_posts where user_post_id = ?`, [user_post_id]);
-  if(exist_post.length === 0){
+
+  const [exist_post] = await db.query(
+    `SELECT * FROM user_posts WHERE user_post_id = ?`,
+    [user_post_id]
+  );
+  if (exist_post.length === 0) {
     return res.status(400).json({
-        result: "0",
-        error: "user post not fount in database",
-        data: []
-      });
+      result: "0",
+      error: "user post not found in database",
+      data: []
+    });
   }
 
-  
   try {
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const offset = (pageNum - 1) * limitNum;
+
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) AS total
+       FROM post_comments
+       WHERE user_post_id = ? AND replies_comment_id IS NULL`,
+      [user_post_id]
+    );
+
     const [comments] = await db.query(
       `SELECT c.comment_id, c.user_id, c.comment, c.created_at,
-              u.username, u.profile_image,
-              (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.comment_id) AS like_count
+      u.username, u.profile_image,
+      (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.comment_id) AS like_count
        FROM post_comments c
        JOIN users u ON c.user_id = u.U_ID
        WHERE c.user_post_id = ? AND c.replies_comment_id IS NULL
-       ORDER BY c.created_at DESC`,
-      [user_post_id]
+       ORDER BY c.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [user_post_id, limitNum, offset]
     );
 
     const normalizedComments = comments.map(comment => ({
@@ -1512,19 +1528,22 @@ exports.getcomment = async (req, res) => {
       replies: comment.replies ?? []
     }));
 
-    if(comments.length === 0){
+    if (comments.length === 0) {
       return res.status(400).json({
         result: "0",
-        error: "no dats in database",
+        error: "no data in database",
+        pagination: { totalPages: 0, nxtpage: 0, recCnt: 0 },
         data: []
       });
     }
-    
 
     res.json({
       result: "1",
-      error: "",
-      data: normalizedComments
+      data: normalizedComments,
+      totalPages: Math.ceil(total / limitNum),
+      nxtpage: pageNum < Math.ceil(total / limitNum) ? pageNum + 1 : 0,
+      recCnt: total,
+      
     });
 
   } catch (err) {
@@ -1532,14 +1551,15 @@ exports.getcomment = async (req, res) => {
     res.status(500).json({
       result: "0",
       error: "Internal server error",
+      totalPages: 0, nxtpage: 0, recCnt: 0 ,
       data: []
     });
   }
 };
 
 exports.getreplay_comment = async (req, res) => {
-  const { comment_id } = req.body;
-
+  const { comment_id, page = 1 } = req.body;
+  const limit = 10;
   if (!comment_id || isNaN(comment_id)) {
     return res.status(400).json({
       result: "0",
@@ -1548,16 +1568,30 @@ exports.getreplay_comment = async (req, res) => {
     });
   }
 
-  const [exist_comment] = await db.query(`select * from post_comments where comment_id = ?`,[comment_id]);
-  if(exist_comment.length === 0){
+  const [exist_comment] = await db.query(
+    `SELECT * FROM post_comments WHERE comment_id = ?`,
+    [comment_id]
+  );
+  if (exist_comment.length === 0) {
     return res.status(400).json({
-      result : "0",
-      error : "comment id is not existing in database",
-      data : []
+      result: "0",
+      error: "comment id is not existing in database",
+      data: []
     });
   }
 
   try {
+    const pageNum = parseInt(page, 10) || 1;
+    const limitNum = parseInt(limit, 10) || 10;
+    const offset = (pageNum - 1) * limitNum;
+
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) AS total
+       FROM post_comments
+       WHERE replies_comment_id = ?`,
+      [comment_id]
+    );
+
     const [replies] = await db.query(
       `SELECT c.comment_id, c.user_id, c.comment, c.created_at,
               u.username, u.profile_image,
@@ -1565,8 +1599,9 @@ exports.getreplay_comment = async (req, res) => {
        FROM post_comments c
        JOIN users u ON c.user_id = u.U_ID
        WHERE c.replies_comment_id = ?
-       ORDER BY c.created_at ASC`,
-      [comment_id]
+       ORDER BY c.created_at ASC
+       LIMIT ? OFFSET ?`,
+      [comment_id, limitNum, offset]
     );
 
     const normalized = replies.map(r => ({
@@ -1581,8 +1616,11 @@ exports.getreplay_comment = async (req, res) => {
 
     res.json({
       result: "1",
-      error: "",
-      data: normalized
+      data: normalized,
+      totalPages: Math.ceil(total / limitNum),
+      nxtpage: pageNum < Math.ceil(total / limitNum) ? pageNum + 1 : 0,
+      recCnt: total
+      
     });
 
   } catch (err) {
@@ -1590,6 +1628,7 @@ exports.getreplay_comment = async (req, res) => {
     res.status(500).json({
       result: "0",
       error: "Internal server error",
+      totalPages: 0, nxtpage: 0, recCnt: 0,
       data: []
     });
   }

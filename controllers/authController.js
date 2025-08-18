@@ -85,7 +85,7 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { action, phone_num } = req.body;
+    const { phone_num } = req.body;
 
     if (!phone_num) {
       return res.status(400).json({
@@ -120,9 +120,9 @@ exports.login = async (req, res) => {
     );
 
     res.json({
-      result: "1",
-      error: "",
-      data: [
+      result : "1",
+      error : "",
+      data : [
         {
           phone_num,
           otp_sent: true,
@@ -248,7 +248,6 @@ exports.verifyOtp = async (req, res) => {
 
     res.json({
       result: "1",
-      error : "",
       data: [{
         user_id: user.U_ID ?? 0,
         name: user.name ?? "",
@@ -376,7 +375,6 @@ exports.contact = async (req, res) => {
 
     return res.json({
       result: "1",
-      error: "",
       data: [
         {
           user_id,
@@ -429,8 +427,6 @@ exports.deactivate_or_restore_user = async (req, res) => {
       return res.json({
         result: "1",
         message: "User account deactivated for 30 days.",
-        error: "",
-        data: []
       });
 
     } else if (status === 2) {
@@ -445,16 +441,14 @@ exports.deactivate_or_restore_user = async (req, res) => {
       if (result.affectedRows === 0) {
         return res.status(400).json({
           result: "0",
-          message: "Account cannot be restored or already deleted permanently.",
-          error: "",
+          error: "Account cannot be restored or already deleted permanently.",
           data: []
         });
       }
 
       return res.json({
         result: "1",
-        message: "User account restored successfully.",
-        error: "",
+        error: "User account restored successfully.",
         data: []
       });
 

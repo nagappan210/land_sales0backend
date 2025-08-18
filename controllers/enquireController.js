@@ -34,7 +34,7 @@ exports.land_categories = async (req, res) => {
 
     if (rows.length === 0) {
       return res.json({
-        success: "0",
+        result : "0",
         error: "No data in database",
         data: [],
         currentPage: page,
@@ -44,7 +44,7 @@ exports.land_categories = async (req, res) => {
     }
 
     res.json({
-      success: "1",
+      result : "1",
       error: "",
       categories: rows,
       currentPage: page,
@@ -54,7 +54,7 @@ exports.land_categories = async (req, res) => {
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({
-      success: "0",
+      result : "0",
       error: "Server error.",
       data: []
     });
@@ -98,35 +98,28 @@ exports.land_categories_para = async (req, res) => {
 };
 
 exports.enquire = async (req, res) => {
-  const {
-    user_id,
-    recever_posts_id,
-    land_type_id,
-    land_categorie_id,
-    name,
-    phone_num,
-    whatsapp_num,
-    email,
-    land_category_para
-  } = req.body;
+  const { user_id, recever_posts_id, land_type_id, land_categorie_id, name, phone_num, whatsapp_num, email, land_category_para } = req.body;
 
   if (!user_id || !recever_posts_id || !land_categorie_id || !name || !land_type_id) {
     return res.status(400).json({
-      success: false,
-      message: 'Required fields: user_id, recever_posts_id, land_type_id, land_categorie_id, and name.'
+      result : "0" ,
+      error : 'Required fields: user_id, recever_posts_id, land_type_id, land_categorie_id, and name.',
+      data : []
     });
   }
 
   if (phone_num && (!Number.isInteger(Number(phone_num)) || Number(phone_num) <= 0)) {
     return res.status(400).json({
-      success: false,
-      message: 'phone_num must be a positive integer.'
+      result : "0",
+      error: 'phone_num must be a integer.',
+      data : []
     });
   }
   if (whatsapp_num && (!Number.isInteger(Number(whatsapp_num)) || Number(whatsapp_num) <= 0)) {
     return res.status(400).json({
-      success: false,
-      message: 'whatsapp_num must be a positive integer.'
+      result : "0",
+      error : 'whatsapp_num must be a integer.',
+      data : []
     });
   }
 
@@ -159,12 +152,12 @@ exports.enquire = async (req, res) => {
 
     if (existing.length > 0) {
       return res.status(409).json({
-        success: false,
-        message: 'You have already submitted an enquiry for this post.'
+        result : "0",
+        error: 'You have already submitted an enquiry for this post.',
+        data :[]
       });
     }
 
-    // Insert enquiry
     await db.query(
       `INSERT INTO enquiries
         (user_id, recever_posts_id, land_type_id, land_categorie_id, name, phone_number, whatsapp_num, email, land_category_para)
@@ -182,11 +175,11 @@ exports.enquire = async (req, res) => {
       ]
     );
 
-    return res.json({ success: true, message: 'Enquiry submitted successfully.' });
+    return res.json({ result : "1", message: 'Enquiry submitted successfully.' });
 
   } catch (err) {
     console.error('Enquiry error:', err);
-    return res.status(500).json({ success: false, message: 'Server error.' });
+    return res.status(500).json({ result : "0", error: 'Server error.', data : [] });
   }
 };
 
@@ -201,13 +194,13 @@ exports.my_leads = async (req, res) => {
   }
   const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (exist_user.length === 0) 
-    {return res.status(404).json({ success: "0", 
+    {return res.status(404).json({ result : "0", 
     error: 'User not found.',
     data : [] });}
 
     const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE recever_posts_id = ?`, [user_id]);
     if (exist_enquire.length === 0) 
-    {return res.status(404).json({ success: "0", 
+    {return res.status(404).json({ result : "0", 
     error: 'User Enquire is not found.',
     data : [] });}
 
@@ -266,13 +259,13 @@ exports.self_enquiry = async (req, res) => {
 
   const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (exist_user.length === 0) 
-    {return res.status(404).json({ success: "0", 
+    {return res.status(404).json({ result : "0", 
     error: 'User not found.',
     data : [] });}
 
     const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE user_id = ?`, [user_id]);
     if (exist_enquire.length === 0) 
-    {return res.status(404).json({ success: "0", 
+    {return res.status(404).json({ result : "0", 
     error: 'You Enquiry is not found.',
     data : [] });}
 
@@ -301,14 +294,14 @@ exports.self_enquiry = async (req, res) => {
     );
 
     return res.json({
-      success: "1",
+      result : "1",
       count: rows.length,
       data : rows
     });
 
   } catch (err) {
     console.error('Fetch my enquiries error:', err);
-    return res.status(500).json({ success: false, message: 'Server error.' });
+    return res.status(500).json({ result : "0", error : 'Server error.' , data : [] });
   }
 };
 
@@ -426,13 +419,14 @@ exports.declineEnquiry = async (req, res) => {
 
   if (!enquire_id || isNaN(enquire_id)) {
     return res.status(400).json({
-      success: false,
-      message: "enquire_id is required and it must be an Integer."
+      result : "0",
+      error : "enquire_id is required and it must be an Integer.",
+      data : []
     });
   }
   const [exist_user_post] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ?`, [user_posts_id]);
     if (exist_user_post.length === 0) 
-    {return res.status(404).json({ success: "0", 
+    {return res.status(404).json({ result : "0", 
     error: 'User post is not found.',
     data : [] });}
 
@@ -442,7 +436,7 @@ exports.declineEnquiry = async (req, res) => {
     );
     if (check.length === 0) {
       return res.status(404).json({
-        success: "0",
+        result : "0",
         error: "Enquiry not found.",
         data : []
       });
@@ -481,7 +475,7 @@ exports.declineEnquiry = async (req, res) => {
 
   } catch (err) {
     console.error("Decline Enquiry Error:", err);
-    res.status(500).json({ success: false, message: "Server error." });
+    res.status(500).json({ result : "0", error : "Server error." , data : []});
   }
 };
 
@@ -523,10 +517,10 @@ exports.getDeclinedEnquiries = async (req, res) => {
 
     const [rows] = await db.query(sql, values);
 
-    res.json({ success: true, data: rows });
+    res.json({ result : "1", data: rows });
 
   } catch (err) {
     console.error("Get Declined Enquiries Error:", err);
-    res.status(500).json({ success: false, message: "Server error." });
+    res.status(500).json({ result: "0", error: "Server error.", data : [] });
   }
 };

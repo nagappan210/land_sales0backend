@@ -1,6 +1,5 @@
 const db = require('../db');
 
-
 // exports.getAllLandTypes = async (req, res) => {
 //   try {
 //     const [results] = await db.query('SELECT * FROM land_types');
@@ -41,45 +40,59 @@ const {status} = req.body;
 };
 
 exports.createPostStep1 = async (req, res) => {
-  const { user_id, user_type } = req.body;
-
-  if (!user_id || !user_type) {
-    return res.status(400).json({
-      result: "0",
-      error: "user_id and user_type are required.",
-      data: []
-    });
-  }
-  const [exist_user] = await db.query (`select * from users where U_ID = ?`,[user_id]);
-      if(exist_user.length === 0 ){
-        return res.status(400).json({
-          result : "0",
-          error : "User does not existing in database",
-          data : []
-        })
-      }
-
-  if (!['owner', 'broker'].includes(user_type.toLowerCase())) {
-    return res.status(400).json({
-      result: "0",
-      error: 'Invalid user_type. Must be "owner" or "broker".',
-      data: []
-    });
-  }
-
   try {
+    let { user_id, user_type, user_post_id } = req.body;
+    user_id = Number(user_id);
+    user_type = Number(user_type);
+    user_post_id = Number(user_post_id);
+    const draft = 1
+
+    if (!user_id || isNaN(user_id) || ![0, 1].includes(user_type)) {
+      return res.status(400).json({
+        result: "0",
+        error: "user_id is required and user_type must be 0 or 1.",
+        data: []
+      });
+    }
+
+    const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+    if (exist_user.length === 0) {
+      return res.status(400).json({
+        result: "0",
+        error: "User does not exist in database",
+        data: []
+      });
+    }
+    let exist_post = [];
+    if (user_post_id) {
+      [exist_post] = await db.query(
+        `SELECT * FROM user_posts WHERE user_post_id = ? AND U_ID = ?`,
+        [user_post_id, user_id]
+      );
+    }
+
+    if (exist_post.length > 0) {
+      await db.query(
+        `UPDATE user_posts SET user_type = ?, updated_at = NOW() WHERE user_post_id = ? AND U_ID = ?`,
+        [user_type, user_post_id, user_id]
+      );
+
+      return res.json({
+        result: "1",
+        message: "Step 1 completed: Existing post updated.",
+        data: { post_id: user_post_id }
+      });
+    }
+
     const [result] = await db.query(
-      `INSERT INTO user_posts (U_ID, user_type, status) VALUES (?, ?, 'draft')`,
-      [user_id, user_type]
+      `INSERT INTO user_posts (U_ID, user_type, status , draft) VALUES (?, ?, 'draft' , ?)`,
+      [user_id, user_type , draft]
     );
 
     return res.status(201).json({
       result: "1",
-      error: "",
-      message: "Step 1 completed: User type saved.",
-      data: {
-        post_id: result.insertId
-      }
+      message: "Step 1 completed: New post created.",
+      data: { post_id: result.insertId }
     });
 
   } catch (err) {
@@ -109,13 +122,15 @@ exports.createPostStep2 = async (req, res) => {
           data : []
         })
       }
+  
+    const draft = 2;
 
   try {
     const [result] = await db.query(`
       UPDATE user_posts 
-      SET land_type_id = ?, land_categorie_id = ?, updated_at = NOW() 
+      SET land_type_id = ?, land_categorie_id = ?, updated_at = NOW() , draft = ?
       WHERE U_ID = ? AND user_post_id = ? AND deleted_at is null
-    `, [status, land_categorie_id, user_id , user_post_id]);
+    `, [status, land_categorie_id, draft, user_id , user_post_id]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ 
@@ -127,7 +142,7 @@ exports.createPostStep2 = async (req, res) => {
 
     res.json({ 
       result : "1",
-      error : "Step 2 completed: Land type and category updated.",
+      message : "Step 2 completed: Land type and category updated.",
       data : []
     });
 } 
@@ -150,6 +165,7 @@ exports.createPostStep3 = async (req, res) => {
       data: []
     });
   }
+  const draft = 3
 
   try {
 
@@ -172,9 +188,9 @@ exports.createPostStep3 = async (req, res) => {
 
     const [updateResult] = await db.query(
       `UPDATE user_posts 
-       SET country = ?, state = ?, city = ?, locality = ?, latitude = ?, longitude = ?, updated_at = NOW() 
+       SET country = ?, state = ?, city = ?, locality = ?, latitude = ?, longitude = ?, updated_at = NOW() , draft = ?
        WHERE U_ID = ? AND user_post_id = ?`,
-      [country, state, city, locality, latitude, longitude, user_id, user_post_id]
+      [country, state, city, locality, latitude, longitude, draft,  user_id, user_post_id]
     );
 
     if (updateResult.affectedRows === 0) {
@@ -187,7 +203,7 @@ exports.createPostStep3 = async (req, res) => {
 
     res.json({
       result: "1",
-      error: "Step 3 completed: Location saved.",
+      message : "Step 3 completed: Location saved.",
       data: []
     });
 
@@ -199,7 +215,6 @@ exports.createPostStep3 = async (req, res) => {
     });
   }
 };
-
 
 // exports.createPostStep4 = async (req, res) => {
 //   const {
@@ -336,10 +351,11 @@ exports.createPostStep3 = async (req, res) => {
 exports.createPostStep5 = async (req, res) => {
   const { user_id,user_post_id, price } = req.body;
 
+  const draft = 5;
   try {
     const [result] = await db.query(
-      `UPDATE user_posts SET price = ?, updated_at = NOW() WHERE U_ID = ? and user_post_id =?`,
-      [price || 0, user_id , user_post_id]
+      `UPDATE user_posts SET price = ?, updated_at = NOW() , draft = ? WHERE U_ID = ? and user_post_id = ?`,
+      [price || 0, draft , user_id , user_post_id]
     );
 
     if (result.affectedRows === 0) {
