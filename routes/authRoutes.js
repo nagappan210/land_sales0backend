@@ -11,7 +11,7 @@ const landTypeController = require('../controllers/postController');
 const videoController = require('../controllers/videoController');
 const enquireController = require('../controllers/enquireController');
 
-const adminController = require('../admin conrollers/userlist');
+
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -131,6 +131,5 @@ router.post('/getInterestedSearchers',userController.getInterestedSearchers);
 router.post('/declineForm',enquireController.declineForm);
 router.post('/declineFormpara',enquireController.declineFormpara);
 
-router.get('/getusertable',adminController.getusertable);
 
 module.exports = router;

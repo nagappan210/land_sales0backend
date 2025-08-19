@@ -49,19 +49,35 @@
       </thead>
       <tbody>
         <tr class="border-t">
+          <td class="p-3">User ID</td>
+          <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+          <td class="p-3">user_id</td>
+          <td class="p-3">No</td>
+          <td class="p-3">int</td>
+          <td class="p-3">1</td>
+        </tr>
+        <tr class="border-t">
           <td class="p-3">Name</td>
           <td class="p-3"><input type="text" name="name" class="w-full border rounded p-2" /></td>
           <td class="p-3">name</td>
-          <td class="p-3">Yes</td>
+          <td class="p-3">No</td>
           <td class="p-3">string</td>
           <td class="p-3">Nagappan</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">Country Code</td>
+          <td class="p-3"><input type="text" name="phone_num_cc" class="w-full border rounded p-2" /></td>
+          <td class="p-3">phone_num_cc</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">string</td>
+          <td class="p-3">+91</td>
         </tr>
         <tr class="border-t">
           <td class="p-3">Mobile</td>
           <td class="p-3"><input type="text" name="phone_num" class="w-full border rounded p-2" /></td>
           <td class="p-3">phone_num</td>
           <td class="p-3">Yes</td>
-          <td class="p-3">Int</td>
+          <td class="p-3">string</td>
           <td class="p-3">9898989898</td>
         </tr>
         <tr class="border-t">
@@ -139,12 +155,44 @@
       </thead>
       <tbody>
         <tr class="border-t">
+          <td class="p-3">Country Code</td>
+          <td class="p-3"><input type="text" name="phone_num_cc" class="w-full border rounded p-2" /></td>
+          <td class="p-3">phone_num_cc</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">string</td>
+          <td class="p-3">+91</td>
+        </tr>
+        <tr class="border-t">
           <td class="p-3">Mobile</td>
           <td class="p-3"><input type="text" name="phone_num" class="w-full border rounded p-2" /></td>
           <td class="p-3">phone_num</td>
           <td class="p-3">Yes</td>
           <td class="p-3">Int</td>
           <td class="p-3">123456789</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">Device Id</td>
+          <td class="p-3"><input type="text" name="device_id" class="w-full border rounded p-2" /></td>
+          <td class="p-3">device_id</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">string</td>
+          <td class="p-3">device_id</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">Device Type</td>
+          <td class="p-3"><input type="text" name="device_type" class="w-full border rounded p-2" /></td>
+          <td class="p-3">device_type</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">string</td>
+          <td class="p-3">device_type</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">Device Token</td>
+          <td class="p-3"><input type="text" name="device_token" class="w-full border rounded p-2" /></td>
+          <td class="p-3">device_token</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">string</td>
+          <td class="p-3">device_token</td>
         </tr>
         <tr>
           <td colspan="6" class="text-center p-4">
@@ -198,12 +246,28 @@
       </thead>
       <tbody>
         <tr class="border-t">
+          <td class="p-3">Country Code <br> Mobile Number</td>
+          <td class="p-3"><input type="text" name="phone_num_cc" class="w-full border rounded p-2" /></td>
+          <td class="p-3">phone_num_cc</td>
+          <td class="p-3">No</td>
+          <td class="p-3">string</td>
+          <td class="p-3">+91</td>
+        </tr>
+        <tr class="border-t">
           <td class="p-3">Mobile</td>
           <td class="p-3"><input type="text" name="phone_num" class="w-full border rounded p-2" /></td>
           <td class="p-3">phone_num</td>
           <td class="p-3">Yes</td>
           <td class="p-3">Int</td>
           <td class="p-3">123456789</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">Country Code <br> Whatsapp Number</td>
+          <td class="p-3"><input type="text" name="whatsapp_num_cc" class="w-full border rounded p-2" /></td>
+          <td class="p-3">whatsapp_num_cc</td>
+          <td class="p-3">No</td>
+          <td class="p-3">string</td>
+          <td class="p-3">+91</td>
         </tr>
         <tr class="border-t">
           <td class="p-3">whatsapp Number</td>
@@ -288,6 +352,14 @@
           <td class="p-3">Yes</td>
           <td class="p-3">int</td>
           <td class="p-3">1</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">Country Code <br> whatsapp Number</td>
+          <td class="p-3"><input type="text" name="whatsapp_num_cc" class="w-full border rounded p-2" /></td>
+          <td class="p-3">whatsapp_num_cc</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">string</td>
+          <td class="p-3">+91</td>
         </tr>
         <tr class="border-t">
           <td class="p-3">Whatsapp Number</td>
@@ -3529,11 +3601,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3557,11 +3629,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3583,11 +3655,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3611,11 +3683,11 @@
 
     const json = await res.json();
     sessionStorage.setItem('registerResponse', JSON.stringify(json));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
   } catch (err) {
     const errorObj = { error: err.message };
     sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
   }
 });
 
@@ -3644,11 +3716,11 @@
       console.log('Response:', json);
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
   
@@ -3675,11 +3747,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       console.error('Error:', err);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3706,11 +3778,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3739,11 +3811,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
 });
 
@@ -3761,11 +3833,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3792,11 +3864,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3823,11 +3895,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3857,11 +3929,11 @@
       const json = await res.json();
       console.log(json); 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3889,11 +3961,11 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3920,11 +3992,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3951,12 +4023,12 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -3983,12 +4055,12 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4017,12 +4089,12 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4051,12 +4123,12 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4085,12 +4157,12 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4121,11 +4193,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4156,11 +4228,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4191,11 +4263,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4273,13 +4345,13 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       console.error(err);
       alert("Error: " + err.message);
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4349,11 +4421,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4384,11 +4456,11 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4419,12 +4491,12 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       const errorObj = { error: err.message };
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4458,12 +4530,12 @@
 
       const json = await res.json();
         sessionStorage.setItem('registerResponse', JSON.stringify(json));
-        window.location.href = 'response';
+        window.location.href = 'response.html';
 
     }catch (err) {
         const errorObj = { error: err.message };
         sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-        window.location.href = 'response';
+        window.location.href = 'response.html';
       }
   });
 
@@ -4497,12 +4569,12 @@
 
       const json = await res.json();
         sessionStorage.setItem('registerResponse', JSON.stringify(json));
-        window.location.href = 'response';
+        window.location.href = 'response.html';
 
     }catch (err) {
         const errorObj = { error: err.message };
         sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-        window.location.href = 'response';
+        window.location.href = 'response.html';
       }
   });
 
@@ -4536,12 +4608,12 @@
 
       const json = await res.json();
         sessionStorage.setItem('registerResponse', JSON.stringify(json));
-        window.location.href = 'response';
+        window.location.href = 'response.html';
 
     }catch (err) {
         const errorObj = { error: err.message };
         sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
-        window.location.href = 'response';
+        window.location.href = 'response.html';
       }
   });
 
@@ -4572,7 +4644,7 @@
 
       const json = await res.json();
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
@@ -4581,7 +4653,7 @@
   });
   function showError(message) {
     sessionStorage.setItem('registerResponse', JSON.stringify({ error: message }));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
   }
 
   //COUNT LIKE
@@ -4614,12 +4686,12 @@
     const json = await res.json();
 
     sessionStorage.setItem('registerResponse', JSON.stringify(json));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
 
   } catch (err) {
     console.error("Request failed:", err.message);
     sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
   }
 });
 
@@ -4660,12 +4732,12 @@
     }
 
     sessionStorage.setItem('registerResponse', JSON.stringify(json));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
 
   } catch (err) {
     console.error("Request failed:", err.message);
     sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
   }
 });
 
@@ -4702,12 +4774,12 @@
     const json = await res.json();
 
     sessionStorage.setItem('registerResponse', JSON.stringify(json));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
 
   } catch (err) {
     console.error("Request failed:", err.message);
     sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
   }
 });
   
@@ -4744,12 +4816,12 @@
     const json = await res.json();
 
     sessionStorage.setItem('registerResponse', JSON.stringify(json));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
 
   } catch (err) {
     console.error("Request failed:", err.message);
     sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
   }
 });
 
@@ -4786,12 +4858,12 @@
     const json = await res.json();
 
     sessionStorage.setItem('registerResponse', JSON.stringify(json));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
 
   } catch (err) {
     console.error("Request failed:", err.message);
     sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-    window.location.href = 'response';
+    window.location.href = 'response.html';
   }
 });
 
@@ -4821,12 +4893,12 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4856,12 +4928,12 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4891,12 +4963,12 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4926,12 +4998,12 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4961,12 +5033,12 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -4996,12 +5068,12 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -5031,12 +5103,12 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -5066,12 +5138,12 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -5101,12 +5173,12 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 
@@ -5136,12 +5208,12 @@
       const json = await res.json();
 
       sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
 
     } catch (err) {
       console.error("Request failed:", err.message);
       sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      window.location.href = 'response';
+      window.location.href = 'response.html';
     }
   });
 

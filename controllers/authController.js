@@ -27,53 +27,110 @@ const sendOTPEmail = async (to, otp) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, phone_num, device_id, device_type, device_token } = req.body;
+    const { user_id , name, phone_num_cc, phone_num, device_id, device_type, device_token } = req.body;
 
-    if (!name || !phone_num || !device_id || !device_token || !device_type) {
-      return res.status(400).json({
+    if (!phone_num_cc || !phone_num || !device_id || !device_token || !device_type) {
+      return res.status(200).json({
         result: "0",
-        error: "Name, phone_num, device_id, device_token and device_type are required",
+        error: "All fields are required",
         data: []
       });
     }
-
-    const [existingUsers] = await db.query(
-      'SELECT * FROM users WHERE phone_num = ?',
-      [phone_num]
-    );
-
-    if (existingUsers.length > 0) {
-      return res.status(400).json({
-        result: "0",
-        error: "User already exists. Please login.",
-        data: []
-      });
-    }
-
     const otp = generateOTP();
-    const defaultNotificationSettings = '1,2,3,4,5';
-    const defaultUserInterests = '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18';
 
-    const [insertResult] = await db.query(
-      `INSERT INTO users (name, phone_num, otp, otp_created_at, allow_notification, notification_settings, user_interest, device_id, device_type, device_token) 
-       VALUES (?, ?, ?, NOW(), TRUE, ?, ?, ?, ?, ?)`,
-      [name, phone_num, otp, defaultNotificationSettings, defaultUserInterests, device_id, device_type, device_token]
-    );
+    if (user_id) {
+      const [existingUser] = await db.query("SELECT * FROM users WHERE U_ID = ?", [user_id]);
 
-    res.json({
-      result: "1",
-      error: "",
-      data: [
-        {
-          user_id: insertResult.insertId,
+      if (!existingUser.length) {
+        return res.status(200).json({
+          result: "0",
+          error: "User not found for update.",
+          data: []
+        });
+      }
+
+      await db.query(
+        `UPDATE users 
+         SET  phone_num = ?, phone_num_cc = ?, otp = ?, otp_created_at = now(), device_id = ?, device_type = ?, device_token = ?
+         WHERE U_ID = ?`,
+        [phone_num, phone_num_cc, otp, device_id, device_type, device_token, user_id]
+      );
+
+      return res.json({
+        result: "1",
+        error: "",
+        data: [
+          {
+            user_id: user_id,
+            phone_num_cc,
+            phone_num,
+            updated: true,
+            otp
+          }
+        ]
+      });
+    } else {
+      const [existingUsers] = await db.query(
+        "SELECT * FROM users WHERE phone_num = ?",
+        [phone_num]
+      );
+
+      if (existingUsers.length > 0) {
+        return res.status(200).json({
+          result: "0",
+          error: "User already exists. Please login.",
+          data: []
+        });
+      }
+
+      const [lastUser] = await db.query("SELECT U_ID FROM users ORDER BY U_ID DESC LIMIT 1");
+
+      let newUserName;
+      if (lastUser.length > 0) {
+        const lastId = lastUser[0].U_ID;
+        const nextId = lastId + 1;
+        newUserName = `user${String(nextId).padStart(3, "0")}`;
+      } else {
+        newUserName = "user001";
+      }
+
+      
+      const defaultNotificationSettings = "1,2,3,4,5";
+      const defaultUserInterests = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
+
+      const [insertResult] = await db.query(
+        `INSERT INTO users 
+        (name, username, phone_num, otp, phone_num_cc, otp_created_at, allow_notification, notification_settings, user_interest, device_id, device_type, device_token) 
+        VALUES (?, ?, ?, ?, ?, NOW(), TRUE, ?, ?, ?, ?, ?)`,
+        [
           name,
+          newUserName,
           phone_num,
-          otp_sent: true,
-          otp 
-        }
-      ]
-    });
+          otp,
+          phone_num_cc,
+          defaultNotificationSettings,
+          defaultUserInterests,
+          device_id,
+          device_type,
+          device_token
+        ]
+      );
 
+      return res.json({
+        result: "1",
+        error: "",
+        data: [
+          {
+            user_id: insertResult.insertId,
+            name: newUserName,
+            phone_num_cc,
+            phone_num,
+            otp_sent: true,
+            otp
+          }
+        ]
+      });
+    }
   } catch (err) {
     return res.status(500).json({
       result: "0",
@@ -85,48 +142,68 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   try {
-    const { phone_num } = req.body;
+    const { phone_num, phone_num_cc } = req.body;
 
-    if (!phone_num) {
-      return res.status(400).json({
+    if (!phone_num || !phone_num_cc) {
+      return res.status(200).json({
         result: "0",
-        error: "Phone number is required.",
-        data: []
-      });
-    }
-    if (isNaN(phone_num)) {
-      return res.status(400).json({
-        result: "0",
-        error: "phone_num must be an integer",
+        error: "All fields are required.",
         data: []
       });
     }
 
-    const [users] = await db.query('SELECT * FROM users WHERE phone_num = ?', [phone_num]);
+    // Check user
+    const [users] = await db.query(
+      'SELECT * FROM users WHERE phone_num = ? AND phone_num_cc = ?',
+      [phone_num, phone_num_cc]
+    );
 
     if (users.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "User not found. Please register.",
         data: []
       });
     }
 
+    const user = users[0];
+
+    // If OTP already exists, don't regenerate
+    if (user.otp) {
+      return res.status(200).json({
+        result: "0",
+        error: "OTP already sent. Please verify.",
+        data: []
+      });
+    }
+
+    // Generate new OTP
     const otp = generateOTP();
 
-    await db.query(
-      'UPDATE users SET otp = ?, otp_created_at = NOW() WHERE phone_num = ?',
-      [otp, phone_num]
+    const [row] = await db.query(
+      'UPDATE users SET otp = ?, otp_created_at = NOW() WHERE U_ID = ? AND otp IS NULL',
+      [otp, user.U_ID]
     );
 
-    res.json({
-      result : "1",
-      error : "",
-      data : [
+    if (row.affectedRows === 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "OTP already exists, please use the existing one.",
+        data: []
+      });
+    }
+
+    // Success
+    return res.status(200).json({
+      result: "1",
+      error: "",
+      data: [
         {
+          user_id: user.U_ID,
+          phone_num_cc,
           phone_num,
           otp_sent: true,
-          otp 
+          otp
         }
       ]
     });
@@ -142,59 +219,45 @@ exports.login = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   try {
-    const { phone_num, whatsapp_num, email, otp } = req.body;
+    const { phone_num, whatsapp_num, email, otp, phone_num_cc, whatsapp_num_cc } = req.body;
 
     if (!otp) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "OTP is required.",
         data: []
       });
     }
 
-    if (phone_num && isNaN(phone_num)) {
-      return res.status(400).json({
-        result: "0",
-        error: "phone_num must be a number",
-        data: []
-      });
-    }
-    if (whatsapp_num && isNaN(whatsapp_num)) {
-      return res.status(400).json({
-        result: "0",
-        error: "whatsapp_num must be a number",
-        data: []
-      });
-    }
     if (isNaN(otp)) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
-        error: "OTP must be a number",
+        error: "OTP must be a number.",
         data: []
       });
     }
 
     let query, value;
     if (whatsapp_num) {
-      query = "SELECT * FROM users WHERE whatsapp_num = ?";
-      value = whatsapp_num;
+      query = "SELECT * FROM users WHERE whatsapp_num = ? AND whatsapp_num_cc = ?";
+      value = [whatsapp_num, whatsapp_num_cc];
     } else if (phone_num) {
-      query = "SELECT * FROM users WHERE phone_num = ?";
-      value = phone_num;
+      query = "SELECT * FROM users WHERE phone_num = ? AND phone_num_cc = ?";
+      value = [phone_num, phone_num_cc];
     } else if (email) {
       query = "SELECT * FROM users WHERE email = ?";
-      value = email;
+      value = [email];
     } else {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "Phone number, WhatsApp number, or Email is required.",
         data: []
       });
     }
 
-    const [users] = await db.query(query, [value]);
+    const [users] = await db.query(query, value);
     if (!users.length) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "User not found.",
         data: []
@@ -204,7 +267,7 @@ exports.verifyOtp = async (req, res) => {
     const user = users[0];
 
     if (!user.otp || !user.otp_created_at) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "No OTP generated. Please request again.",
         data: []
@@ -213,24 +276,24 @@ exports.verifyOtp = async (req, res) => {
 
     const now = new Date();
     const created = new Date(user.otp_created_at);
-    const diff = Math.floor((now - created) / 1000); 
+    const diff = Math.floor((now - created) / 1000);
 
-    if (diff > 300) { 
+    if (diff > 300) {
       await db.query(
         `UPDATE users SET otp = NULL, otp_created_at = NULL WHERE U_ID = ?`,
         [user.U_ID]
       );
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "OTP expired. Please request a new one.",
         data: []
       });
     }
 
-    if (user.otp !== otp) {
-      return res.status(401).json({
+    if (String(user.otp) !== String(otp)) {
+      return res.status(200).json({
         result: "0",
-        error: "Invalid OTP or already resent.",
+        error: "Invalid OTP.",
         data: []
       });
     }
@@ -246,17 +309,37 @@ exports.verifyOtp = async (req, res) => {
       { expiresIn: "30d" }
     );
 
-    res.json({
+    if(phone_num && phone_num_cc){
+      res.json({
       result: "1",
+      error: "",
       data: [{
-        user_id: user.U_ID ?? 0,
+        user_id: user.U_ID,
         name: user.name ?? "",
+        phone_num_cc : user.phone_num_cc ?? "",
         phone_num: user.phone_num ?? "",
         whatsapp_num: user.whatsapp_num ?? "",
         email: user.email ?? "",
         token
       }]
     });
+    }
+    else{
+      res.json({
+      result: "1",
+      error: "",
+      data: [{
+        user_id: user.U_ID,
+        name: user.name ?? "",
+        phone_num_cc : user.phone_num_cc ?? "",
+        phone_num: user.phone_num ?? "",
+        whatsapp_num: user.whatsapp_num ?? "",
+        email: user.email ?? ""
+        
+      }]
+    });
+    }
+
 
   } catch (err) {
     console.error("Verify OTP error:", err);
@@ -270,10 +353,10 @@ exports.verifyOtp = async (req, res) => {
 
 exports.contact = async (req, res) => {
   try {
-    const { email, whatsapp_num, user_id } = req.body;
+    const { email, whatsapp_num, user_id, whatsapp_num_cc } = req.body;
 
     if (!user_id || isNaN(user_id)) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "user_id is required and it must be an integer",
         data: []
@@ -282,37 +365,36 @@ exports.contact = async (req, res) => {
 
     const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (existing_user.length === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "User does not exist in table",
         data: []
       });
     }
 
-    if (!email && !whatsapp_num) {
-      return res.status(400).json({
+    if (!email && !whatsapp_num && !whatsapp_num_cc) {
+      return res.status(200).json({
         result: "0",
-        error: "whatsapp_num or email is required.",
+        error: "whatsapp_num, country code or email is required.",
         data: []
       });
     }
 
-
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "Invalid email format.",
         data: []
       });
     }
 
-    if (whatsapp_num) {
+    if (whatsapp_num && whatsapp_num_cc) {
       const [existingWhatsApp] = await db.query(
-        "SELECT U_ID FROM users WHERE whatsapp_num = ? AND U_ID != ?",
-        [whatsapp_num, user_id]
+        "SELECT U_ID FROM users WHERE whatsapp_num = ? AND whatsapp_num_cc = ? AND U_ID != ?",
+        [whatsapp_num, whatsapp_num_cc, user_id]
       );
       if (existingWhatsApp.length > 0) {
-        return res.status(400).json({
+        return res.status(200).json({
           result: "0",
           error: "WhatsApp number already in use.",
           data: []
@@ -326,7 +408,7 @@ exports.contact = async (req, res) => {
         [email, user_id]
       );
       if (existingEmail.length > 0) {
-        return res.status(400).json({
+        return res.status(200).json({
           result: "0",
           error: "Email already in use.",
           data: []
@@ -335,7 +417,6 @@ exports.contact = async (req, res) => {
     }
 
     const otp = generateOTP();
-    console.log("Generated OTP:", otp);
 
     let updateFields = [];
     let values = [];
@@ -343,6 +424,10 @@ exports.contact = async (req, res) => {
     if (whatsapp_num) {
       updateFields.push("whatsapp_num = ?");
       values.push(whatsapp_num);
+    }
+    if (whatsapp_num_cc) {
+      updateFields.push("whatsapp_num_cc = ?");
+      values.push(whatsapp_num_cc);
     }
     if (email) {
       updateFields.push("email = ?");
@@ -357,7 +442,7 @@ exports.contact = async (req, res) => {
 
     const [result] = await db.query(query, values);
     if (result.affectedRows === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "User not found or update failed.",
         data: []
@@ -367,7 +452,6 @@ exports.contact = async (req, res) => {
     if (email) {
       try {
         await sendOTPEmail(email, otp);
-        console.log("Email sent to:", email);
       } catch (e) {
         console.error("Error sending email:", e);
       }
@@ -378,10 +462,11 @@ exports.contact = async (req, res) => {
       data: [
         {
           user_id,
+          whatsapp_num_cc: whatsapp_num_cc || "",
           whatsapp_num: whatsapp_num || "",
           email: email || "",
           otp_sent: true,
-          otp 
+          otp
         }
       ]
     });
@@ -401,19 +486,19 @@ exports.deactivate_or_restore_user = async (req, res) => {
     const { user_id, status } = req.body;
 
     if (!user_id || !status) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "user_id and status are required",
         data: []
       });
     }
-    
-    const [exist_user] = await db.query (`select * from users where U_ID = ?`,[user_id]);
-    if(exist_user.length === 0 ){
-      return res.status(400).json({
-        result : "0",
-        error : "User does not existing in database",
-        data : []
+
+    const [exist_user] = await db.query(`select * from users where U_ID = ?`, [user_id]);
+    if (exist_user.length === 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "User does not existing in database",
+        data: []
       })
     }
 
@@ -439,7 +524,7 @@ exports.deactivate_or_restore_user = async (req, res) => {
       );
 
       if (result.affectedRows === 0) {
-        return res.status(400).json({
+        return res.status(200).json({
           result: "0",
           error: "Account cannot be restored or already deleted permanently.",
           data: []
@@ -453,7 +538,7 @@ exports.deactivate_or_restore_user = async (req, res) => {
       });
 
     } else {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "Invalid status. Use 1 for deactivate, 2 for activate.",
         data: []

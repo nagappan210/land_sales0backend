@@ -12,7 +12,10 @@ app.use(express.json());
 
 
 const authRoutes = require('./routes/authRoutes');
+const adminRoutes = require('./admin_routes/adminRoutes')
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/admin', adminRoutes);
+
 app.use('/uploaded', express.static('uploaded'));
 
 app.use("/webform", (req, res)=>{
