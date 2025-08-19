@@ -4,9 +4,8 @@ require('dotenv').config();
 exports.getusertable = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT U_ID, name, profile_image , username, phone_num FROM users where deleted_at is  `
+      `SELECT U_ID, name, profile_image , username, phone_num FROM users where deleted_at is null and otp is null  `
     );
-
     res.json({ result: "1", error: "", data: rows});
   } catch (err) {
     console.error("Error fetching user table:", err);

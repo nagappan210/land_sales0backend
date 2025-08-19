@@ -96,7 +96,7 @@ exports.getInterest = async (req, res) => {
     let { page = 1 } = req.body;
 
     page = parseInt(page);
-    limit = parseInt(10);
+    limit = parseInt(30);
     const offset = (page - 1) * limit;
 
     const [results] = await db.query(`

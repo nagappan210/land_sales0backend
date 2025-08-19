@@ -64,7 +64,6 @@ exports.register = async (req, res) => {
             user_id: user_id,
             phone_num_cc,
             phone_num,
-            updated: true,
             otp
           }
         ]
@@ -125,7 +124,6 @@ exports.register = async (req, res) => {
             name: newUserName,
             phone_num_cc,
             phone_num,
-            otp_sent: true,
             otp
           }
         ]
@@ -152,7 +150,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Check user
+    
     const [users] = await db.query(
       'SELECT * FROM users WHERE phone_num = ? AND phone_num_cc = ?',
       [phone_num, phone_num_cc]
@@ -168,11 +166,11 @@ exports.login = async (req, res) => {
 
     const user = users[0];
 
-    // If OTP already exists, don't regenerate
+   
     if (user.otp) {
       return res.status(200).json({
         result: "0",
-        error: "OTP already sent. Please verify.",
+        error: "User doesn't exist. please register",
         data: []
       });
     }
@@ -202,7 +200,6 @@ exports.login = async (req, res) => {
           user_id: user.U_ID,
           phone_num_cc,
           phone_num,
-          otp_sent: true,
           otp
         }
       ]
@@ -316,6 +313,7 @@ exports.verifyOtp = async (req, res) => {
       data: [{
         user_id: user.U_ID,
         name: user.name ?? "",
+        username: user.username ?? "",
         phone_num_cc : user.phone_num_cc ?? "",
         phone_num: user.phone_num ?? "",
         whatsapp_num: user.whatsapp_num ?? "",
@@ -331,6 +329,7 @@ exports.verifyOtp = async (req, res) => {
       data: [{
         user_id: user.U_ID,
         name: user.name ?? "",
+        username: user.username ?? "",
         phone_num_cc : user.phone_num_cc ?? "",
         phone_num: user.phone_num ?? "",
         whatsapp_num: user.whatsapp_num ?? "",
