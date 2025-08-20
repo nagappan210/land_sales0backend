@@ -14,8 +14,9 @@ exports.getusertable = async (req, res) => {
 };
 
 exports.edituser = async (req, res) => {
-  const { user_id, name, username, profile_image } = req.body;
-
+  const { user_id, name, phone_num, username, profile_image } = req.body;
+  
+  
   if (!user_id) {
     return res.status(400).json({
       result: "0",
@@ -29,8 +30,8 @@ exports.edituser = async (req, res) => {
     const values = [];
     if (username !== undefined) {
       const [existing] = await db.query(
-        `SELECT * FROM users WHERE username = ?`,
-        [username]
+        `SELECT * FROM users WHERE username = ? AND U_ID != ?`,
+        [username,user_id]
       );
 
       if (existing.length > 0) {
@@ -48,6 +49,11 @@ exports.edituser = async (req, res) => {
     if (name !== undefined) {
       fields.push("name = ?");
       values.push(name);
+    }
+
+    if (phone_num !== undefined) {
+      fields.push("phone_num = ?");
+      values.push(phone_num);
     }
 
     if (profile_image !== undefined) {

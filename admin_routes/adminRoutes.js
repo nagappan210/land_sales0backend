@@ -19,7 +19,7 @@ const upload = multer({ storage });
 
 
 router.get('/getusertable', adminController.getusertable);
-router.post('/edituser', upload.single('profile_image'), adminController.edituser);
+router.post('/edituser/:user_id', upload.single('profile_image'), adminController.edituser);
 router.post('/deleteuser/:user_id', adminController.deleteuser);
 
 module.exports = router;

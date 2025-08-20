@@ -42,7 +42,7 @@ const db = require('../db');
 //   }
 // };
 
-exports.post_user_details = async (req, res) => {
+exports.location = async (req, res) => {
   try {
     const { user_id, country, state, cities, pincode , latitude , longitude } = req.body;
 
@@ -72,7 +72,7 @@ exports.post_user_details = async (req, res) => {
     }
 
     await db.query(
-      `UPDATE users SET country = ?, state = ?, cities = ?, pincode = ? , latitude = ? , longitude = ? WHERE U_ID = ?`,
+      `UPDATE users SET country = ?, state = ?, cities = ?, pincode = ? , latitude = ? , longitude = ? , location_page = 1 WHERE U_ID = ?`,
       [country || "", state || "", cities || "", pincode || "", latitude || "" , longitude || "" , user_id]
     );
 
@@ -96,8 +96,10 @@ exports.getInterest = async (req, res) => {
     let { page = 1 } = req.body;
 
     page = parseInt(page);
-    limit = parseInt(30);
+    const limit = 30;
     const offset = (page - 1) * limit;
+
+   
 
     const [results] = await db.query(`
       SELECT land_categorie_id, land_type_id, name, image 
@@ -109,12 +111,13 @@ exports.getInterest = async (req, res) => {
     const totalCount = countResult[0].total;
     const totalPages = Math.ceil(totalCount / limit);
     const nextPage = page < totalPages ? page + 1 : 0;
+
     if (totalCount === 0 || page > totalPages) {
       return res.json({
         result: "0",
         error: "No records found",
         data: [],
-        totalPages : 0,
+        totalPages: 0,
         nxtpage: 0,
         recCnt: 0
       });
@@ -123,7 +126,7 @@ exports.getInterest = async (req, res) => {
     res.json({
       result: "1",
       error: "",
-      data: results,
+      data : results,
       totalPages,
       nxtpage: nextPage,
       recCnt: totalCount
@@ -181,7 +184,7 @@ exports.updateUserInterest = async (req, res) => {
     const settingsUser = validInterests.join(",");
 
     const [result] = await db.query(
-      `UPDATE users SET user_interest = ? WHERE U_ID = ?`,
+      `UPDATE users SET user_interest = ? , interest_page = 1 WHERE U_ID = ?`,
       [settingsUser, user_id]
     );
 

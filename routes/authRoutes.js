@@ -63,7 +63,7 @@ const uploads = multer({
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/verify', authController.verifyOtp);
-router.post('/location',userController.post_user_details);
+router.post('/location',userController.location);
 
 // router.post('/add_land_category',land_categoies_upload.single('image'),userController.add_land_category)
 router.post('/getInterest',userController.getInterest);

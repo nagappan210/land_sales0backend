@@ -27,7 +27,7 @@ const sendOTPEmail = async (to, otp) => {
 
 exports.register = async (req, res) => {
   try {
-    const { user_id , name, phone_num_cc, phone_num, device_id, device_type, device_token } = req.body;
+    const { user_id, name, phone_num_cc, phone_num, device_id, device_type, device_token } = req.body;
 
     if (!phone_num_cc || !phone_num || !device_id || !device_token || !device_type) {
       return res.status(200).json({
@@ -36,6 +36,7 @@ exports.register = async (req, res) => {
         data: []
       });
     }
+
     const otp = generateOTP();
 
     if (user_id) {
@@ -51,7 +52,8 @@ exports.register = async (req, res) => {
 
       await db.query(
         `UPDATE users 
-         SET  phone_num = ?, phone_num_cc = ?, otp = ?, otp_created_at = now(), device_id = ?, device_type = ?, device_token = ?
+         SET phone_num = ?, phone_num_cc = ?, otp = ?, otp_created_at = NOW(),
+             device_id = ?, device_type = ?, device_token = ?, flag = 1
          WHERE U_ID = ?`,
         [phone_num, phone_num_cc, otp, device_id, device_type, device_token, user_id]
       );
@@ -59,76 +61,63 @@ exports.register = async (req, res) => {
       return res.json({
         result: "1",
         error: "",
-        data: [
-          {
-            user_id: user_id,
-            phone_num_cc,
-            phone_num,
-            otp
-          }
-        ]
-      });
-    } else {
-      const [existingUsers] = await db.query(
-        "SELECT * FROM users WHERE phone_num = ?",
-        [phone_num]
-      );
-
-      if (existingUsers.length > 0) {
-        return res.status(200).json({
-          result: "0",
-          error: "User already exists. Please login.",
-          data: []
-        });
-      }
-
-      const [lastUser] = await db.query("SELECT U_ID FROM users ORDER BY U_ID DESC LIMIT 1");
-
-      let newUserName;
-      if (lastUser.length > 0) {
-        const lastId = lastUser[0].U_ID;
-        const nextId = lastId + 1;
-        newUserName = `user${String(nextId).padStart(3, "0")}`;
-      } else {
-        newUserName = "user001";
-      }
-
-      
-      const defaultNotificationSettings = "1,2,3,4,5";
-      const defaultUserInterests = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
-
-      const [insertResult] = await db.query(
-        `INSERT INTO users 
-        (name, username, phone_num, otp, phone_num_cc, otp_created_at, allow_notification, notification_settings, user_interest, device_id, device_type, device_token) 
-        VALUES (?, ?, ?, ?, ?, NOW(), TRUE, ?, ?, ?, ?, ?)`,
-        [
-          name,
-          newUserName,
-          phone_num,
-          otp,
-          phone_num_cc,
-          defaultNotificationSettings,
-          defaultUserInterests,
-          device_id,
-          device_type,
-          device_token
-        ]
-      );
-
-      return res.json({
-        result: "1",
-        error: "",
-        data: [
-          {
-            user_id: insertResult.insertId,
-            name: newUserName,
-            phone_num_cc,
-            phone_num,
-            otp
-          }
-        ]
+        data: [{ user_id, phone_num_cc, phone_num, otp }]
       });
     }
+
+    const [existingUsers] = await db.query("SELECT * FROM users WHERE phone_num = ?", [phone_num]);
+    if (existingUsers.length > 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "User already exists. Please login.",
+        data: []
+      });
+    }
+
+    const [lastUser] = await db.query("SELECT U_ID FROM users ORDER BY U_ID DESC LIMIT 1");
+    let newUserName;
+    if (lastUser.length > 0) {
+      const lastId = lastUser[0].U_ID;
+      const nextId = lastId + 1;
+      newUserName = `user${String(nextId).padStart(3, "0")}`;
+    } else {
+      newUserName = "user001";
+    }
+
+    const defaultNotificationSettings = "1,2,3,4,5";
+    const defaultUserInterests = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
+
+    const [insertResult] = await db.query(
+      `INSERT INTO users 
+       (name, username, phone_num, otp, phone_num_cc, otp_created_at, allow_notification, notification_settings, user_interest, device_id, device_type, device_token, flag) 
+       VALUES (?, ?, ?, ?, ?, NOW(), TRUE, ?, ?, ?, ?, ?, 1)`,
+      [
+        name,
+        newUserName,
+        phone_num,
+        otp,
+        phone_num_cc,
+        defaultNotificationSettings,
+        defaultUserInterests,
+        device_id,
+        device_type,
+        device_token
+      ]
+    );
+
+    return res.json({
+      result: "1",
+      error: "",
+      data: [
+        {
+          user_id: insertResult.insertId,
+          name: newUserName,
+          phone_num_cc,
+          phone_num,
+          otp
+        }
+      ]
+    });
   } catch (err) {
     return res.status(500).json({
       result: "0",
@@ -167,7 +156,7 @@ exports.login = async (req, res) => {
     const user = users[0];
 
    
-    if (user.otp) {
+    if (user.flag) {
       return res.status(200).json({
         result: "0",
         error: "User doesn't exist. please register",
@@ -175,11 +164,10 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate new OTP
     const otp = generateOTP();
 
     const [row] = await db.query(
-      'UPDATE users SET otp = ?, otp_created_at = NOW() WHERE U_ID = ? AND otp IS NULL',
+      'UPDATE users SET otp = ?, otp_created_at = NOW() WHERE U_ID = ? AND flag = 0',
       [otp, user.U_ID]
     );
 
@@ -191,7 +179,6 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Success
     return res.status(200).json({
       result: "1",
       error: "",
@@ -275,9 +262,9 @@ exports.verifyOtp = async (req, res) => {
     const created = new Date(user.otp_created_at);
     const diff = Math.floor((now - created) / 1000);
 
-    if (diff > 300) {
+    if (diff > 30) {
       await db.query(
-        `UPDATE users SET otp = NULL, otp_created_at = NULL WHERE U_ID = ?`,
+        `UPDATE users SET otp = NULL, otp_created_at = NULL , flag = 0 WHERE U_ID = ?`,
         [user.U_ID]
       );
       return res.status(200).json({
@@ -296,9 +283,10 @@ exports.verifyOtp = async (req, res) => {
     }
 
     await db.query(
-      `UPDATE users SET otp = NULL, otp_created_at = NULL WHERE U_ID = ?`,
-      [user.U_ID]
-    );
+      `UPDATE users SET otp = NULL, otp_created_at = NULL , flag = 0 WHERE U_ID = ?`,
+      [user.U_ID])
+    ;
+    
 
     const token = jwt.sign(
       { id: user.U_ID },
@@ -316,8 +304,11 @@ exports.verifyOtp = async (req, res) => {
         username: user.username ?? "",
         phone_num_cc : user.phone_num_cc ?? "",
         phone_num: user.phone_num ?? "",
+        whatsapp_num_cc : user.whatsapp_num_cc ?? "",
         whatsapp_num: user.whatsapp_num ?? "",
         email: user.email ?? "",
+        interest_page : user.interest_page ?? "",
+        location_page : user.location_page ?? "",
         token
       }]
     });
@@ -333,8 +324,9 @@ exports.verifyOtp = async (req, res) => {
         phone_num_cc : user.phone_num_cc ?? "",
         phone_num: user.phone_num ?? "",
         whatsapp_num: user.whatsapp_num ?? "",
-        email: user.email ?? ""
-        
+        email: user.email ?? "",
+        interest_page : user.interest_page ?? "",
+        location_page : user.location_page ?? ""
       }]
     });
     }
