@@ -13,8 +13,39 @@ exports.getusertable = async (req, res) => {
   }
 };
 
+exports.adduser = async (req, res) => {
+    const { name, username, phone_num } = req.body;
+    console.log('hit');
+    
+
+    if (!name || !username || !phone_num) {
+        return res.status(400).json({
+            result: "0",
+            error: "All fields are required",
+            data: []
+        });
+    }
+
+    try {
+        const [row] = await db.query( `INSERT INTO users (name, username, phone_num) VALUES (?, ?, ?)`, [name, username, phone_num] );
+        return res.status(200).json({
+            result: "1",
+            message: "User added successfully",
+            data: { id: row.insertId, name, username, phone_num}
+        });
+    } catch (err) {
+        console.error("Error inserting user:", err);
+        return res.status(500).json({
+            result: "0",
+            error: "Server error",
+            data: []
+        });
+    }
+};
+
 exports.edituser = async (req, res) => {
-  const { user_id, name, phone_num, username, profile_image } = req.body;
+  const { user_id, name, phone_num, username } = req.body;
+  const profile_image = req.file ? req.file.filename : null;
   
   
   if (!user_id) {
