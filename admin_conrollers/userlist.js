@@ -169,3 +169,28 @@ exports.deleteuser = async (req, res) => {
     });
   }
 };
+
+exports.getuser = async (req,res) => {
+  const {user_id} = req.params;
+  try{
+    const [row] = await db.query(`select u.name, u.phone_num_cc , u.phone_num , u.whatsapp_num_cc , 
+      u.whatsapp_num , u.email ,u.country , u.state , u.cities , u.pincode , u.username ,  
+      u.bio , u.profile_image , (select count(*) from followers f where f.user_id = u.U_ID) as follower_count ,
+    (select count(*) from followers where)) from users as u join followers where U_ID = user_id `,[user_id]);
+    return res.status(200).json({
+      result : "1",
+      message : "The user profile is show sucessfully",
+      data : row[0]
+    });
+
+  }
+  catch(err){
+    console.log(err);
+    return res.status(500).json({
+      result : "0",
+      error : "Server error",
+      data : []
+    })
+    
+  }
+}

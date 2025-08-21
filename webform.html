@@ -2735,7 +2735,7 @@
           <tr class="border-t">
             <td class="p-3">Comment ID</td>
             <td class="p-3"><input type="text" name="comment_id" class="w-full border rounded p-2" /></td>
-            <td class="p-3">comment-id</td>
+            <td class="p-3">comment_id</td>
             <td class="p-3">Yes</td>
             <td class="p-3">int</td>
             <td class="p-3">1</td>
@@ -4316,13 +4316,13 @@
       console.log("Response:", json);
 
       sessionStorage.setItem("registerResponse", JSON.stringify(json));
-      window.location.href = "response";
+      window.location.href = "response.html";
 
     } catch (err) {
       console.error("Upload failed:", err);
       const errorObj = { error: err.message };
       sessionStorage.setItem("registerResponse", JSON.stringify(errorObj));
-      window.location.href = "response";
+      window.location.href = "response.html";
     } finally {
       btn.disabled = false;
       btn.textContent = "Submit";
@@ -4393,12 +4393,12 @@
       const json = await res.json();
       console.log("Response:", json);
       sessionStorage.setItem("registerResponse", JSON.stringify(json));
-      window.location.href = "response";
+      window.location.href = "response.html";
     } catch (err) {
       console.error("Upload failed:", err);
       const errorObj = { error: err.message };
       sessionStorage.setItem("registerResponse", JSON.stringify(errorObj));
-      window.location.href = "response";
+      window.location.href = "response.html";
     }
   });
 

@@ -47,7 +47,7 @@ exports.location = async (req, res) => {
     const { user_id, country, state, cities, pincode , latitude , longitude } = req.body;
 
     if (!user_id || !country || !state || !cities || !pincode || !latitude || !longitude ) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "All Filed are required",
         data: []
@@ -55,7 +55,7 @@ exports.location = async (req, res) => {
     }
 
     if(isNaN(latitude || longitude)){
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "Latitude and Longitude are in double",
         data :[]
@@ -64,17 +64,25 @@ exports.location = async (req, res) => {
 
     const [existing_user] = await db.query(`select * from users where U_ID = ?` , [user_id]);
     if(existing_user.length ===0){
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "User does not exist in table",
         data :[]
       })
     }
 
-    await db.query(
+    const [row] = await db.query(
       `UPDATE users SET country = ?, state = ?, cities = ?, pincode = ? , latitude = ? , longitude = ? , location_page = 1 WHERE U_ID = ?`,
       [country || "", state || "", cities || "", pincode || "", latitude || "" , longitude || "" , user_id]
     );
+
+    if(row.affectedRows === 0){
+      return res.status(400).json({
+        result : "0",
+        error : "Database does not updated",
+        data : []
+      });
+    }
 
     res.json({
       result: "1",
@@ -318,7 +326,14 @@ exports.updateProfile = async (req, res) => {
 
     const query = `UPDATE users SET ${updateFields.join(", ")} WHERE U_ID = ?`;
     values.push(user_id);
-    await db.query(query, values);
+    const [result] = await db.query(query, values);
+    if (result.affectedRows === 0) {
+      return res.status(400).json({
+        result : "0",
+        error : "Database does not updated",
+        data : []
+      })
+    }
 
     res.json({
       result: "1",
@@ -347,7 +362,7 @@ exports.getProfileStats = async (req, res) => {
 
   const query = `
     SELECT 
-      u.U_ID AS user_id,u.username,u.bio,u.profile_image,
+      u.U_ID AS user_id,u.username,u.name ,u.bio,u.profile_image,
       (SELECT COUNT(*) FROM user_posts 
         WHERE U_ID = u.U_ID 
           AND deleted_at IS NULL 
@@ -379,6 +394,7 @@ exports.getProfileStats = async (req, res) => {
     const normalizeProfile = (profile) => ({
       user_id: profile.user_id,
       username: profile.username || "",
+      name : profile.name || "",
       bio: profile.bio || "",
       profile_image: profile.profile_image || "",
       posts: profile.posts || 0,
@@ -455,10 +471,17 @@ exports.followUser = async (req, res) => {
         });
       }
 
-      await db.query(
+     const [result] =  await db.query(
         `INSERT INTO followers (user_id, following_id, followed_at) VALUES (?, ?, NOW())`,
         [user_id, following_id]
       );
+      if (result.affectedRows === 0) {
+      return res.status(400).json({
+        result : "0",
+        error : "Database does not updated",
+        data : []
+      })
+    }
 
       return res.json({
         result: "1",
@@ -481,10 +504,18 @@ exports.followUser = async (req, res) => {
         });
       }
 
-      await db.query(
+      const [result] = await db.query(
         `DELETE FROM followers WHERE user_id = ? AND following_id = ?`,
         [user_id, following_id]
       );
+      if (result.affectedRows === 0) {
+      return res.status(400).json({
+        result : "0",
+        error : "Database does not updated",
+        data : []
+      })
+    }
+      
 
       return res.json({
         result: "1",
@@ -650,10 +681,17 @@ exports.save_property = async (req, res) => {
 
   try {
     if (status == 1) {
-      await db.query(
+      const [result] = await db.query(
         'INSERT IGNORE INTO saved_properties (U_ID, user_post_id) VALUES (?, ?)',
         [user_id, user_post_id]
       );
+      if (result.affectedRows === 0) {
+      return res.status(400).json({
+        result : "0",
+        error : "Database does not updated",
+        data : []
+      })
+    }
       return res.json({ result : "1", 
         message: 'Property saved successfully.',
         data : []
@@ -664,6 +702,14 @@ exports.save_property = async (req, res) => {
         'DELETE FROM saved_properties WHERE U_ID = ? AND user_post_id = ?',
         [user_id, user_post_id]
       );
+      if (result.affectedRows === 0) {
+      return res.status(400).json({
+        result : "0",
+        error : "Database does not updated",
+        data : []
+      })
+    }
+      
       return res.json({ result: "1", 
         message: 'Property unsaved successfully.',
         data : []

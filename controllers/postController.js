@@ -230,7 +230,8 @@ exports.createPostStep3 = async (req, res) => {
 //     landmark_nearby, staircase_count, lift_available, fire_noc_certified, occupancy_certificate,
 //     previously_used_for, location_advantages, suitable_for_business, other_features,
 //     road_width, property_dimension, industry_type_approved, pantry_cafeteria,
-//     shop_location, kind_of_office, floors_allowed
+//     shop_location, kind_of_office, floors_allowed ,
+//     property_area , area_length , area_width
 //   } = req.body;
 
 //   if (!user_id || !user_post_id) {
@@ -255,26 +256,25 @@ exports.createPostStep3 = async (req, res) => {
 
 //     switch (land_type_id_from_db) {
 //       case 1:
-//         landTypeName = "Residential";
-//         updateQuery = `
-//           UPDATE user_posts SET 
-//             property_name = ?, bhk_type = ?, property_area = ?, area_length = ?, area_width = ?,
-//             total_floors = ?, property_floor = ?, furnishing = ?, 
-//             parking_available = ?, ownership_type = ?, availability_status = ?, 
-//             description = ?, amenities = ?, open_sides = ?, construction_done = ?, is_boundary_wall = ?,
-//             water_source = ?, flooring_type = ?, updated_at = NOW()
-//           WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL
-//         `;
-//         updateValues = [
-//           property_name || null, bhk_type || null, property_area || null, area_length || null, area_width || null,
-//           total_floors || null, property_floor || null, furnishing || null,
-//           parking_available || null, ownership_type || null, availability_status || null,
-//           description || null, amenities || null, open_sides || null, construction_done || null, is_boundary_wall || null,
-//           water_source || null, flooring_type || null,
-//           user_id, user_post_id
-//         ];
-//         break;
-
+//   landTypeName = "Residential";
+//   updateQuery = `
+//     UPDATE user_posts SET 
+//       property_name = ?, bhk_type = ?, property_area = ?, area_length = ?, area_width = ?,
+//       total_floors = ?, property_floor = ?, furnishing = ?, 
+//       parking_available = ?, ownership_type = ?, availability_status = ?, 
+//       description = ?, amenities = ?, open_sides = ?, construction_done = ?, is_boundary_wall = ?,
+//       water_source = ?, flooring_type = ?, updated_at = NOW()
+//     WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL
+//   `;
+//   updateValues = [
+//     property_name || null, bhk_type || null, Carpet_area || null, built_up_length || null, super_built_up_area || null,
+//     total_floors || null, property_floor || null, furnishing || null,
+//     parking_available || null, ownership_type || null, availability_status || null,
+//     description || null, amenities || null, open_sides || null, construction_done || null, is_boundary_wall || null,
+//     water_source || null, flooring_type || null,
+//     user_id, user_post_id
+//   ];
+//   break;
 //       case 2: 
 //         landTypeName = "Commercial";
 //         updateQuery = `

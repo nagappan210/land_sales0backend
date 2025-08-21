@@ -22,5 +22,6 @@ router.get('/getusertable', adminController.getusertable);
 router.post('/adduser', adminController.adduser);
 router.post('/edituser/:user_id', upload.single('profile_image'), adminController.edituser);
 router.post('/deleteuser/:user_id', adminController.deleteuser);
+router.post('/getuser/:user_id',adminController.getuser);
 
 module.exports = router;
