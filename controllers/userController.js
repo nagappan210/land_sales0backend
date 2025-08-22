@@ -6,11 +6,11 @@ const db = require('../db');
 //     const image = req.file ? req.file.filename : null;
 
 //     if (!land_categorie_id) {
-//       return res.status(400).json({ message: 'land_categorie_id is required.' });
+//       return res.status(200).json({ message: 'land_categorie_id is required.' });
 //     }
 
 //     if (!image) {
-//       return res.status(400).json({ message: 'Image file is required.' });
+//       return res.status(200).json({ message: 'Image file is required.' });
 //     }
 
 //     await db.query(
@@ -77,7 +77,7 @@ exports.location = async (req, res) => {
     );
 
     if(row.affectedRows === 0){
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "Database does not updated",
         data : []
@@ -158,7 +158,7 @@ exports.updateUserInterest = async (req, res) => {
     let { user_interest, user_id } = req.body;
 
     if (!user_id || isNaN(user_id)) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "user_id is required and must be a valid number.",
         message: "Failed to update interest.",
@@ -179,7 +179,7 @@ exports.updateUserInterest = async (req, res) => {
       .filter(num => Number.isInteger(num) && num >= 1 && num <= 18);
 
     if (validInterests.length === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "Invalid interest values provided.",
         message: "Failed to update interest.",
@@ -226,7 +226,7 @@ exports.getUserInterest = async (req, res) => {
     const { user_id } = req.body;
 
     if (!user_id) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "user_id is required",
         data: []
@@ -267,11 +267,10 @@ exports.getUserInterest = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
   try {
-    const { username, bio, user_id } = req.body;
-    const profile_image = req.file ? req.file.filename : null;
+    const {name , bio, user_id , profile_image } = req.body;
 
     if (!Number.isInteger(Number(user_id))) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "user_id is required and must be an integer",
         data: []
@@ -290,20 +289,9 @@ exports.updateProfile = async (req, res) => {
     const updateFields = [];
     const values = [];
 
-    if (username) {
-      const [existing] = await db.query(
-        "SELECT * FROM users WHERE username = ? AND U_ID != ?",
-        [username, user_id]
-      );
-      if (existing.length > 0) {
-        return res.status(409).json({
-          result: "0",
-          error: "Username already taken",
-          data: []
-        });
-      }
-      updateFields.push("username = ?");
-      values.push(username);
+    if (name) {
+      updateFields.push("name = ?");
+      values.push(name);
     }
 
     if (bio) {
@@ -317,7 +305,7 @@ exports.updateProfile = async (req, res) => {
     }
 
     if (updateFields.length === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "No data provided for update",
         data: []
@@ -328,7 +316,7 @@ exports.updateProfile = async (req, res) => {
     values.push(user_id);
     const [result] = await db.query(query, values);
     if (result.affectedRows === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "Database does not updated",
         data : []
@@ -347,13 +335,73 @@ exports.updateProfile = async (req, res) => {
       data: []
     });
   }
+}; 
+
+exports.updateUsername = async (req, res) => {
+  try {
+    const { user_id, username } = req.body;
+
+    if (!user_id || !username || isNaN(user_id)) {
+      return res.status(200).json({
+        result: "0",
+        error: "All fields are required",
+        data: []
+      });
+    }
+
+    const [userRows] = await db.query("SELECT * FROM users WHERE U_ID = ?", [user_id]);
+    if (userRows.length === 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "User not found",
+        data: []
+      });
+    }
+
+    const user = userRows[0];
+
+    if (user.username_updated === 1 && user.username_updated_at) {
+      const now = new Date();
+      console.log('hit');
+      
+      const diffDays = Math.floor((now - user.username_updated_at) / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 30) {
+        return res.status(200).json({
+          result: "0",
+          error: `You can only update username once every 30 days. Please try again after ${30 - diffDays} days.`,
+          data: []
+        });
+      }
+    }
+
+    await db.query(
+      `UPDATE users 
+       SET username = ?, username_updated_at = NOW(), username_updated = 1
+       WHERE U_ID = ?`,
+      [username, user_id]
+    );
+
+    return res.json({
+      result: "1",
+      error: "",
+      data: [{ user_id, username }]
+    });
+
+  } catch (err) {
+    return res.status(500).json({
+      result: "0",
+      error: err.message,
+      data: []
+    });
+  }
 };
 
 exports.getProfileStats = async (req, res) => {
   const { user_id } = req.body;
 
   if (!user_id) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_id is required",
       data: []
@@ -423,7 +471,7 @@ exports.followUser = async (req, res) => {
     status = Number(status);
 
     if (!user_id || !following_id || !status || isNaN(user_id) || isNaN(following_id)) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "user_id, following_id , status are required and it must be a Integer",
         data: []
@@ -432,7 +480,7 @@ exports.followUser = async (req, res) => {
 
     const [existing_user] = await db.query(`select * from users where U_ID =?`,[user_id]);
     if(existing_user.length === 0){
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "User is not existing in database",
         data :[]
@@ -441,7 +489,7 @@ exports.followUser = async (req, res) => {
     
     const [existing_follower] = await db.query(`select * from users where U_ID =?`,[following_id]);
     if(existing_follower.length === 0 ){
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "Follower Id is not existing in database",
         data :[]
@@ -450,7 +498,7 @@ exports.followUser = async (req, res) => {
 
 
     if (user_id === following_id) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "You can't follow yourself.",
         data: []
@@ -464,7 +512,7 @@ exports.followUser = async (req, res) => {
       );
 
       if (check.length > 0) {
-        return res.status(400).json({
+        return res.status(200).json({
           result: "0",
           error: "Already following.",
           data: []
@@ -476,7 +524,7 @@ exports.followUser = async (req, res) => {
         [user_id, following_id]
       );
       if (result.affectedRows === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "Database does not updated",
         data : []
@@ -509,7 +557,7 @@ exports.followUser = async (req, res) => {
         [user_id, following_id]
       );
       if (result.affectedRows === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "Database does not updated",
         data : []
@@ -524,7 +572,7 @@ exports.followUser = async (req, res) => {
       });
     }
 
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "Invalid status. Use 1 (follow) or 2 (unfollow).",
       data: []
@@ -544,7 +592,7 @@ exports.getFollowData = async (req, res) => {
   const limit = 50;
 
   if (!user_id || !status) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_id and status are required.",
       data: []
@@ -553,7 +601,7 @@ exports.getFollowData = async (req, res) => {
 
   const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
   if(existing_user.length === 0 ){
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error : "User is not fount in database",
       data : []
@@ -596,7 +644,7 @@ exports.getFollowData = async (req, res) => {
         WHERE f.user_id = ?`;
 
     } else {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "Invalid status. Use 1 for followers or 2 for following.",
         data: [] ,
@@ -645,7 +693,7 @@ exports.save_property = async (req, res) => {
   const { user_id, user_post_id, status } = req.body;
 
   if (!user_id || !user_post_id || typeof status === 'undefined') {
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error: 'U_ID, user_post_id, and status are required.',
       data : []
@@ -653,7 +701,7 @@ exports.save_property = async (req, res) => {
   }
 
   if(isNaN(user_id) || isNaN(user_post_id)){
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error: 'U_ID, user_post_id are must be in Integer',
       data : []
@@ -662,7 +710,7 @@ exports.save_property = async (req, res) => {
 
   const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
   if(existing_user.length === 0 ){
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error : "User is not fount in database",
       data : []
@@ -671,7 +719,7 @@ exports.save_property = async (req, res) => {
 
   const [existing_post] = await db.query(`select * from user_posts where user_post_id = ?`,[user_post_id]);
   if(existing_post.length === 0 ){
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error : "User post is not fount in database",
       data : []
@@ -686,7 +734,7 @@ exports.save_property = async (req, res) => {
         [user_id, user_post_id]
       );
       if (result.affectedRows === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "Database does not updated",
         data : []
@@ -703,7 +751,7 @@ exports.save_property = async (req, res) => {
         [user_id, user_post_id]
       );
       if (result.affectedRows === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "Database does not updated",
         data : []
@@ -716,7 +764,7 @@ exports.save_property = async (req, res) => {
       });
 
     } else {
-      return res.status(400).json({
+      return res.status(200).json({
         success: "0",
         error: 'Invalid status. Use 1 for save, 2 for unsave.',
         data :[]
@@ -757,7 +805,7 @@ exports.getSavedProperties = async (req, res) => {
   }
   const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
   if(existing_user.length === 0 ){
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error : "User is not fount in database",
       data : []
@@ -818,7 +866,7 @@ exports.getSavedProperties = async (req, res) => {
 exports.sold_status = async (req, res) => {
   const { user_id, user_post_id, status } = req.body;
   if (!user_id || !user_post_id || !status) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_id, user_post_id, and status are required.",
       data: [],
@@ -826,7 +874,7 @@ exports.sold_status = async (req, res) => {
   }
   const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
   if(existing_user.length === 0 ){
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error : "User is not fount in database",
       data : []
@@ -848,7 +896,7 @@ exports.sold_status = async (req, res) => {
                WHERE user_post_id = ? AND U_ID = ?`;
       message = "Property marked as sold.";
     } else {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "Invalid status. Use 1 for unsold, 2 for sold.",
         data: [],
@@ -892,7 +940,7 @@ exports.getsold_status = async (req, res) => {
 
   const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
   if(existing_user.length === 0 ){
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error : "User is not fount in database",
       data : []
@@ -963,7 +1011,7 @@ exports.getDraftPosts = async (req, res) => {
   const { user_id, page = 1 } = req.body;
   const limit = 10
   if (!user_id || isNaN(user_id)) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_id is required and it must be in Integer",
       data: []
@@ -971,7 +1019,7 @@ exports.getDraftPosts = async (req, res) => {
   }
   const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
   if(existing_user.length === 0 ){
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error : "User is not fount in database",
       data : []
@@ -1020,7 +1068,7 @@ exports.getDraftPosts = async (req, res) => {
     }));
 
     if(rows.length === 0){
-      return res.status(400).json({
+      return res.status(200).json({
       result : "0",
       error : "No value in database",
       data : []
@@ -1050,7 +1098,7 @@ exports.blockOrUnblockUser = async (req, res) => {
   const { user_id, blocker_id, status } = req.body;
 
   if (!user_id || !blocker_id || !status) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "Fill all fields",
       data: []
@@ -1058,7 +1106,7 @@ exports.blockOrUnblockUser = async (req, res) => {
   }
   const [exist_user] = await db.query(`select * from users where U_ID =?`,[user_id]);
   if(exist_user.length === 0){
-      return res.status(400).json({
+      return res.status(200).json({
           result : "0",
           error : "User does not exist in database",
           data : []
@@ -1066,7 +1114,7 @@ exports.blockOrUnblockUser = async (req, res) => {
       }
   const [exist_blocker] = await db.query(`select * from users where U_ID =?`,[blocker_id  ]);
       if(exist_blocker.length === 0){
-        return res.status(400).json({
+        return res.status(200).json({
           result : "0",
           error : "Blocker ID does not exist in database",
           data : []
@@ -1074,7 +1122,7 @@ exports.blockOrUnblockUser = async (req, res) => {
       }
 
   if (user_id === blocker_id) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "You can't block yourself.",
       data: []
@@ -1089,7 +1137,7 @@ exports.blockOrUnblockUser = async (req, res) => {
 
     if (status === 1) {
       if (existing.length > 0) {
-        return res.status(400).json({
+        return res.status(200).json({
           result: "0",
           error: "User is already blocked.",
           data: []
@@ -1131,7 +1179,7 @@ exports.blockOrUnblockUser = async (req, res) => {
       });
 
     } else {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "Invalid status. Use 1 (block) or 2 (unblock).",
         data: []
@@ -1152,7 +1200,7 @@ exports.getBlockedList = async (req, res) => {
   const limit = 10;
 
   if (!user_id) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_id is required",
       data: []
@@ -1160,7 +1208,7 @@ exports.getBlockedList = async (req, res) => {
   }
   const [exist_user] = await db.query(`select * from users where U_ID =?`,[user_id]);
       if(exist_user.length === 0){
-        return res.status(400).json({
+        return res.status(200).json({
           result : "0",
           error : "User does not exist in database",
           data : []
@@ -1197,7 +1245,7 @@ exports.getBlockedList = async (req, res) => {
     const data = rawResults.map(normalizeUser);
 
     if(data.length === 0){
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "There is no data for this User",
         data :[]
@@ -1227,7 +1275,7 @@ exports.delete_post = async (req, res) => {
   const { user_id, user_post_id } = req.body;
 
   if (!user_id || !user_post_id) {
-    return res.status(400).json({
+    return res.status(200).json({
       success: false,
       message: "user_id and user_post_id are required.",
     });
@@ -1268,7 +1316,7 @@ exports.getReels = async (req, res) => {
   const limit = 10;
 
   if (!user_id) {
-    return res.status(400).json({ result: "0", error: "user_id is required", data: [] });
+    return res.status(200).json({ result: "0", error: "user_id is required", data: [] });
   }
   
   const offset = (parseInt(page) - 1) * limit;
@@ -1326,7 +1374,7 @@ exports.getReels = async (req, res) => {
     );
 
     if(reels.length === 0){
-      return res.status(400).json({ 
+      return res.status(200).json({ 
         result: "0",
          error: "No data for User_id", 
          data: [] });
@@ -1350,7 +1398,7 @@ exports.post_like = async (req, res) => {
   const { user_id, user_post_id, status } = req.body;
 
   if (!user_id || !user_post_id || !status) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_id, user_post_id and valid status (1=like, 2=unlike) are required",
       data: []
@@ -1358,7 +1406,7 @@ exports.post_like = async (req, res) => {
   }
  const [exist_user] = await db.query (`select * from users where U_ID = ?`, [user_id]);
  if(exist_user.length === 0){
-  return res.status(400).json({
+  return res.status(200).json({
       result: "0",
       error: "user not fount in database",
       data: []
@@ -1423,7 +1471,7 @@ exports.getPostLikeCount = async (req, res) => {
   const { user_post_id } = req.body;
 
   if (!user_post_id || isNaN(user_post_id)) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_post_id is required and it must be an Integer",
       data: []
@@ -1432,7 +1480,7 @@ exports.getPostLikeCount = async (req, res) => {
 
   const [exist_userpost] = await db.query (`select * from user_posts where user_post_id = ?`, [user_post_id]);
  if(exist_userpost.length === 0){
-  return res.status(400).json({
+  return res.status(200).json({
       result: "0",
       error: "user post is not fount in database",
       data: []
@@ -1468,7 +1516,7 @@ exports.add_firstcomment = async (req, res) => {
   let { user_id, user_post_id, comment, replies_comment_id = null } = req.body;
 
   if (!user_id || !user_post_id || !comment) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_id, user_post_id, and comment are required"
     });
@@ -1479,7 +1527,7 @@ exports.add_firstcomment = async (req, res) => {
   }
   const [exist_user] = await db.query (`select * from users where U_ID = ?`, [user_id]);
   if(exist_user.length === 0){
-    return res.status(400).json({
+    return res.status(200).json({
         result: "0",
         error: "user not fount in database",
         data: []
@@ -1488,7 +1536,7 @@ exports.add_firstcomment = async (req, res) => {
 
   const [exist_post] = await db.query (`select * from user_posts where user_post_id = ?`, [user_post_id]);
   if(exist_post.length === 0){
-    return res.status(400).json({
+    return res.status(200).json({
         result: "0",
         error: "user post is not fount in database",
         data: []
@@ -1523,7 +1571,7 @@ exports.getcomment = async (req, res) => {
   const limit = 10;
 
   if (!user_post_id) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_post_id is required",
       data: []
@@ -1535,7 +1583,7 @@ exports.getcomment = async (req, res) => {
     [user_post_id]
   );
   if (exist_post.length === 0) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user post not found in database",
       data: []
@@ -1578,7 +1626,7 @@ exports.getcomment = async (req, res) => {
     }));
 
     if (comments.length === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "no data in database",
         pagination: { totalPages: 0, nxtpage: 0, recCnt: 0 },
@@ -1610,7 +1658,7 @@ exports.getreplay_comment = async (req, res) => {
   const { comment_id, page = 1 } = req.body;
   const limit = 10;
   if (!comment_id || isNaN(comment_id)) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "comment_id is required and it must be an Integer",
       data: []
@@ -1622,7 +1670,7 @@ exports.getreplay_comment = async (req, res) => {
     [comment_id]
   );
   if (exist_comment.length === 0) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "comment id is not existing in database",
       data: []
@@ -1687,7 +1735,7 @@ exports.likeComment = async (req, res) => {
   const { user_id, comment_id, user_post_id, status } = req.body;
 
   if (!user_id || !comment_id || !user_post_id) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_id, comment_id, and user_post_id are required",
       data: []
@@ -1695,7 +1743,7 @@ exports.likeComment = async (req, res) => {
   }
   const [exist_user] = await db.query (`select * from users where U_ID = ?`, [user_id]);
   if(exist_user.length === 0){
-    return res.status(400).json({
+    return res.status(200).json({
         result: "0",
         error: "user not fount in database",
         data: []
@@ -1703,7 +1751,7 @@ exports.likeComment = async (req, res) => {
   }
   const [exist_post] = await db.query (`select * from user_posts where user_post_id = ?`, [user_post_id]);
   if(exist_post.length === 0){
-    return res.status(400).json({
+    return res.status(200).json({
         result: "0",
         error: "user post not fount in database",
         data: []
@@ -1711,7 +1759,7 @@ exports.likeComment = async (req, res) => {
   }
   const [exist_comment] = await db.query (`select * from post_comments where comment_id = ?`, [comment_id]);
   if(exist_comment.length === 0){
-    return res.status(400).json({
+    return res.status(200).json({
         result: "0",
         error: "user comment not fount in database",
         data: []
@@ -1755,7 +1803,7 @@ exports.likeComment = async (req, res) => {
         data: []
       });
     } else {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "Invalid status. Use 1 for like, 2 for unlike.",
         data: []
@@ -1779,7 +1827,7 @@ exports.search = async (req, res) => {
     isNaN(Number(user_id)) || isNaN(Number(land_type_id)) ||
     isNaN(Number(min_price)) || isNaN(Number(max_price))
   ) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "All fields are required. user_id, land_type_id, min_price, and max_price must be integers.",
       data: []
@@ -1878,7 +1926,7 @@ exports.getInterestedSearchers = async (req, res) => {
   const { user_id } = req.body;
 
   if (!user_id || isNaN(user_id)) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "user_id is required and it must be an Integer",
       data: []
@@ -1887,7 +1935,7 @@ exports.getInterestedSearchers = async (req, res) => {
 
   const [exist_user] = await db.query (`select * from users where U_ID = ?`, [user_id]);
   if(exist_user.length === 0){
-    return res.status(400).json({
+    return res.status(200).json({
         result: "0",
         error: "user not fount in database",
         data: []
@@ -1941,7 +1989,7 @@ exports.getInterestedSearchers = async (req, res) => {
       );
 
       if(searchers.length === 0){
-        return res.status(400).json({
+        return res.status(200).json({
           result : "0",
           error : "No matching searchers found within 30 km",
           data :[]

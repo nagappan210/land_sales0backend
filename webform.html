@@ -737,12 +737,12 @@
           <td class="p-3">1</td>
         </tr>
         <tr class="border-t">
-          <td class="p-3">User Name</td>
-          <td class="p-3"><input type="text" name="username" class="w-full border rounded p-2" /></td>
-          <td class="p-3">username</td>
+          <td class="p-3">Name</td>
+          <td class="p-3"><input type="text" name="name" class="w-full border rounded p-2" /></td>
+          <td class="p-3">name</td>
           <td class="p-3">Yes</td>
           <td class="p-3">varchar(100)</td>
-          <td class="p-3">nagappan</td>
+          <td class="p-3">Nagappan</td>
         </tr>
         <tr class="border-t">
           <td class="p-3">Bio</td>
@@ -754,7 +754,7 @@
         </tr>
         <tr class="border-t">
         <td class="p-3">Profile Image</td>
-        <td class="p-3"><input type="file" name="profile_image" class="w-full border rounded p-2" /></td>
+        <td class="p-3"><input type="text" name="profile_image" class="w-full border rounded p-2" /></td>
         <td class="p-3">profile_image</td>
         <td class="p-3">Yes</td>
         <td class="p-3">varchar(100)</td>
@@ -775,7 +775,75 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">10. Get User Profile</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">10. User Name Update</h2>
+  <div class="mb-6">
+    <table class="w-full bg-white border rounded shadow text-sm mb-6">
+      <tbody>
+        <tr class="border-b">
+          <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+          <td class="p-3 text-blue-700">http://localhost:7000/api/auth/update_username</td>
+        </tr>
+        <tr class="border-b">
+          <td class="font-semibold p-3 bg-gray-50">Method:</td>
+          <td class="p-3">POST</td>
+        </tr>
+        <tr class="border-b">
+          <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+          <td class="p-3">application/json; charset=utf-8</td>
+        </tr>
+        <tr>
+          <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+          <td class="p-3">Development</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <form id="update_username">
+    <table class="w-full text-sm bg-white border rounded shadow mb-6">
+      <thead class="bg-slate-900 text-white">
+        <tr>
+          <th class="p-3 text-left">Label Name</th>
+          <th class="p-3 text-left">Value</th>
+          <th class="p-3 text-left">Variable Name</th>
+          <th class="p-3 text-left">Mandatory</th>
+          <th class="p-3 text-left">Note</th>
+          <th class="p-3 text-left">Sample</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-t">
+          <td class="p-3">User ID</td>
+          <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+          <td class="p-3">user_id</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">int</td>
+          <td class="p-3">1</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">User Name</td>
+          <td class="p-3"><input type="text" name="username" class="w-full border rounded p-2" /></td>
+          <td class="p-3">username</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">string</td>
+          <td class="p-3">nagappan_18</td>
+        </tr>
+       
+        <tr>
+          <td colspan="6" class="text-center p-4">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+              Submit
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
+
+  </div>
+</div>
+
+<div>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">11. Get User Profile</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -834,7 +902,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">11. Follow & Unfollow User</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">12. Follow & Unfollow User</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -911,7 +979,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">12. Follow List</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">13. Follow List</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -989,7 +1057,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">13. Get Notification Settings</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">14. Get Notification Settings</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -1048,7 +1116,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">14. Notification Settings</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">15. Notification Settings</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -1127,7 +1195,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">15. Block User Settings</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">16. Block User Settings</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -1205,7 +1273,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">16. Get Blocked Users</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">17. Get Blocked Users</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -1272,7 +1340,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">17. User Account Deactivate / Activate</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">18. User Account Deactivate / Activate</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1341,7 +1409,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">18. Post Video Step 1</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">19. Post Video Step 1</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1418,7 +1486,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">19. Get Land Categories</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">20. Get Land Categories</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1481,7 +1549,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">20. Post Video Step 2</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">21. Post Video Step 2</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1566,7 +1634,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">21. Post Video Step 3</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">22. Post Video Step 3</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1756,10 +1824,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">
-    24. Post Video Step 6
-  </h2>
-
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">24. Post Video Step 6</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -1799,9 +1864,7 @@
         <tbody>
           <tr class="border-t">
             <td class="p-3">User ID</td>
-            <td class="p-3">
-              <input type="number" name="user_id" class="w-full border rounded p-2" required/>
-            </td>
+            <td class="p-3"><input type="number" name="user_id" class="w-full border rounded p-2" required/></td>
             <td class="p-3">user_id</td>
             <td class="p-3">Yes</td>
             <td class="p-3">int</td>
@@ -1809,14 +1872,7 @@
           </tr>
           <tr class="border-t">
             <td class="p-3">User Post ID</td>
-            <td class="p-3">
-              <input
-                type="number"
-                name="user_post_id"
-                class="w-full border rounded p-2"
-                required
-              />
-            </td>
+            <td class="p-3"><input type="number" name="user_post_id" class="w-full border rounded p-2" required/></td>
             <td class="p-3">user_post_id</td>
             <td class="p-3">Yes</td>
             <td class="p-3">int</td>
@@ -1824,9 +1880,7 @@
           </tr>
           <tr class="border-t">
             <td class="p-3">Post Type</td>
-            <td class="p-3">
-              <input type="number" name="post_type" class="w-full border rounded p-2" required/>
-            </td>
+            <td class="p-3"><input type="number" name="post_type" class="w-full border rounded p-2" required/></td>
             <td class="p-3">post_type</td>
             <td class="p-3">Yes</td>
             <td class="p-3">int</td>
@@ -1835,41 +1889,23 @@
           </tr>
           <tr class="border-t">
             <td class="p-3">Upload Video</td>
-            <td class="p-3">
-              <input
-                type="file"
-                name="video"
-                accept="video/*"
-                class="w-full border rounded p-2"
-              />
-            </td>
-            <td class="p-3">video</td>
+            <td class="p-3"><input type="text" name="video_base64" class="w-full border rounded p-2"/></td>
+            <td class="p-3">video_base64</td>
             <td class="p-3">Only if Post Type = 1</td>
-            <td class="p-3">file</td>
-            <td class="p-3">myvideo.mp4</td>
+            <td class="p-3">url</td>
+            <td class="p-3">base64_url</td>
           </tr>
           <tr class="border-t">
             <td class="p-3">Upload Images</td>
-            <td class="p-3">
-              <input
-                type="file"
-                name="images"
-                accept="image/*"
-                multiple
-                class="w-full border rounded p-2"
-              />
-            </td>
-            <td class="p-3">images</td>
+            <td class="p-3"> <input type="text" name="images_base64" multiple class="w-full border rounded p-2"/></td>
+            <td class="p-3">images_base64</td>
             <td class="p-3">Only if Post Type = 2</td>
-            <td class="p-3">files</td>
-            <td class="p-3">img1.jpg, img2.jpg</td>
+            <td class="p-3">url</td>
+            <td class="p-3">[ base64_url1 , base64_url12 ] </td>
           </tr>
           <tr>
             <td colspan="7" class="text-center p-4">
-              <button
-                type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
-              >
+              <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
                 Submit
               </button>
             </td>
@@ -3830,13 +3866,54 @@
   //UPDATE USER PROFILE
   const update_profileForm = document.getElementById('update_profile');
   update_profileForm.addEventListener('submit', async function (e) {
+  e.preventDefault();
+  
+  const formData = new FormData(update_profileForm);
+  const data = {};
+
+  formData.forEach((value, key) => {
+    data[key] = value;
+  });
+
+  try {
+    const res = await fetch('http://localhost:7000/api/auth/update_profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+
+    const json = await res.json();
+    sessionStorage.setItem('registerResponse', JSON.stringify(json));
+    window.location.href = 'response.html';
+  } catch (err) {
+    const errorObj = { error: err.message };
+    sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
+    window.location.href = 'response.html';
+  }
+});
+
+
+  //UPDATE USERNAME
+  const update_username = document.getElementById('update_username');
+  update_username.addEventListener('submit', async function (e) {
     e.preventDefault();
-    const formData = new FormData(update_profileForm);
+
+    const formData = new FormData(update_username);
+    const data = {};
+
+    formData.forEach((value, key) => {
+      if (value) data[key] = value;
+      
+    });
+
 
     try {
-      const res = await fetch('http://localhost:7000/api/auth/update_profile', {
-        method: 'POST',
-        body: formData
+      const res = await fetch('http://localhost:7000/api/auth/update_username', {
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data) 
       });
 
       const json = await res.json();
@@ -3847,7 +3924,8 @@
       sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
       window.location.href = 'response.html';
     }
-  });
+});
+
 
   //FOLLOW & FOLLOWING
   const followForm = document.getElementById('follow');

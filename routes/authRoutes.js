@@ -70,7 +70,8 @@ router.post('/getInterest',userController.getInterest);
 router.post('/user_interest', userController.updateUserInterest);
 router.post('/get_user_interest', userController.getUserInterest);
 
-router.post('/update_profile', upload.single('profile_image'), userController.updateProfile);
+router.post('/update_profile', userController.updateProfile);
+router.post('/update_username',userController.updateUsername);
 router.post('/follow', userController.followUser);
 router.post('/profile_status', userController.getProfileStats);
 router.post('/contact', authController.contact);
@@ -92,7 +93,7 @@ router.post('/land_categories', landTypeController.getCategoriesByLandType);
 router.post('/poststep1',landTypeController.createPostStep1);
 router.post('/poststep2',landTypeController.createPostStep2);
 router.post('/poststep3',landTypeController.createPostStep3);
-// router.post('/poststep4',landTypeController.createPostStep4);
+router.post('/poststep4',landTypeController.createPostStep4);
 router.post('/poststep5',landTypeController.createPostStep5);
 router.post('/poststep6', uploads,  videoController.createPostStep6);
 router.post('/poststep7',videoController.createPostStep7);

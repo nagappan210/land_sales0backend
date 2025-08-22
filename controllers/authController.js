@@ -247,11 +247,11 @@ exports.verifyOtp = async (req, res) => {
 
     if (diff > 30) {
       await db.query(`UPDATE users SET otp = NULL, otp_created_at = NULL, flag = 1 WHERE U_ID = ?`, [user.U_ID]);
-      return res.status(410).json({ result: "0", error: "OTP expired. Please request a new one.", data: [] });
+      return res.status(200).json({ result: "0", error: "OTP expired. Please request a new one.", data: [] });
     }
 
     if (String(user.otp) !== String(otp)) {
-      return res.status(400).json({ result: "0", error: "Invalid OTP.", data: [] });
+      return res.status(200).json({ result: "0", error: "Invalid OTP.", data: [] });
     }
 
     await db.query(`UPDATE users SET otp = NULL, otp_created_at = NULL, flag = 0 WHERE U_ID = ?`, [user.U_ID]);

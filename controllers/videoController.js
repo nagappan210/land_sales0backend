@@ -3,12 +3,12 @@ const path = require('path');
 const sharp = require('sharp');
 const ffmpeg = require('fluent-ffmpeg');
 const db = require('../db');
+const { buffer } = require('stream/consumers');
 ffmpeg.setFfmpegPath('C:/ffmpeg/bin/ffmpeg.exe');
 
 exports.createPostStep6 = async (req, res) => {
   try {
-    let { user_id, user_post_id, post_type } = req.body;
-    const files = req.files;
+    let { user_id, user_post_id, post_type , video_base64 , images_base64  } = req.body;
 
     user_id = Number(user_id);
     user_post_id = Number(user_post_id);
@@ -33,23 +33,20 @@ exports.createPostStep6 = async (req, res) => {
       });
     }
 
-    if (!files || (!files.video && !files.images)) {
-      return res.status(400).json({
-        result: "0",
-        error: "No media files uploaded.",
-        data: []
-      });
-    }
+    if (post_type === "1" && video_base64) {
 
-    if (post_type === "1" && files.video?.length > 0) {
-      const videoPath = files.video[0].path;
+      let buffer;
+      const matches = video_base64.match(/^data:video\/\w+;base64,(.*)$/);
+      const base64Data = matches ? matches[1] : video_base64;
+      buffer = Buffer.from(base64Data, "base64");
 
-      const [video] = await db.query(
-        `UPDATE user_posts 
-         SET video = ?, post_type = ?, image_ids = NULL, updated_at = NOW(), draft = ? 
-         WHERE U_ID = ? AND user_post_id = ?`,
-        [videoPath, post_type, draft, user_id, user_post_id]
-      );
+      const videoPath = `uploaded/posts/video_${Date.now()}.mp4`;
+      await fs.mkdir(path.dirname(videoPath), { recursive: true });
+      await fs.writeFile(videoPath, buffer);
+
+      const [video] = await db.query(`update user_posts set video = ? , post_type = ? , image_ids = null , updated_at = now() , draft = ?
+        where U_ID = ? and user_post_id = ? ` , [videoPath, post_type, draft, user_id, user_post_id])
+      
 
       if (video.affectedRows === 0) {
         return res.status(404).json({
@@ -67,22 +64,26 @@ exports.createPostStep6 = async (req, res) => {
       });
     }
 
-    if (post_type === "2" && files.images?.length > 0) {
-      const imageFiles = files.images;
+    if (post_type === "2" && Array.isArray(images_base64) && images_base64.length > 0) {
       const tempDir = `uploaded/posts/${Date.now()}_sequence`;
       await fs.mkdir(tempDir, { recursive: true });
 
       const insertedImageIds = [];
-      for (let i = 0; i < imageFiles.length; i++) {
-        const destPath = path.join(tempDir, `img_${String(i).padStart(3, "0")}.jpg`);
-        await sharp(imageFiles[i].path)
+
+      for (let i = 0; i < images_base64.length; i++) {
+        const matches = images_base64[i].match(/^data:image\/\w+;base64,(.*)$/)
+        const base64Data = matches ? matches[1] : images_base64[i];
+        const buffer = Buffer.from(base64Data , "base64");
+
+        const destpath = path.join(tempDir , `img_${String(i).padStart(3, "0")}.jpg`);
+        await sharp(buffer)
           .resize({ width: 1280, height: 720, fit: "contain", background: "#000" })
           .jpeg()
-          .toFile(destPath);
+          .toFile(destpath);
 
         const [result] = await db.query(
           `INSERT INTO post_images (U_ID, user_post_id, image_path) VALUES (?, ?, ?)`,
-          [user_id, user_post_id, destPath]
+          [user_id, user_post_id, destpath]
         );
         insertedImageIds.push(result.insertId);
       }
@@ -98,8 +99,6 @@ exports.createPostStep6 = async (req, res) => {
           .on("error", reject)
           .save(outputVideoPath);
       });
-
-      await fs.rm(tempDir, { recursive: true, force: true });
 
       const imageIdsStr = insertedImageIds.join(",");
 

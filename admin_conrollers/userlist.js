@@ -170,27 +170,78 @@ exports.deleteuser = async (req, res) => {
   }
 };
 
-exports.getuser = async (req,res) => {
-  const {user_id} = req.params;
-  try{
-    const [row] = await db.query(`select u.name, u.phone_num_cc , u.phone_num , u.whatsapp_num_cc , 
-      u.whatsapp_num , u.email ,u.country , u.state , u.cities , u.pincode , u.username ,  
-      u.bio , u.profile_image , (select count(*) from followers f where f.user_id = u.U_ID) as follower_count ,
-    (select count(*) from followers where)) from users as u join followers where U_ID = user_id `,[user_id]);
+exports.getuser = async (req, res) => {
+  const { user_id } = req.params;
+  try {
+    const [row] = await db.query(
+      `SELECT
+      u.U_ID, u.name, u.phone_num_cc, u.phone_num, u.whatsapp_num_cc, u.whatsapp_num, u.email, u.country, u.state, u.cities, u.pincode, u.username, u.bio,
+         u.profile_image,
+         (SELECT COUNT(*) FROM followers f WHERE f.user_id = u.U_ID) AS follower_count,
+         (SELECT COUNT(*) FROM followers f WHERE f.following_id = u.U_ID) AS following_count,
+         (SELECT COUNT(*) FROM user_posts p WHERE p.U_ID = u.U_ID AND p.deleted_at IS NULL) AS post_count,
+         (SELECT COUNT(*) FROM user_posts p WHERE p.U_ID = u.U_ID AND p.status = draft) AS draft_count
+       FROM users u
+       WHERE u.U_ID = ?`,
+      [user_id]
+    );
+
+    if (!row.length) {
+      return res.status(404).json({
+        result: "0",
+        error: "User not found",
+        data: []
+      });
+    }
+
     return res.status(200).json({
-      result : "1",
-      message : "The user profile is show sucessfully",
-      data : row[0]
+      result: "1",
+      message: "The user profile is shown successfully",
+      data: row[0]
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error",
+      data: []
+    });
+  }
+};
+
+exports.getpost = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT  u.user_post_id,  
+        u.U_ID,  
+        u.user_type,  
+        u.land_type_id,  
+        u.land_categorie_id,  
+        u.video,
+        u.image_ids,  
+        u.status,  
+        u.post_type,
+        i.image_path AS images 
+      FROM user_posts AS u
+      JOIN post_images AS i ON u.U_ID = i.user_post_id
+      WHERE u.deleted_at IS NULL
+      group by u.user_post_id
+    `);
+
+    return res.status(200).json({
+      result: "1",
+      message: "Posts fetched successfully",
+      data: rows
     });
 
-  }
-  catch(err){
-    console.log(err);
+  } catch (err) {
+    console.error(err);
     return res.status(500).json({
-      result : "0",
-      error : "Server error",
-      data : []
-    })
-    
+      result: "0",
+      error: "Server error",
+      data: []
+    });
   }
-}
+};
+
+
