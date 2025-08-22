@@ -34,7 +34,7 @@ const db = require('../db');
 //       [userId]
 //     );
 
-//     if (result.length === 0) return res.status(404).json({ message: 'User not found' });
+//     if (result.length === 0) return res.status(200).json({ message: 'User not found' });
 
 //     res.json(result[0]);
 //   } catch (err) {
@@ -197,7 +197,7 @@ exports.updateUserInterest = async (req, res) => {
     );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "User not found.",
         message: "No update occurred.",
@@ -239,7 +239,7 @@ exports.getUserInterest = async (req, res) => {
     );
 
     if (result.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "User not found",
         data: []
@@ -279,7 +279,7 @@ exports.updateProfile = async (req, res) => {
 
     const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (existing_user.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "User not found in the table",
         data: []
@@ -430,7 +430,7 @@ exports.getProfileStats = async (req, res) => {
     const [results] = await db.query(query, [user_id]);
 
     if (results.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "User not found",
         data: []
@@ -545,7 +545,7 @@ exports.followUser = async (req, res) => {
       );
 
       if (check.length === 0) {
-        return res.status(404).json({
+        return res.status(200).json({
           result: "0",
           error: "Not following.",
           data: []
@@ -906,7 +906,7 @@ exports.sold_status = async (req, res) => {
     const [result] = await db.query(query, [user_post_id, user_id]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "Property not found or status already set.",
         data: [],
@@ -1159,7 +1159,7 @@ exports.blockOrUnblockUser = async (req, res) => {
     } else if (status === 2) {
       // UNBLOCK USER
       if (existing.length === 0) {
-        return res.status(404).json({
+        return res.status(200).json({
           result: "0",
           error: "User is not blocked.",
           data: []
@@ -1288,7 +1288,7 @@ exports.delete_post = async (req, res) => {
     );
 
     if (check.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         success: false,
         message: "Post not found or already deleted.",
       });
@@ -1328,7 +1328,7 @@ exports.getReels = async (req, res) => {
     );
 
     if (!user.length) {
-      return res.status(404).json({ result: "0", error: "User not found", data: [] });
+      return res.status(200).json({ result: "0", error: "User not found", data: [] });
     }
 
     const interestIds = user[0].user_interest ? user[0].user_interest.split(",") : [];
@@ -1835,7 +1835,7 @@ exports.search = async (req, res) => {
   }
   const [userExists] = await db.query(`SELECT U_ID FROM users WHERE U_ID = ?`, [user_id]);
     if (userExists.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "User not found",
         data: []
@@ -1844,7 +1844,7 @@ exports.search = async (req, res) => {
 
   const [land_type_exist] = await db.query(`SELECT * FROM land_types WHERE land_type_id = ?`, [land_type_id]);
     if (land_type_exist.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "User land type is not found",
         data: []
@@ -1952,7 +1952,7 @@ exports.getInterestedSearchers = async (req, res) => {
     );
 
     if (!posts || posts.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "No posts found for this user",
         data: []

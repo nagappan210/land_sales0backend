@@ -13,7 +13,7 @@ exports.getCategoriesByLandType = async (req, res) => {
 const {status} = req.body;
 
   if(!status || isNaN(status)){
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "status are required and it must be Integer.",
       data: []
@@ -22,7 +22,7 @@ const {status} = req.body;
 
   const [existing_categoies] = await db.query (`select * from land_categories where land_type_id = ?`,[status]);
   if(existing_categoies.length === 0){
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error : "The status is not existing in databse",
       data  : []
@@ -47,17 +47,17 @@ exports.createPostStep1 = async (req, res) => {
     user_post_id = Number(user_post_id);
     const draft = 1
 
-    if (!user_id || isNaN(user_id) || ![0, 1].includes(user_type)) {
-      return res.status(400).json({
+    if (!user_id || isNaN(user_id) || ![0, 1].includes(user_type) || !user_post_id) {
+      return res.status(200).json({
         result: "0",
-        error: "user_id is required and user_type must be 0 or 1.",
+        error: "user_id and user_post_id is required and user_type must be 0 or 1.",
         data: []
       });
     }
 
     const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (exist_user.length === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "User does not exist in database",
         data: []
@@ -84,16 +84,16 @@ exports.createPostStep1 = async (req, res) => {
       });
     }
 
-    const [result] = await db.query(
+    if(user_post_id === 0){
+      const [result] = await db.query(
       `INSERT INTO user_posts (U_ID, user_type, status , draft) VALUES (?, ?, 'draft' , ?)`,
-      [user_id, user_type , draft]
-    );
-
-    return res.status(201).json({
+      [user_id, user_type , draft]);
+      return res.status(201).json({
       result: "1",
       message: "Step 1 completed: New post created.",
       data: { post_id: result.insertId }
     });
+    }
 
   } catch (err) {
     console.error("Create Post Step 1 Error:", err);
@@ -108,7 +108,7 @@ exports.createPostStep1 = async (req, res) => {
 exports.createPostStep2 = async (req, res) => {
   const { user_id, user_post_id, status, land_categorie_id } = req.body;
   if (!user_id || ! user_post_id || !status || !land_categorie_id) {
-    return res.status(400).json({ 
+    return res.status(200).json({ 
       result : "0",
       error : "All fileds are required.",
       data : []
@@ -116,7 +116,7 @@ exports.createPostStep2 = async (req, res) => {
   }
   const [exist_user] = await db.query (`select * from users where U_ID = ?`,[user_id]);
       if(exist_user.length === 0 ){
-        return res.status(400).json({
+        return res.status(200).json({
           result : "0",
           error : "User does not existing in database",
           data : []
@@ -133,7 +133,7 @@ exports.createPostStep2 = async (req, res) => {
     `, [status, land_categorie_id, draft, user_id , user_post_id]);
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ 
+      return res.status(200).json({ 
         result : "0",
         error : "Post not found or already deleted.",
         data : []
@@ -159,7 +159,7 @@ exports.createPostStep3 = async (req, res) => {
   const { user_id, user_post_id, country, state, city, locality, latitude, longitude } = req.body;
 
   if ( !user_id || !country || !state || !city || !locality || !user_post_id || !latitude || !longitude) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "All fields are required",
       data: []
@@ -171,7 +171,7 @@ exports.createPostStep3 = async (req, res) => {
 
     const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (exist_user.length === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "User does not exist in database",
         data: []
@@ -179,7 +179,7 @@ exports.createPostStep3 = async (req, res) => {
     }
 
     if(isNaN(latitude || longitude)){
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "Latitude and Longitude are in double only.",
         data :[]
@@ -194,7 +194,7 @@ exports.createPostStep3 = async (req, res) => {
     );
 
     if (updateResult.affectedRows === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "Post not found for this user",
         data: []
@@ -235,7 +235,7 @@ exports.createPostStep4 = async (req, res) => {
   } = req.body;
 
   if (!user_id || !user_post_id) {
-    return res.status(400).json({ message: "user_id and user_post_id are required." });
+    return res.status(200).json({ message: "user_id and user_post_id are required." });
   }
 
   try {
@@ -246,7 +246,7 @@ exports.createPostStep4 = async (req, res) => {
     );
 
     if (!landTypeResult.length) {
-      return res.status(404).json({ message: 'Post not found for given user_id and user_post_id.' });
+      return res.status(200).json({ message: 'Post not found for given user_id and user_post_id.' });
     }
 
     const land_type_id_from_db = landTypeResult[0].land_type_id;
@@ -331,13 +331,13 @@ exports.createPostStep4 = async (req, res) => {
         break;
 
       default:
-        return res.status(400).json({ message: 'Invalid land_type_id.' });
+        return res.status(200).json({ message: 'Invalid land_type_id.' });
     }
 
     const [updateResult] = await db.query(updateQuery, updateValues);
 
     if (updateResult.affectedRows === 0) {
-      return res.status(404).json({ message: 'Update failed: Post not found or already deleted.' });
+      return res.status(200).json({ message: 'Update failed: Post not found or already deleted.' });
     }
 
     res.json({ success: true, message: `Step 4 completed for ${landTypeName} property.` });
@@ -359,7 +359,7 @@ exports.createPostStep5 = async (req, res) => {
     );
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ result : "0",
+      return res.status(200).json({ result : "0",
         error: 'Post not found.',
       data : [] });
     }

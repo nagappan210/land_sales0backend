@@ -39,85 +39,110 @@ exports.register = async (req, res) => {
 
     const otp = generateOTP();
 
-    if (user_id) {
-      const [existingUser] = await db.query("SELECT * FROM users WHERE U_ID = ?", [user_id]);
+    // if (user_id) {
+    //   const [existingUser] = await db.query("SELECT * FROM users WHERE phone_num = ?", [phone_num]);
 
-      if (!existingUser.length) {
-        return res.status(200).json({
-          result: "0",
-          error: "User not found for update.",
-          data: []
-        });
-      }
+    //   // if (!existingUser.length) {
+    //   //   return res.status(200).json({
+    //   //     result: "0",
+    //   //     error: "User not found for update.",
+    //   //     data: []
+    //   //   });
+    //   // }
 
-      await db.query(
-        `UPDATE users 
-         SET phone_num = ?, phone_num_cc = ?, otp = ?, otp_created_at = NOW(),
-             device_id = ?, device_type = ?, device_token = ?, flag = 1
-         WHERE U_ID = ?`,
-        [phone_num, phone_num_cc, otp, device_id, device_type, device_token, user_id]
-      );
+    //   await db.query(
+    //     `UPDATE users 
+    //      SET phone_num = ?, phone_num_cc = ?, otp = ?, otp_created_at = NOW(),
+    //          device_id = ?, device_type = ?, device_token = ?, flag = 1
+    //      WHERE phone_num = ?`,
+    //     [phone_num, phone_num_cc, otp, device_id, device_type, device_token, phone_num]
+    //   );
 
-      return res.json({
-        result: "1",
-        error: "",
-        data: [{ user_id, phone_num_cc, phone_num, otp }]
-      });
-    }
+    //   return res.json({
+    //     result: "1",
+    //     error: "",
+    //     data: [{ user_id, phone_num_cc, phone_num, otp }]
+    //   });
+    // }
 
-    const [existingUsers] = await db.query("SELECT * FROM users WHERE phone_num = ? and flag = 0", [phone_num]);
-    if (existingUsers.length > 0) {
+    const [existingUsers] = await db.query("SELECT * FROM users WHERE phone_num = ?", [phone_num]);
+    if (existingUsers && existingUsers.length && existingUsers[0]?.flag === 0) {
       return res.status(200).json({
         result: "0",
         error: "User already exists. Please login.",
         data: []
       });
-    }
-
-    const [lastUser] = await db.query("SELECT U_ID FROM users ORDER BY U_ID DESC LIMIT 1");
-    let newUserName;
-    if (lastUser.length > 0) {
-      const lastId = lastUser[0].U_ID;
-      const nextId = lastId + 1;
-      newUserName = `user${String(nextId).padStart(3, "0")}`;
+    } else if (existingUsers && existingUsers.length && existingUsers[0]?.flag === 1) {
+const [insertResult] = await db.query(
+        `UPDATE users SET otp = ?,otp_created_at = NOW() WHERE U_ID = ?`,
+        [
+          otp,
+          existingUsers[0]?.U_ID
+        ]
+      );
+            return res.json({
+        result: "1",
+        error: "",
+        data: [
+          {
+            user_id: existingUsers[0]?.U_ID,
+            name: existingUsers[0]?.name,
+            userName:  existingUsers[0]?.username,
+            phone_num_cc: existingUsers[0]?.phone_num_cc,
+            phone_num: existingUsers[0]?.phone_num,
+            otp
+          }
+        ]
+      });
     } else {
-      newUserName = "user001";
+      const [lastUser] = await db.query("SELECT U_ID FROM users ORDER BY U_ID DESC LIMIT 1");
+      let newUserName;
+      if (lastUser.length > 0) {
+        const lastId = lastUser[0].U_ID;
+        const nextId = lastId + 1;
+        newUserName = `user${String(nextId).padStart(3, "0")}`;
+      } else {
+        newUserName = "user001";
+      }
+
+      const defaultNotificationSettings = "1,2,3,4,5";
+      const defaultUserInterests = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
+
+      const [insertResult] = await db.query(
+        `INSERT INTO users 
+       (name, username, phone_num, otp, phone_num_cc, allow_notification, notification_settings, user_interest, device_id, device_type, device_token, flag) 
+       VALUES (?, ?, ?, ?, ?,  TRUE, ?, ?, ?, ?, ?, 1)`,
+        [
+          name,
+          newUserName,
+          phone_num,
+          otp,
+          phone_num_cc,
+          defaultNotificationSettings,
+          defaultUserInterests,
+          device_id,
+          device_type,
+          device_token
+        ]
+      );
+
+      return res.json({
+        result: "1",
+        error: "",
+        data: [
+          {
+            user_id: insertResult.insertId,
+            name,
+            userName: newUserName,
+            phone_num_cc,
+            phone_num,
+            otp
+          }
+        ]
+      });
     }
 
-    const defaultNotificationSettings = "1,2,3,4,5";
-    const defaultUserInterests = "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18";
 
-    const [insertResult] = await db.query(
-      `INSERT INTO users 
-       (name, username, phone_num, otp, phone_num_cc, otp_created_at, allow_notification, notification_settings, user_interest, device_id, device_type, device_token, flag) 
-       VALUES (?, ?, ?, ?, ?, NOW(), TRUE, ?, ?, ?, ?, ?, 1)`,
-      [
-        name,
-        newUserName,
-        phone_num,
-        otp,
-        phone_num_cc,
-        defaultNotificationSettings,
-        defaultUserInterests,
-        device_id,
-        device_type,
-        device_token
-      ]
-    );
-
-    return res.json({
-      result: "1",
-      error: "",
-      data: [
-        {
-          user_id: insertResult.insertId,
-          name: newUserName,
-          phone_num_cc,
-          phone_num,
-          otp
-        }
-      ]
-    });
   } catch (err) {
     return res.status(500).json({
       result: "0",
@@ -139,7 +164,7 @@ exports.login = async (req, res) => {
       });
     }
 
-    
+
     const [users] = await db.query(
       'SELECT * FROM users WHERE phone_num = ? AND phone_num_cc = ? and flag = 0',
       [phone_num, phone_num_cc]
@@ -155,7 +180,7 @@ exports.login = async (req, res) => {
 
     const user = users[0];
 
-   
+
     // if (user.flag) {
     //   return res.status(200).json({
     //     result: "0",
@@ -265,13 +290,13 @@ exports.verifyOtp = async (req, res) => {
         user_id: user.U_ID,
         name: user.name ?? "",
         username: user.username ?? "",
-        phone_num_cc : user.phone_num_cc ?? "",
+        phone_num_cc: user.phone_num_cc ?? "",
         phone_num: user.phone_num ?? "",
-        whatsapp_num_cc : user.whatsapp_num_cc ?? "",
+        whatsapp_num_cc: user.whatsapp_num_cc ?? "",
         whatsapp_num: user.whatsapp_num ?? "",
         email: user.email ?? "",
-        interest_page : user.interest_page ?? "",
-        location_page : user.location_page ?? "",
+        interest_page: user.interest_page ?? "",
+        location_page: user.location_page ?? "",
         token
       }]
     });
@@ -281,7 +306,6 @@ exports.verifyOtp = async (req, res) => {
     return res.status(500).json({ result: "0", error: err.message, data: [] });
   }
 };
-
 
 exports.contact = async (req, res) => {
   try {
@@ -486,3 +510,4 @@ exports.deactivate_or_restore_user = async (req, res) => {
     });
   }
 };
+

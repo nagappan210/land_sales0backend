@@ -5,7 +5,7 @@ exports.land_categories = async (req, res) => {
   const limit = 10;
 
   if (!Number.isInteger(Number(page)) || Number(page) < 1) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "page must be a positive integer",
       data: []
@@ -65,7 +65,7 @@ exports.land_categories_para = async (req, res) => {
   const { name } = req.body;
 
   if (!name) {
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "name is required",
       data: []
@@ -76,7 +76,7 @@ exports.land_categories_para = async (req, res) => {
     const [rows] = await db.query(`SELECT para FROM land_categories WHERE name = ?`, [name]);
 
     if (rows.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result: "0",
         error: "No category found with that name",
         data: []
@@ -101,7 +101,7 @@ exports.enquire = async (req, res) => {
   const { user_id, recever_posts_id, land_type_id, land_categorie_id, name, phone_num, whatsapp_num, email, land_category_para } = req.body;
 
   if (!user_id || !recever_posts_id || !land_categorie_id || !name || !land_type_id) {
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0" ,
       error : 'Required fields: user_id, recever_posts_id, land_type_id, land_categorie_id, and name.',
       data : []
@@ -109,14 +109,14 @@ exports.enquire = async (req, res) => {
   }
 
   if (phone_num && (!Number.isInteger(Number(phone_num)) || Number(phone_num) <= 0)) {
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error: 'phone_num must be a integer.',
       data : []
     });
   }
   if (whatsapp_num && (!Number.isInteger(Number(whatsapp_num)) || Number(whatsapp_num) <= 0)) {
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error : 'whatsapp_num must be a integer.',
       data : []
@@ -125,22 +125,22 @@ exports.enquire = async (req, res) => {
 
   try {
     const [[user]] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
-    if (!user) return res.status(404).json({ success: "0", 
+    if (!user) return res.status(200).json({ success: "0", 
       error: 'User not found.',
     data : [] });
 
     const [[post]] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ?`, [recever_posts_id]);
-    if (!post) return res.status(404).json({ success: "0", 
+    if (!post) return res.status(200).json({ success: "0", 
       error: 'Post not found.',
     data : [] });
 
     const [[landType]] = await db.query(`SELECT * FROM land_types WHERE land_type_id = ?`, [land_type_id]);
-    if (!landType) return res.status(404).json({ success: "0", 
+    if (!landType) return res.status(200).json({ success: "0", 
       error: 'Land type not found',
       data : []});
 
     const [[landCat]] = await db.query(`SELECT * FROM land_categories WHERE land_categorie_id = ?`, [land_categorie_id]);
-    if (!landCat) return res.status(404).json({ success: "0", 
+    if (!landCat) return res.status(200).json({ success: "0", 
       error: 'Land category not found.',
       data : []});
 
@@ -187,20 +187,20 @@ exports.my_leads = async (req, res) => {
   const user_id = req.body.user_id || req.query.user_id;
 
   if (!user_id || isNaN(user_id)) {
-    return res.status(400).json({ 
+    return res.status(200).json({ 
     result: "0",
     error : 'User ID is required and it must be an Integer',
     data : [] });
   }
   const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (exist_user.length === 0) 
-    {return res.status(404).json({ result : "0", 
+    {return res.status(200).json({ result : "0", 
     error: 'User not found.',
     data : [] });}
 
     const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE recever_posts_id = ?`, [user_id]);
     if (exist_enquire.length === 0) 
-    {return res.status(404).json({ result : "0", 
+    {return res.status(200).json({ result : "0", 
     error: 'User Enquire is not found.',
     data : [] });}
 
@@ -254,18 +254,18 @@ exports.self_enquiry = async (req, res) => {
   const { user_id } = req.body;
 
   if (!user_id || isNaN(user_id)) {
-    return res.status(400).json({ result : "0", error: 'User ID is required and it must be an Integer.' , data : [] });
+    return res.status(200).json({ result : "0", error: 'User ID is required and it must be an Integer.' , data : [] });
   }
 
   const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (exist_user.length === 0) 
-    {return res.status(404).json({ result : "0", 
+    {return res.status(200).json({ result : "0", 
     error: 'User not found.',
     data : [] });}
 
     const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE user_id = ?`, [user_id]);
     if (exist_enquire.length === 0) 
-    {return res.status(404).json({ result : "0", 
+    {return res.status(200).json({ result : "0", 
     error: 'You Enquiry is not found.',
     data : [] });}
 
@@ -311,7 +311,7 @@ exports.declineForm = async (req, res) => {
     let limit = 10;
 
     if(isNaN(page)){
-      return res.status(400).json({
+      return res.status(200).json({
         result : "0",
         error : "error page is only in Integer",
         data : []
@@ -379,7 +379,7 @@ exports.declineFormpara = async (req, res) => {
     const { name } = req.body;
 
     if (!name) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "Name is required",
         data: []
@@ -418,7 +418,7 @@ exports.declineEnquiry = async (req, res) => {
   const { enquire_id, user_posts_id, custom_para } = req.body;
 
   if (!enquire_id || isNaN(enquire_id)) {
-    return res.status(400).json({
+    return res.status(200).json({
       result : "0",
       error : "enquire_id is required and it must be an Integer.",
       data : []
@@ -426,7 +426,7 @@ exports.declineEnquiry = async (req, res) => {
   }
   const [exist_user_post] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ?`, [user_posts_id]);
     if (exist_user_post.length === 0) 
-    {return res.status(404).json({ result : "0", 
+    {return res.status(200).json({ result : "0", 
     error: 'User post is not found.',
     data : [] });}
 
@@ -435,7 +435,7 @@ exports.declineEnquiry = async (req, res) => {
       [enquire_id]
     );
     if (check.length === 0) {
-      return res.status(404).json({
+      return res.status(200).json({
         result : "0",
         error: "Enquiry not found.",
         data : []
@@ -446,7 +446,7 @@ exports.declineEnquiry = async (req, res) => {
       [enquire_id]
     );
     if (alreadyDeclined.length > 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "You have already declined this enquiry.",
         data : []
@@ -458,7 +458,7 @@ exports.declineEnquiry = async (req, res) => {
         [user_posts_id]
       );
       if (postCheck.length === 0) {
-        return res.status(404).json({
+        return res.status(200).json({
           result: "0",
           error: "User post not found.",
           data : []

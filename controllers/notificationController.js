@@ -10,7 +10,7 @@ exports.getNotificationSettings = async (req, res) => {
     );
 
     if (result.length === 0) {
-      return res.status(404).json({ 
+      return res.status(200).json({ 
         result: "0",
         error: "User not found",
         data: []
@@ -45,7 +45,7 @@ exports.updateNotificationSettings = async (req, res) => {
     let { user_id, allow_notification, notification_ids } = req.body;
 
     if (!user_id || isNaN(user_id)) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "user_id is required and must be an integer",
         data: []
@@ -54,7 +54,7 @@ exports.updateNotificationSettings = async (req, res) => {
 
     const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (exist_user.length === 0) {
-      return res.status(400).json({
+      return res.status(200).json({
         result: "0",
         error: "User does not exist in database",
         data: []
@@ -87,7 +87,7 @@ exports.updateNotificationSettings = async (req, res) => {
         settingsArray = validNumbers;
       }
       if (!settingsArray.every(num => validNumbers.includes(num))) {
-        return res.status(400).json({
+        return res.status(200).json({
           result: "0",
           error: "Invalid notification_ids. Allowed values are 1,2,3,4,5 only.",
           data: []
@@ -109,7 +109,7 @@ exports.updateNotificationSettings = async (req, res) => {
       });
     }
 
-    return res.status(400).json({
+    return res.status(200).json({
       result: "0",
       error: "Invalid allow_notification value. Use 0 or 1 only.",
       data: []
