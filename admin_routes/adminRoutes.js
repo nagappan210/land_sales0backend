@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 
 const adminController = require('../admin_conrollers/userlist');
-
+const landController = require('../admin_conrollers/land');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -24,5 +24,7 @@ router.post('/edituser/:user_id', upload.single('profile_image'), adminControlle
 router.post('/deleteuser/:user_id', adminController.deleteuser);
 router.post('/getuser/:user_id',adminController.getuser);
 router.get('/userpost',adminController.getpost);
+
+router.get('/landtype',landController.landtype);
 
 module.exports = router;

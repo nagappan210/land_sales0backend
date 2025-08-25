@@ -107,10 +107,10 @@ exports.getInterest = async (req, res) => {
     const limit = 30;
     const offset = (page - 1) * limit;
 
-   
+    const baseImageUrl = process.env.SERVER_ADDRESS + "uploaded/land_categoies/";
 
     const [results] = await db.query(`
-      SELECT land_categorie_id, land_type_id, name, image 
+      SELECT land_categorie_id, land_type_id, name, image
       FROM land_categories 
       LIMIT ? OFFSET ?
     `, [limit, offset]);
@@ -120,7 +120,7 @@ exports.getInterest = async (req, res) => {
     const totalPages = Math.ceil(totalCount / limit);
     const nextPage = page < totalPages ? page + 1 : 0;
 
-    if (totalCount === 0 || page > totalPages) {
+    if (totalCount === 0 || page > totalPages || results.length === 0) {
       return res.json({
         result: "0",
         error: "No records found",
@@ -131,10 +131,17 @@ exports.getInterest = async (req, res) => {
       });
     }
 
+    const normalized = results.map(r => ({
+      land_categorie_id: r.land_categorie_id ?? 0,
+      land_type_id: r.land_type_id ?? 0,
+      name: r.name ?? "",
+      image: r.image ? baseImageUrl + r.image : ""
+    }));
+
     res.json({
       result: "1",
       error: "",
-      data : results,
+      data: normalized,
       totalPages,
       nxtpage: nextPage,
       recCnt: totalCount
@@ -398,7 +405,7 @@ exports.updateUsername = async (req, res) => {
 };
 
 exports.getProfileStats = async (req, res) => {
-  const { user_id } = req.body;
+  const { user_id, others_id } = req.body;
 
   if (!user_id) {
     return res.status(200).json({
@@ -408,10 +415,21 @@ exports.getProfileStats = async (req, res) => {
     });
   }
 
+  const profile_images_path = process.env.SERVER_ADDRESS + "uploaded/profile_images/";
+
+  const targetId = others_id && others_id !== 0 ? others_id : user_id;
+
   const query = `
     SELECT 
-      u.U_ID AS user_id,u.username,u.name ,u.bio,u.profile_image,
-      (SELECT COUNT(*) FROM user_posts 
+      u.U_ID AS user_id,
+      u.username,
+      u.name,
+      u.bio,
+      u.phone_num_cc,
+      u.phone_num,
+      u.profile_image,
+      (SELECT COUNT(*) 
+        FROM user_posts 
         WHERE U_ID = u.U_ID 
           AND deleted_at IS NULL 
           AND status = 'published' 
@@ -427,7 +445,7 @@ exports.getProfileStats = async (req, res) => {
   `;
 
   try {
-    const [results] = await db.query(query, [user_id]);
+    const [results] = await db.query(query, [targetId]);
 
     if (results.length === 0) {
       return res.status(200).json({
@@ -439,15 +457,32 @@ exports.getProfileStats = async (req, res) => {
 
     const profile = results[0];
 
+    let isBlocked = 0;
+    if (others_id && others_id !== 0) {
+      const [blockRows] = await db.query(
+        `SELECT COUNT(*) AS blocked
+        FROM blocks
+        WHERE user_id = ? AND blocker_id = ?`,
+        [user_id, others_id]
+      );
+      isBlocked = blockRows[0].blocked > 0 ? 1 : 0;
+
+    }
+
     const normalizeProfile = (profile) => ({
       user_id: profile.user_id,
       username: profile.username || "",
-      name : profile.name || "",
+      name: profile.name || "",
+      phone_num_cc: profile.phone_num_cc || "",
+      phone_num: profile.phone_num || "",
       bio: profile.bio || "",
-      profile_image: profile.profile_image || "",
+      profile_image: profile.profile_image
+        ? profile_images_path + profile.profile_image
+        : "",
       posts: profile.posts || 0,
       followers: profile.followers || 0,
-      following: profile.following || 0
+      following: profile.following || 0,
+      is_blocked: isBlocked
     });
 
     return res.json({
@@ -599,58 +634,74 @@ exports.getFollowData = async (req, res) => {
     });
   }
 
-  const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
-  if(existing_user.length === 0 ){
+  const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+  if (existing_user.length === 0) {
     return res.status(200).json({
-      result : "0",
-      error : "User is not fount in database",
-      data : []
+      result: "0",
+      error: "User not found in database",
+      data: []
     });
   }
 
   const offset = (page - 1) * limit;
+  const profile_images = process.env.SERVER_ADDRESS + "uploaded/profile_images/";
 
   try {
-    let baseQuery = '';
-    let countQuery = '';
-    let values = [user_id, limit, offset];
-    let countValues = [user_id];
+    let baseQuery = "";
+    let countQuery = "";
+    let values = [];
+    let countValues = [];
 
-    if (status === 1) {
+    const statusInt = parseInt(status, 10);
+
+    if (statusInt === 1) {
       baseQuery = `
-        SELECT u.U_ID, u.username, u.profile_image
+        SELECT u.U_ID, u.name, u.username, u.profile_image,
+          CASE 
+            WHEN EXISTS (
+              SELECT 1 
+              FROM followers f2 
+              WHERE f2.user_id = ? AND f2.following_id = u.U_ID
+            ) THEN 1 ELSE 0
+          END as followed
         FROM followers f
         JOIN users u ON f.user_id = u.U_ID
         WHERE f.following_id = ?
         LIMIT ? OFFSET ?`;
 
-      countQuery = `
-        SELECT COUNT(*) as total
-        FROM followers f
-        WHERE f.following_id = ?`;
+      countQuery = `SELECT COUNT(*) as total FROM followers f WHERE f.following_id = ?`;
 
-    } else if (status === 2) {
-    
+      values = [user_id, user_id, limit, offset];
+      countValues = [user_id];
+
+    } else if (statusInt === 2) {
       baseQuery = `
-        SELECT u.U_ID, u.username, u.profile_image
+        SELECT u.U_ID, u.name, u.username, u.profile_image,
+          CASE 
+            WHEN EXISTS (
+              SELECT 1 
+              FROM followers f2 
+              WHERE f2.user_id = u.U_ID AND f2.following_id = ?
+            ) THEN 1 ELSE 0
+          END as followed
         FROM followers f
         JOIN users u ON f.following_id = u.U_ID
         WHERE f.user_id = ?
         LIMIT ? OFFSET ?`;
 
-      countQuery = `
-        SELECT COUNT(*) as total
-        FROM followers f
-        WHERE f.user_id = ?`;
+      countQuery = `SELECT COUNT(*) as total FROM followers f WHERE f.user_id = ?`;
+
+      values = [user_id, user_id, limit, offset];
+      countValues = [user_id];
 
     } else {
       return res.status(200).json({
         result: "0",
         error: "Invalid status. Use 1 for followers or 2 for following.",
-        data: [] ,
-        recCnt : 0,
-      totalPages : 0,
-      nxtpage
+        data: [],
+        recCnt: 0,
+        totalPages: 0,
+        nxtpage: 0
       });
     }
 
@@ -661,13 +712,28 @@ exports.getFollowData = async (req, res) => {
     const totalPages = Math.ceil(totalCount / limit);
     const nxtpage = page < totalPages ? page + 1 : 0;
 
-    const normalizeUser = (user) => ({
-      user_id: user.U_ID,
-      username: user.username ?? "",
-      profile_image: user.profile_image ?? ""
-    });
+    const data = await Promise.all(
+      rawData.map(async (user) => {
+        const [[followersCount]] = await db.query(
+          `SELECT COUNT(*) as count FROM followers WHERE following_id = ?`,
+          [user.U_ID]
+        );
+        const [[followingCount]] = await db.query(
+          `SELECT COUNT(*) as count FROM followers WHERE user_id = ?`,
+          [user.U_ID]
+        );
 
-    const data = rawData.map(normalizeUser);
+        return {
+          user_id: user.U_ID,
+          name: user.name,
+          username: user.username ?? "",
+          profile_image: user.profile_image ? profile_images + user.profile_image : "",
+          is_followed: user.followed ?? 0,
+          followers_count: followersCount.count, 
+          following_count: followingCount.count  
+        };
+      })
+    );
 
     res.json({
       result: "1",
@@ -678,13 +744,14 @@ exports.getFollowData = async (req, res) => {
     });
 
   } catch (err) {
+    console.error(err);
     res.status(500).json({
       result: "0",
       error: err.message,
       data: [],
-      recCnt : 0,
-      totalPages : 0,
-      nxtpage
+      recCnt: 0,
+      totalPages: 0,
+      nxtpage: 0
     });
   }
 };
