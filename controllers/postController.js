@@ -41,13 +41,14 @@ const {status} = req.body;
 
 exports.createPostStep1 = async (req, res) => {
   try {
+    
     let { user_id, user_type, user_post_id } = req.body;
     user_id = Number(user_id);
     user_type = Number(user_type);
     user_post_id = Number(user_post_id);
     const draft = 1
 
-    if (!user_id || isNaN(user_id) || ![0, 1].includes(user_type) || !user_post_id) {
+    if (!user_id || isNaN(user_id) || ![0, 1].includes(user_type) ) {
       return res.status(200).json({
         result: "0",
         error: "user_id and user_post_id is required and user_type must be 0 or 1.",

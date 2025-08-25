@@ -49,14 +49,6 @@
       </thead>
       <tbody>
         <tr class="border-t">
-          <td class="p-3">User ID</td>
-          <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
-          <td class="p-3">user_id</td>
-          <td class="p-3">No</td>
-          <td class="p-3">int</td>
-          <td class="p-3">1</td>
-        </tr>
-        <tr class="border-t">
           <td class="p-3">Name</td>
           <td class="p-3"><input type="text" name="name" class="w-full border rounded p-2" /></td>
           <td class="p-3">name</td>
@@ -2844,6 +2836,14 @@
             <td class="p-3">int</td>
             <td class="p-3">1</td>
           </tr>
+          <tr class="border-t">
+            <td class="p-3">Page</td>
+            <td class="p-3"><input type="text" name="page" class="w-full border rounded p-2" /></td>
+            <td class="p-3">page</td>
+            <td class="p-3">No</td>
+            <td class="p-3">int</td>
+            <td class="p-3">1</td>
+          </tr>
           <tr>
             <td colspan="6" class="text-center p-4">
               <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
@@ -2900,6 +2900,14 @@
             <td class="p-3"><input type="text" name="comment_id" class="w-full border rounded p-2" /></td>
             <td class="p-3">comment_id</td>
             <td class="p-3">Yes</td>
+            <td class="p-3">int</td>
+            <td class="p-3">1</td>
+          </tr>
+          <tr class="border-t">
+            <td class="p-3">Page</td>
+            <td class="p-3"><input type="text" name="page" class="w-full border rounded p-2" /></td>
+            <td class="p-3">page</td>
+            <td class="p-3">No</td>
             <td class="p-3">int</td>
             <td class="p-3">1</td>
           </tr>
@@ -3618,12 +3626,7 @@
   </div>
 </div>
 
-
-
-
-
 <script>
-
 
   // REGISTER FORM SUBMISSION
   const registerForm = document.getElementById('RegisterForm');
@@ -3892,7 +3895,6 @@
   }
 });
 
-
   //UPDATE USERNAME
   const update_username = document.getElementById('update_username');
   update_username.addEventListener('submit', async function (e) {
@@ -3925,7 +3927,6 @@
       window.location.href = 'response.html';
     }
 });
-
 
   //FOLLOW & FOLLOWING
   const followForm = document.getElementById('follow');
@@ -4440,7 +4441,6 @@
       window.location.href = 'response.html';
     }
   });
-
 
   //PUBLISHED
   const laststep = document.getElementById("laststep");

@@ -2,7 +2,7 @@ const db = require ('../db')
 
 exports.land_categories = async (req, res) => {
   let { page = 1 } = req.body;
-  const limit = 10;
+  const limit = 30;
 
   if (!Number.isInteger(Number(page)) || Number(page) < 1) {
     return res.status(200).json({

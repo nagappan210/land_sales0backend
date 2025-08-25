@@ -335,7 +335,7 @@ exports.updateProfile = async (req, res) => {
       data: []
     });
   }
-}; 
+};
 
 exports.updateUsername = async (req, res) => {
   try {
@@ -1688,6 +1688,16 @@ exports.getreplay_comment = async (req, res) => {
        WHERE replies_comment_id = ?`,
       [comment_id]
     );
+    if (total === 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "No replies found for this comment",
+        totalPages: 0,
+        nxtpage: 0,
+        recCnt: 0,
+        data: []
+      });
+    }
 
     const [replies] = await db.query(
       `SELECT c.comment_id, c.user_id, c.comment, c.created_at,
@@ -1820,8 +1830,9 @@ exports.likeComment = async (req, res) => {
 };
 
 exports.search = async (req, res) => {
-  const { land_type_id, locality, min_price, max_price, user_id } = req.body;
+  const { land_type_id, locality, min_price, max_price, user_id , page = 1 } = req.body;
 
+  const limit = 10;
   if (
     !user_id || !land_type_id || !locality || !min_price || !max_price ||
     isNaN(Number(user_id)) || isNaN(Number(land_type_id)) ||
@@ -1867,6 +1878,20 @@ exports.search = async (req, res) => {
       );
     }
 
+    const offset = (page - 1) * limit;
+
+    const [countRows] = await db.query(
+      `SELECT COUNT(DISTINCT p.user_post_id) AS total
+       FROM user_posts p
+       WHERE p.land_type_id = ?
+         AND p.price BETWEEN ? AND ?
+         AND p.locality LIKE ?`,
+      [land_type_id, min_price, max_price, `%${locality}%`]
+    );
+
+    const total = countRows[0].total;
+    const totalPages = Math.ceil(total / limit);
+
 
 
     const [rows] = await db.query(
@@ -1888,14 +1913,15 @@ exports.search = async (req, res) => {
          p.user_post_id, p.land_type_id, p.property_name, 
          p.locality, p.price, p.video, p.created_at
        ORDER BY p.user_post_id DESC`,
-      [land_type_id, min_price, max_price, `%${locality}%`]
+      [land_type_id, min_price, max_price, `%${locality}%`, Number(limit), offset]
     );
 
     if (rows.length === 0) {
       return res.status(200).json({
         result: "0",
-        error : "No data are fount",
-        data: []
+        error: "No data found",
+        data: [],
+        pagination: { page, limit, total, totalPages }
       });
     }
 
@@ -1909,7 +1935,13 @@ exports.search = async (req, res) => {
 
     return res.status(200).json({
       result: "1",
-      data: sanitizedRows
+      data: sanitizedRows,
+      pagination: {
+        page: Number(page),
+        limit: Number(limit),
+        total,
+        totalPages
+      }
     });
 
   } catch (err) {
