@@ -17,6 +17,19 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
+const land_categories = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../uploaded/land_categoies'));
+  },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9) + ext;
+    cb(null, uniqueName);
+  }
+});
+
+const land_categoies_upload = multer({ storage: land_categories });
+
 
 router.get('/getusertable', adminController.getusertable);
 router.post('/adduser', adminController.adduser);
@@ -26,5 +39,8 @@ router.post('/getuser/:user_id',adminController.getuser);
 router.get('/userpost',adminController.getpost);
 
 router.get('/landtype',landController.landtype);
+router.post('/addland_types',landController.addlandtypes)
+router.post('/add_land_category',land_categoies_upload.single('image'),landController.add_land_category)
+router.get('/get_land_categorie' ,landController.get_land_categorie);
 
 module.exports = router;

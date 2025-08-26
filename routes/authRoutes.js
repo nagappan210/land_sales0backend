@@ -47,25 +47,13 @@ const uploads = multer({
   { name: 'images', maxCount: 10 }
 ]);
 
-// const land_categories = multer.diskStorage({
-//   destination: function (req, file, cb) {
-//     cb(null, path.join(__dirname, '../uploaded/land_categoies'));
-//   },
-//   filename: function (req, file, cb) {
-//     const ext = path.extname(file.originalname);
-//     const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1e9) + ext;
-//     cb(null, uniqueName);
-//   }
-// });
-
-// const land_categoies_upload = multer({ storage: land_categories });
 
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/verify', authController.verifyOtp);
 router.post('/location',userController.location);
 
-// router.post('/add_land_category',land_categoies_upload.single('image'),userController.add_land_category)
+
 router.post('/getInterest',userController.getInterest);
 router.post('/user_interest', userController.updateUserInterest);
 router.post('/get_user_interest', userController.getUserInterest);

@@ -1,29 +1,5 @@
 const db = require('../db');
 
-// exports.add_land_category = async (req, res) => {
-//   try {
-//     const { land_categorie_id } = req.body;
-//     const image = req.file ? req.file.filename : null;
-
-//     if (!land_categorie_id) {
-//       return res.status(200).json({ message: 'land_categorie_id is required.' });
-//     }
-
-//     if (!image) {
-//       return res.status(200).json({ message: 'Image file is required.' });
-//     }
-
-//     await db.query(
-//       `UPDATE land_categories SET image = ? WHERE land_categorie_id = ?`,
-//       [image, land_categorie_id]
-//     );
-
-//     res.json({ message: 'Image updated successfully.', filename: image });
-//   } catch (err) {
-//     console.error('Error updating image:', err);
-//     res.status(500).json({ error: err.message });
-//   }
-// };
 
 // exports.getContact = async (req, res) => {
 //   const userId = req.params.id;
