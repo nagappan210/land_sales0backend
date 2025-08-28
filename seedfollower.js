@@ -19,7 +19,7 @@ async function seedFollows() {
       let followingId;
 
       do {
-        followingId = 6
+        followingId = faker.number.int({ min: startId, max: endId });
       } while (followingId === userId);
 
       await db.query(

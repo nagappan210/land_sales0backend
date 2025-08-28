@@ -212,20 +212,17 @@ exports.getuser = async (req, res) => {
 exports.getpost = async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT  u.user_post_id,  
-        u.U_ID,  
-        u.user_type,  
-        u.land_type_id,  
-        u.land_categorie_id,  
-        u.video,
-        u.image_ids,  
-        u.status,  
-        u.post_type,
-        i.image_path AS images 
+      SELECT  u.user_post_id,  u.U_ID,  u.user_type,  u.land_type_id,  u.land_categorie_id,  u.video,u.image_ids,  u.status,  
+      u.post_type,CASE 
+        WHEN u.post_type = 2 THEN i.image_path 
+        ELSE NULL 
+      END AS images
       FROM user_posts AS u
-      JOIN post_images AS i ON u.U_ID = i.user_post_id
+      LEFT JOIN post_images AS i 
+        ON u.user_post_id = i.user_post_id 
+        AND u.post_type = 2
       WHERE u.deleted_at IS NULL
-      group by u.user_post_id
+      GROUP BY u.user_post_id
     `);
 
     return res.status(200).json({
@@ -243,5 +240,3 @@ exports.getpost = async (req, res) => {
     });
   }
 };
-
-

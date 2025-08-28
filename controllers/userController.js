@@ -497,7 +497,6 @@ exports.followUser = async (req, res) => {
       });
     }
 
-    // User existence check
     const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (existing_user.length === 0) {
       return res.status(200).json({
@@ -524,7 +523,6 @@ exports.followUser = async (req, res) => {
       });
     }
 
-    // ----------------- FOLLOW -----------------
     if (status === 1) {
       const [check] = await db.query(
         `SELECT * FROM followers WHERE user_id = ? AND following_id = ?`,
@@ -559,7 +557,6 @@ exports.followUser = async (req, res) => {
       });
     }
 
-    // ----------------- UNFOLLOW -----------------
     if (status === 2) {
       const [check] = await db.query(
         `SELECT * FROM followers WHERE user_id = ? AND following_id = ?`,
@@ -594,11 +591,10 @@ exports.followUser = async (req, res) => {
       });
     }
 
-    // ----------------- REMOVE FOLLOWER -----------------
     if (status === 3) {
       const [result] = await db.query(
         `DELETE FROM followers WHERE user_id = ? AND following_id = ?`,
-        [following_id, user_id] // swapped
+        [following_id, user_id]
       );
 
       if (result.affectedRows === 0) {
@@ -615,8 +611,7 @@ exports.followUser = async (req, res) => {
         status: 3,
       });
     }
-
-    // ----------------- INVALID STATUS -----------------
+    
     return res.status(200).json({
       result: "0",
       error: "Invalid status. Use 1 (follow), 2 (unfollow), 3 (remove follower).",
@@ -632,9 +627,8 @@ exports.followUser = async (req, res) => {
   }
 };
 
-
 exports.getFollowData = async (req, res) => {
-  const { user_id, status, page  } = req.body;
+  const { user_id, others_id, status, page } = req.body;
   const currentPage = parseInt(page, 10) || 1;
   const limit = 20;
 
@@ -659,15 +653,14 @@ exports.getFollowData = async (req, res) => {
   const profile_images = process.env.SERVER_ADDRESS + "uploaded/profile_images/";
 
   try {
+    const statusInt = parseInt(status, 10);
+    const targetId = others_id || user_id; 
     let baseQuery = "";
     let countQuery = "";
     let values = [];
     let countValues = [];
 
-    const statusInt = parseInt(status, 10);
-
     if (statusInt === 1) {
-      // followers of current user
       baseQuery = `
         SELECT u.U_ID, u.name, u.username, u.profile_image
         FROM followers f
@@ -677,11 +670,10 @@ exports.getFollowData = async (req, res) => {
 
       countQuery = `SELECT COUNT(*) as total FROM followers f WHERE f.following_id = ?`;
 
-      values = [user_id, limit, offset];
-      countValues = [user_id];
+      values = [targetId, limit, offset];
+      countValues = [targetId];
 
     } else if (statusInt === 2) {
-      // users current user is following
       baseQuery = `
         SELECT u.U_ID, u.name, u.username, u.profile_image
         FROM followers f
@@ -691,8 +683,8 @@ exports.getFollowData = async (req, res) => {
 
       countQuery = `SELECT COUNT(*) as total FROM followers f WHERE f.user_id = ?`;
 
-      values = [user_id, limit, offset];
-      countValues = [user_id];
+      values = [targetId, limit, offset];
+      countValues = [targetId];
 
     } else {
       return res.status(200).json({
@@ -718,26 +710,14 @@ exports.getFollowData = async (req, res) => {
           `SELECT COUNT(*) as cnt FROM followers WHERE user_id = ? AND following_id = ?`,
           [user_id, user.U_ID]
         );
+
         const [[otherFollows]] = await db.query(
           `SELECT COUNT(*) as cnt FROM followers WHERE user_id = ? AND following_id = ?`,
           [user.U_ID, user_id]
         );
+        let im_followed = userFollows.cnt > 0 ? 1 : 0;
+        let  is_followed= otherFollows.cnt > 0 ? 1 : 0;
 
-        let im_followed = 0;
-        let is_followed = 0;
-        if (userFollows.cnt > 0 && otherFollows.cnt > 0) {
-          is_followed = 1;
-          im_followed = 1;
-        } else if (userFollows.cnt > 0 && otherFollows.cnt == 0) {
-          is_followed = 0;
-          im_followed = 1
-        }
-        else if(userFollows.cnt == 0 && otherFollows.cnt > 0){
-          is_followed = 1;
-          im_followed = 0
-        }
-
-        // followers/following counts
         const [[followersCount]] = await db.query(
           `SELECT COUNT(*) as count FROM followers WHERE following_id = ?`,
           [user.U_ID]
@@ -782,13 +762,13 @@ exports.getFollowData = async (req, res) => {
 };
 
 exports.searchfollower = async (req, res) => {
-  const { user_id, status, name, username } = req.body;
+  const { user_id, status, search } = req.body;
 
   try {
     let query = "";
     let params = [];
 
-    const base_url = process.env.SERVER_ADDRESS+"uploaded/profile_image/";
+    const base_url = process.env.SERVER_ADDRESS + "uploaded/profile_image/";
 
     if (status === 2) {
       query = `
@@ -796,50 +776,38 @@ exports.searchfollower = async (req, res) => {
           u.U_ID, 
           u.name, 
           u.username, 
-          CONCAT(?, u.profile_image) AS profile_image
+          u.profile_image
         FROM followers AS f
         JOIN users AS u ON u.U_ID = f.following_id
         WHERE f.user_id = ?
       `;
-      params.push(base_url, user_id);
+      params.push(user_id);
 
-      if (name && name.length >= 3) {
-        query += " AND LOWER(u.name) LIKE ?";
-        params.push(`%${name.toLowerCase()}%`);
-      }
-      if (username && username.length >= 3) {
-        query += " AND LOWER(u.username) LIKE ?";
-        params.push(`%${username.toLowerCase()}%`);
-      }
-    } 
-    else if (status === 1) {
+    } else if (status === 1) {
       query = `
         SELECT  
           u.U_ID, 
           u.name, 
           u.username, 
-          CONCAT(?, u.profile_image) AS profile_image
+          u.profile_image
         FROM followers AS f
         JOIN users AS u ON u.U_ID = f.user_id
         WHERE f.following_id = ?
       `;
-      params.push(base_url, user_id);
+      params.push(user_id);
 
-      if (name && name.length >= 3) {
-        query += " AND LOWER(u.name) LIKE ?";
-        params.push(`%${name.toLowerCase()}%`);
-      }
-      if (username && username.length >= 3) {
-        query += " AND LOWER(u.username) LIKE ?";
-        params.push(`%${username.toLowerCase()}%`);
-      }
-    } 
-    else {
+    } else {
       return res.status(400).json({
         result: "0",
         error: "Invalid status value",
         data: []
       });
+    }
+
+    // Search filter (if given and >= 3 chars)
+    if (search && search.length >= 3) {
+      query += ` AND (LOWER(u.name) LIKE ? OR LOWER(u.username) LIKE ?) `;
+      params.push(`%${search.toLowerCase()}%`, `%${search.toLowerCase()}%`);
     }
 
     const [rows] = await db.query(query, params);
@@ -852,10 +820,52 @@ exports.searchfollower = async (req, res) => {
       });
     }
 
+    const data = await Promise.all(
+      rows.map(async (user) => {
+        // check if I follow him
+        const [[userFollows]] = await db.query(
+          `SELECT COUNT(*) as cnt FROM followers WHERE user_id = ? AND following_id = ?`,
+          [user_id, user.U_ID]
+        );
+
+        // check if he follows me
+        const [[otherFollows]] = await db.query(
+          `SELECT COUNT(*) as cnt FROM followers WHERE user_id = ? AND following_id = ?`,
+          [user.U_ID, user_id]
+        );
+
+        let im_followed = userFollows.cnt > 0 ? 1 : 0;
+        let is_followed = otherFollows.cnt > 0 ? 1 : 0;
+
+        // followers count of this user
+        const [[followersCount]] = await db.query(
+          `SELECT COUNT(*) as count FROM followers WHERE following_id = ?`,
+          [user.U_ID]
+        );
+
+        // following count of this user
+        const [[followingCount]] = await db.query(
+          `SELECT COUNT(*) as count FROM followers WHERE user_id = ?`,
+          [user.U_ID]
+        );
+
+        return {
+          user_id: user.U_ID,
+          name: user.name,
+          username: user.username ?? "",
+          profile_image: user.profile_image ? base_url + user.profile_image : "",
+          im_followed,
+          is_followed,
+          followers_count: followersCount.count,
+          following_count: followingCount.count
+        };
+      })
+    );
+
     return res.status(200).json({
       result: "1",
       error: "",
-      data: rows
+      data: data
     });
 
   } catch (err) {
@@ -1385,25 +1395,38 @@ exports.getBlockedList = async (req, res) => {
       data: []
     });
   }
-  const [exist_user] = await db.query(`select * from users where U_ID =?`,[user_id]);
-      if(exist_user.length === 0){
-        return res.status(200).json({
-          result : "0",
-          error : "User does not exist in database",
-          data : []
-        });
-      }
+
+  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+  if (exist_user.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "User does not exist in database",
+      data: []
+    });
+  }
+
   const currentPage = parseInt(page);
   const offset = (currentPage - 1) * limit;
 
   try {
     const [rawResults] = await db.query(
-      `SELECT u.U_ID, u.username, u.profile_image
-       FROM blocks b
-       JOIN users u ON b.blocker_id = u.U_ID
-       WHERE b.user_id = ?
-       LIMIT ? OFFSET ?`,
-      [user_id, limit, offset]
+      `
+      SELECT 
+        u.U_ID,
+        u.name,
+        u.username,
+        u.profile_image,
+        (SELECT COUNT(*) FROM followers f WHERE f.following_id = u.U_ID) AS followers,
+        (SELECT COUNT(*) FROM followers f WHERE f.user_id = u.U_ID) AS following,
+        EXISTS(SELECT 1 FROM blocks b2 WHERE b2.user_id = ? AND b2.blocker_id = u.U_ID) AS is_blocked,
+        EXISTS(SELECT 1 FROM followers f1 WHERE f1.user_id = ? AND f1.following_id = u.U_ID) AS is_followed,
+        EXISTS(SELECT 1 FROM followers f2 WHERE f2.user_id = u.U_ID AND f2.following_id = ?) AS im_followed
+      FROM blocks b
+      JOIN users u ON b.blocker_id = u.U_ID
+      WHERE b.user_id = ?
+      LIMIT ? OFFSET ?
+      `,
+      [user_id, user_id, user_id, user_id, limit, offset]
     );
 
     const [totalCountResult] = await db.query(
@@ -1415,23 +1438,31 @@ exports.getBlockedList = async (req, res) => {
     const totalPages = Math.ceil(totalCount / limit);
     const nxtpage = currentPage < totalPages ? currentPage + 1 : 0;
 
-    const normalizeUser = (user) => ({
-      user_id: user.U_ID,
-      username: user.username ?? "",
-      profile_image: user.profile_image ?? ""
+    const profile_images_path = process.env.SERVER_ADDRESS + "uploads/profile/";
+
+    const normalizeUser = (profile) => ({
+      user_id: profile.U_ID,
+      username: profile.username || "",
+      name: profile.name || "",
+      profile_image: profile.profile_image ? profile_images_path + profile.profile_image : "",
+      followers: profile.followers || 0,
+      following: profile.following || 0,
+      is_blocked: profile.is_blocked ? 1 : 0,
+      is_followed: profile.is_followed ? 1 : 0,
+      im_followed: profile.im_followed ? 1 : 0
     });
 
     const data = rawResults.map(normalizeUser);
 
-    if(data.length === 0){
+    if (data.length === 0) {
       return res.status(200).json({
-        result : "0",
-        error : "There is no data for this User",
-        data :[]
-      })
+        result: "0",
+        error: "There is no data for this User",
+        data: []
+      });
     }
 
-    res.json({
+    return res.status(200).json({
       result: "1",
       message: "Blocked user list fetched successfully",
       error: "",
@@ -1442,13 +1473,15 @@ exports.getBlockedList = async (req, res) => {
     });
 
   } catch (err) {
-    res.status(500).json({
+    console.error(err);
+    return res.status(500).json({
       result: "0",
       error: err.message,
       data: []
     });
   }
 };
+
 
 exports.delete_post = async (req, res) => {
   const { user_id, user_post_id } = req.body;
@@ -1493,6 +1526,8 @@ exports.delete_post = async (req, res) => {
 exports.getReels = async (req, res) => {
   const { user_id, page = 1 } = req.body;
   const limit = 10;
+  console.log('hit');
+  
 
   if (!user_id) {
     return res.status(200).json({ result: "0", error: "user_id is required", data: [] });
