@@ -5,6 +5,7 @@ const path = require('path');
 
 const adminController = require('../admin_conrollers/userlist');
 const landController = require('../admin_conrollers/land');
+const { ro } = require('@faker-js/faker');
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -42,5 +43,6 @@ router.get('/landtype',landController.landtype);
 router.post('/addland_types',landController.addlandtypes)
 router.post('/add_land_category',land_categoies_upload.single('image'),landController.add_land_category)
 router.get('/get_land_categorie' ,landController.get_land_categorie);
+router.post('/delete_land_categoies', landController.delete_land_categoies);
 
 module.exports = router;

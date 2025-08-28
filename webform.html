@@ -961,8 +961,8 @@
           <td class="p-3">status</td>
           <td class="p-3">Yes</td>
           <td class="p-3">int</td>
-          <td class="p-3">1 or 2</td>
-          <td>1->follow ,2->unfollow </td>
+          <td class="p-3">1 or 2 or 3</td>
+          <td>1->follow ,2->unfollow, <br> 3->delete follower </td>
         </tr>
         <tr>
           <td colspan="7" class="text-center p-4">
@@ -1057,7 +1057,161 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">14. Get Notification Settings</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">14.Search Follow</h2>
+  <div class="mb-6">
+    <table class="w-full bg-white border rounded shadow text-sm mb-6">
+      <tbody>
+        <tr class="border-b">
+          <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+          <td class="p-3 text-blue-700">http://localhost:7000/api/auth/searchfollower</td>
+        </tr>
+        <tr class="border-b">
+          <td class="font-semibold p-3 bg-gray-50">Method:</td>
+          <td class="p-3">POST</td>
+        </tr>
+        <tr class="border-b">
+          <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+          <td class="p-3">application/json; charset=utf-8</td>
+        </tr>
+        <tr>
+          <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+          <td class="p-3">Development</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <form id="searchfollower">
+    <table class="w-full text-sm bg-white border rounded shadow mb-6">
+      <thead class="bg-slate-900 text-white">
+        <tr>
+          <th class="p-3 text-left">Label Name</th>
+          <th class="p-3 text-left">Value</th>
+          <th class="p-3 text-left">Variable Name</th>
+          <th class="p-3 text-left">Mandatory</th>
+          <th class="p-3 text-left">Note</th>
+          <th class="p-3 text-left">Sample</th>
+          <th class="p-3 text-left">Values</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-t">
+          <td class="p-3">User ID</td>
+          <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+          <td class="p-3">user_id</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">int</td>
+          <td class="p-3">1</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">Status</td>
+          <td class="p-3"><input type="text" name="status" class="w-full border rounded p-2" /></td>
+          <td class="p-3">status</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">int</td>
+          <td class="p-3">1 or 2</td>
+          <td class="p-3">1->Followers list , 2->Following list</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">Name</td>
+          <td class="p-3"><input type="text" name="name" class="w-full border rounded p-2" /></td>
+          <td class="p-3">name</td>
+          <td class="p-3">No</td>
+          <td class="p-3">string</td>
+          <td class="p-3">Naga</td>
+          <td class="p-3">Optional</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">User Name</td>
+          <td class="p-3"><input type="text" name="username" class="w-full border rounded p-2" /></td>
+          <td class="p-3">username</td>
+          <td class="p-3">No</td>
+          <td class="p-3">string</td>
+          <td class="p-3">Naga</td>
+          <td class="p-3">Optional</td>
+        </tr>
+        <tr>
+          <td colspan="7" class="text-center p-4">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+              Submit
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
+
+  </div>
+</div>
+
+<!-- <div>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">15.Delete Followers</h2>
+  <div class="mb-6">
+    <table class="w-full bg-white border rounded shadow text-sm mb-6">
+      <tbody>
+        <tr class="border-b">
+          <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+          <td class="p-3 text-blue-700">http://localhost:7000/api/auth/removefollower</td>
+        </tr>
+        <tr class="border-b">
+          <td class="font-semibold p-3 bg-gray-50">Method:</td>
+          <td class="p-3">POST</td>
+        </tr>
+        <tr class="border-b">
+          <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+          <td class="p-3">application/json; charset=utf-8</td>
+        </tr>
+        <tr>
+          <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+          <td class="p-3">Development</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <form id="removefollower">
+    <table class="w-full text-sm bg-white border rounded shadow mb-6">
+      <thead class="bg-slate-900 text-white">
+        <tr>
+          <th class="p-3 text-left">Label Name</th>
+          <th class="p-3 text-left">Value</th>
+          <th class="p-3 text-left">Variable Name</th>
+          <th class="p-3 text-left">Mandatory</th>
+          <th class="p-3 text-left">Note</th>
+          <th class="p-3 text-left">Sample</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-t">
+          <td class="p-3">User ID</td>
+          <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+          <td class="p-3">user_id</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">int</td>
+          <td class="p-3">1</td>
+        </tr>
+        <tr class="border-t">
+          <td class="p-3">Follower ID</td>
+          <td class="p-3"><input type="text" name="follower_id" class="w-full border rounded p-2" /></td>
+          <td class="p-3">follower_id</td>
+          <td class="p-3">Yes</td>
+          <td class="p-3">int</td>
+          <td class="p-3">2</td>
+        </tr>
+        <tr>
+          <td colspan="7" class="text-center p-4">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+              Submit
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </form>
+
+  </div>
+</div> -->
+
+<div>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">15. Get Notification Settings</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -1116,7 +1270,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">15. Notification Settings</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">16. Notification Settings</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -1195,7 +1349,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">16. Block User Settings</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">17. Block User Settings</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -1273,7 +1427,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">17. Get Blocked Users</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">18. Get Blocked Users</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -1340,7 +1494,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">18. User Account Deactivate / Activate</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">19. User Account Deactivate / Activate</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1409,7 +1563,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">19. Post Video Step 1</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">20. Post Video Step 1</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1486,7 +1640,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">20. Get Land Categories</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">21. Get Land Categories</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1549,7 +1703,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">21. Post Video Step 2</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">22. Post Video Step 2</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1634,7 +1788,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">22. Post Video Step 3</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">23. Post Video Step 3</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1749,7 +1903,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">23. Post Video Step 5</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">25. Post Video Step 5</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1824,7 +1978,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">24. Post Video Step 6</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">26. Post Video Step 6</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -1918,7 +2072,7 @@
 
 <div>
   <h2 class="text-xl font-semibold text-red-600 underline mb-4">
-    25. Post Video Step 7
+    27. Post Video Step 7
   </h2>
 
   <div class="mb-6">
@@ -2000,7 +2154,7 @@
 
 <div>
   <h2 class="text-xl font-semibold text-red-600 underline mb-4">
-    26. Published
+    28. Published
   </h2>
 
   <div class="mb-6">
@@ -2080,7 +2234,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">27. Save Post</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">29. Save Post</h2>
 
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -2157,7 +2311,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">28. Saved Post User</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">30. Saved Post User</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2223,7 +2377,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">29. Mark as Sold </h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">31. Mark as Sold </h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2299,7 +2453,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">30.Get Users Sold Video </h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">32.Get Users Sold Video </h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2365,7 +2519,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">31.Get Users Draft Video</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">33.Get Users Draft Video</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2431,7 +2585,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">32.Get Video Or Reels </h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">34.Get Video Or Reels </h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2497,7 +2651,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">33.Like and Unlike </h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">35.Like and Unlike </h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2573,7 +2727,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">34.Like Count </h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">36.Like Count </h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2631,7 +2785,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">35.Comment For Post </h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">37.Comment For Post </h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2714,7 +2868,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">36.Comment Like </h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">38.Comment Like </h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2799,7 +2953,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">37.Get Comment</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">39.Get Comment</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2866,7 +3020,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">38.Get Repley Comment</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">40.Get Repley Comment</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2933,7 +3087,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">39.Land Categorie Name</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">41.Land Categorie Name</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -2992,7 +3146,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">40.Land Categorie Para</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">42.Land Categorie Para</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -3051,7 +3205,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">41.Enquire Form</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">43.Enquire Form</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -3174,7 +3328,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">42.My Leads</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">44.My Leads</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -3233,7 +3387,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">43.Self Enquire</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">45.Self Enquire</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -3292,7 +3446,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">44.Decline Form Name</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Decline Form Name</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -3351,7 +3505,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">45.Decline Form Para</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Decline Form Para</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -3410,7 +3564,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Decline Form</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">48.Decline Form</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -3485,7 +3639,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Show Interest User Search</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">49.Show Interest User Search</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -3544,7 +3698,7 @@
 </div>
 
 <div>
-  <h2 class="text-xl font-semibold text-red-600 underline mb-4">48.Search</h2>
+  <h2 class="text-xl font-semibold text-red-600 underline mb-4">50.Search</h2>
   <div class="mb-6">
     <table class="w-full bg-white border rounded shadow text-sm mb-6">
       <tbody>
@@ -3633,6 +3787,19 @@
     </form>
   </div>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <script>
 
@@ -3967,7 +4134,7 @@
     }
   });
 
-  //GET USER PROFILE
+  // GET USER PROFILE
   const getuser_profileForm = document.getElementById('getuser_profile');
   getuser_profileForm.addEventListener('submit', async function (e) {
     e.preventDefault();
@@ -3976,7 +4143,9 @@
     const data = {};
 
     formData.forEach((value, key) => {
-      if (value) data[key] = value;
+      if (value !== "" || value === 0) {
+        data[key] = value.trim();
+      }
     });
 
     try {
@@ -3989,15 +4158,15 @@
       });
 
       const json = await res.json();
-      sessionStorage.setItem('registerResponse', JSON.stringify(json));
+      sessionStorage.setItem('registerResponse', JSON.stringify(json, null, 2));
       window.location.href = 'response.html';
     } catch (err) {
       const errorObj = { error: err.message };
-      sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
+      sessionStorage.setItem('registerResponse', JSON.stringify(errorObj, null, 2));
       window.location.href = 'response.html';
     }
   });
-
+ 
   // FOLLOW LIST
   const follower_listForm = document.getElementById('getFollowData');
   follower_listForm.addEventListener('submit', async function (e) {
@@ -4031,6 +4200,77 @@
       window.location.href = 'response.html';
     }
   });
+
+
+  // SEARCH FOLLOW LIST
+  const searchfollower = document.getElementById('searchfollower');
+  searchfollower.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(searchfollower);
+    const data = {};
+
+    formData.forEach((value, key) => {
+      if (value) {
+        data[key] = key === 'status' || key === 'user_id' ? parseInt(value) : value;
+      }
+    });
+
+    try {
+      const res = await fetch('http://localhost:7000/api/auth/searchfollower', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      const json = await res.json();
+      console.log(json); 
+      sessionStorage.setItem('registerResponse', JSON.stringify(json));
+      window.location.href = 'response.html';
+    } catch (err) {
+      const errorObj = { error: err.message };
+      sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
+      window.location.href = 'response.html';
+    }
+  });
+
+
+  // SEARCH FOLLOW LIST
+  const removefollower = document.getElementById('removefollower');
+  removefollower.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const formData = new FormData(removefollower);
+    const data = {};
+
+    formData.forEach((value, key) => {
+      if (value) {
+        data[key] = key === 'follower_id' || key === 'user_id' ? parseInt(value) : value;
+      }
+    });
+
+    try {
+      const res = await fetch('http://localhost:7000/api/auth/removefollower', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      const json = await res.json();
+      console.log(json); 
+      sessionStorage.setItem('registerResponse', JSON.stringify(json));
+      window.location.href = 'response.html';
+    } catch (err) {
+      const errorObj = { error: err.message };
+      sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
+      window.location.href = 'response.html';
+    }
+  });
+
 
   // GET NOTIFICATION SETTINGS
   const  get_notificationForm = document.getElementById('get_notification');

@@ -19,7 +19,7 @@ async function seedFollows() {
       let followingId;
 
       do {
-        followingId = 1
+        followingId = 6
       } while (followingId === userId);
 
       await db.query(

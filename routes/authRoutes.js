@@ -67,6 +67,7 @@ router.post('/contact', authController.contact);
 // router.get('/getcontact/:id',userController.getContact);
 
 router.post('/getFollowData', userController.getFollowData);
+router.post('/searchfollower',userController.searchfollower);
 router.post('/block', userController.blockOrUnblockUser);
 router.post('/blocked_list', userController.getBlockedList);
 
@@ -86,7 +87,6 @@ router.post('/poststep5',landTypeController.createPostStep5);
 router.post('/poststep6', uploads,  videoController.createPostStep6);
 router.post('/poststep7',videoController.createPostStep7);
 router.post('/laststep',videoController.laststep);
-// router.post('/publishpost',videoController.publishPost);
 
 router.post('/save_property', userController.save_property);
 router.post('/saved_properties', userController.getSavedProperties);
