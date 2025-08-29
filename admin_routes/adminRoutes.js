@@ -45,4 +45,7 @@ router.post('/add_land_category',land_categoies_upload.single('image'),landContr
 router.get('/get_land_categorie' ,landController.get_land_categorie);
 router.post('/delete_land_categoies', landController.delete_land_categoies);
 
+
+router.get('/enquire_table',adminController.enquire_table);
+router.get('/decline_enquire',adminController.decline_enquire);
 module.exports = router;

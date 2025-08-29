@@ -440,14 +440,14 @@ exports.getProfileStats = async (req, res) => {
          WHERE user_id = ? AND following_id = ?`,
         [user_id, othersIdNum]
       );
-      is_followed = followRows[0].cnt > 0 ? 1 : 0;
+      im_followed = followRows[0].cnt > 0 ? 1 : 0;
       const [followBackRows] = await db.query(
         `SELECT COUNT(*) AS cnt
          FROM followers
          WHERE user_id = ? AND following_id = ?`,
         [othersIdNum, user_id]
       );
-      im_followed = followBackRows[0].cnt > 0 ? 1 : 0;
+     is_followed = followBackRows[0].cnt > 0 ? 1 : 0;
     }
 
     const others_page = othersIdNum !== 0 ? 1 : 0;
@@ -519,6 +519,15 @@ exports.followUser = async (req, res) => {
       return res.status(200).json({
         result: "0",
         error: "You can't follow yourself.",
+        data: []
+      });
+    }
+
+    const [blocked_users] = await db.query(`select * from blocks where user_id = ? and blocker_id = ?`, [user_id, following_id]);
+    if (blocked_users.length > 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "You are blocked by this user",
         data: []
       });
     }
@@ -611,7 +620,7 @@ exports.followUser = async (req, res) => {
         status: 3,
       });
     }
-    
+
     return res.status(200).json({
       result: "0",
       error: "Invalid status. Use 1 (follow), 2 (unfollow), 3 (remove follower).",
@@ -629,6 +638,7 @@ exports.followUser = async (req, res) => {
 
 exports.getFollowData = async (req, res) => {
   const { user_id, others_id, status, page } = req.body;
+
   const currentPage = parseInt(page, 10) || 1;
   const limit = 20;
 
@@ -649,18 +659,27 @@ exports.getFollowData = async (req, res) => {
     });
   }
 
+  const targetId = (others_id && others_id !== 0) ? others_id : user_id;
   const offset = (currentPage - 1) * limit;
   const profile_images = process.env.SERVER_ADDRESS + "uploaded/profile_images/";
 
   try {
+    const [blocked] = await db.query(
+      `SELECT blocker_id as blocked FROM blocks WHERE user_id = ? 
+       UNION 
+       SELECT user_id as blocked FROM blocks WHERE blocker_id = ?`,
+      [user_id, user_id]
+    );
+    const blockedUsers = blocked.map(b => b.blocked);
+
     const statusInt = parseInt(status, 10);
-    const targetId = others_id || user_id; 
     let baseQuery = "";
     let countQuery = "";
     let values = [];
     let countValues = [];
 
     if (statusInt === 1) {
+      // Followers
       baseQuery = `
         SELECT u.U_ID, u.name, u.username, u.profile_image
         FROM followers f
@@ -668,12 +687,17 @@ exports.getFollowData = async (req, res) => {
         WHERE f.following_id = ?
         LIMIT ? OFFSET ?`;
 
-      countQuery = `SELECT COUNT(*) as total FROM followers f WHERE f.following_id = ?`;
+      countQuery = `
+        SELECT COUNT(*) as total 
+        FROM followers f
+        JOIN users u ON f.user_id = u.U_ID
+        WHERE f.following_id = ?`;
 
       values = [targetId, limit, offset];
       countValues = [targetId];
 
     } else if (statusInt === 2) {
+      // Following
       baseQuery = `
         SELECT u.U_ID, u.name, u.username, u.profile_image
         FROM followers f
@@ -681,7 +705,11 @@ exports.getFollowData = async (req, res) => {
         WHERE f.user_id = ?
         LIMIT ? OFFSET ?`;
 
-      countQuery = `SELECT COUNT(*) as total FROM followers f WHERE f.user_id = ?`;
+      countQuery = `
+        SELECT COUNT(*) as total 
+        FROM followers f
+        JOIN users u ON f.following_id = u.U_ID
+        WHERE f.user_id = ?`;
 
       values = [targetId, limit, offset];
       countValues = [targetId];
@@ -704,8 +732,10 @@ exports.getFollowData = async (req, res) => {
     const totalPages = Math.ceil(totalCount / limit);
     const nxtpage = currentPage < totalPages ? currentPage + 1 : 0;
 
+    const filteredData = rawData.filter(user => !blockedUsers.includes(user.U_ID));
+
     const data = await Promise.all(
-      rawData.map(async (user) => {
+      filteredData.map(async (user) => {
         const [[userFollows]] = await db.query(
           `SELECT COUNT(*) as cnt FROM followers WHERE user_id = ? AND following_id = ?`,
           [user_id, user.U_ID]
@@ -715,8 +745,6 @@ exports.getFollowData = async (req, res) => {
           `SELECT COUNT(*) as cnt FROM followers WHERE user_id = ? AND following_id = ?`,
           [user.U_ID, user_id]
         );
-        let im_followed = userFollows.cnt > 0 ? 1 : 0;
-        let  is_followed= otherFollows.cnt > 0 ? 1 : 0;
 
         const [[followersCount]] = await db.query(
           `SELECT COUNT(*) as count FROM followers WHERE following_id = ?`,
@@ -732,8 +760,8 @@ exports.getFollowData = async (req, res) => {
           name: user.name,
           username: user.username ?? "",
           profile_image: user.profile_image ? profile_images + user.profile_image : "",
-          im_followed,
-          is_followed,
+          im_followed: userFollows.cnt > 0 ? 1 : 0,
+          is_followed: otherFollows.cnt > 0 ? 1 : 0,
           followers_count: followersCount.count,
           following_count: followingCount.count
         };
@@ -760,6 +788,7 @@ exports.getFollowData = async (req, res) => {
     });
   }
 };
+
 
 exports.searchfollower = async (req, res) => {
   const { user_id, status, search } = req.body;
@@ -1338,12 +1367,22 @@ exports.blockOrUnblockUser = async (req, res) => {
         [user_id, blocker_id]
       );
 
+      await db.query(
+        `DELETE FROM followers WHERE user_id = ? AND following_id = ?`,
+        [user_id, blocker_id]
+      );
+      await db.query(
+        `DELETE FROM followers WHERE user_id = ? AND following_id = ?`,
+        [blocker_id,user_id ]
+      );
+
       return res.json({
         result: "1",
         message: "User blocked successfully.",
         error: "",
         data: []
       });
+
 
     } else if (status === 2) {
       // UNBLOCK USER
@@ -1482,7 +1521,6 @@ exports.getBlockedList = async (req, res) => {
   }
 };
 
-
 exports.delete_post = async (req, res) => {
   const { user_id, user_post_id } = req.body;
 
@@ -1526,13 +1564,11 @@ exports.delete_post = async (req, res) => {
 exports.getReels = async (req, res) => {
   const { user_id, page = 1 } = req.body;
   const limit = 10;
-  console.log('hit');
-  
 
   if (!user_id) {
     return res.status(200).json({ result: "0", error: "user_id is required", data: [] });
   }
-  
+
   const offset = (parseInt(page) - 1) * limit;
 
   try {
@@ -1546,18 +1582,30 @@ exports.getReels = async (req, res) => {
     }
 
     const interestIds = user[0].user_interest ? user[0].user_interest.split(",") : [];
-
     if (interestIds.length === 0) {
       return res.status(200).json({ result: "1", data: [], total: 0 });
     }
+    const [blocked] = await db.query(
+      `SELECT user_id, blocker_id 
+       FROM blocks 
+       WHERE user_id = ? OR blocker_id = ?`,
+      [user_id, user_id]
+    );
+    const blockedUserIds = blocked.reduce((acc, b) => {
+      if (b.user_id !== user_id) acc.push(b.user_id);
+      if (b.blocker_id !== user_id) acc.push(b.blocker_id);
+      return acc;
+    }, []);
 
     const [countRows] = await db.query(
       `SELECT COUNT(*) AS total
-       FROM user_posts
-       WHERE FIND_IN_SET(land_categorie_id, ?)
-         AND status = 'published'
-         AND video IS NOT NULL
-         AND deleted_at IS NULL`,
+       FROM user_posts up
+       JOIN users u ON u.U_ID = up.U_ID
+       WHERE FIND_IN_SET(up.land_categorie_id, ?)
+         AND up.status = 'published'
+         AND up.video IS NOT NULL
+         AND up.deleted_at IS NULL
+         ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.join(",")})` : ""}`,
       [interestIds.join(",")]
     );
 
@@ -1582,17 +1630,20 @@ exports.getReels = async (req, res) => {
          AND up.status = 'published'
          AND up.video IS NOT NULL
          AND up.deleted_at IS NULL
+         ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.join(",")})` : ""}
        ORDER BY up.created_at DESC
        LIMIT ? OFFSET ?`,
       [interestIds.join(","), limit, offset]
     );
 
-    if(reels.length === 0){
-      return res.status(200).json({ 
+    if (reels.length === 0) {
+      return res.status(200).json({
         result: "0",
-         error: "No data for User_id", 
-         data: [] });
+        error: "No data for User_id",
+        data: []
+      });
     }
+
     return res.status(200).json({
       result: "1",
       data: reels,

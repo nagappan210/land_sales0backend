@@ -100,86 +100,124 @@ exports.land_categories_para = async (req, res) => {
 exports.enquire = async (req, res) => {
   const { user_id, recever_posts_id, land_type_id, land_categorie_id, name, phone_num, whatsapp_num, email, land_category_para } = req.body;
 
-  if (!user_id || !recever_posts_id || !land_categorie_id || !name || !land_type_id) {
+  // Required fields check
+  if (!user_id || !recever_posts_id || !land_type_id || !land_categorie_id || !name?.trim()) {
     return res.status(200).json({
-      result : "0" ,
-      error : 'Required fields: user_id, recever_posts_id, land_type_id, land_categorie_id, and name.',
-      data : []
+      result: "0",
+      error: "Required fields: user_id, recever_posts_id, land_type_id, land_categorie_id, and name.",
+      data: []
     });
   }
 
+  // Number validations
   if (phone_num && (!Number.isInteger(Number(phone_num)) || Number(phone_num) <= 0)) {
     return res.status(200).json({
-      result : "0",
-      error: 'phone_num must be a integer.',
-      data : []
+      result: "0",
+      error: "phone_num must be a positive integer.",
+      data: []
     });
   }
+
   if (whatsapp_num && (!Number.isInteger(Number(whatsapp_num)) || Number(whatsapp_num) <= 0)) {
     return res.status(200).json({
-      result : "0",
-      error : 'whatsapp_num must be a integer.',
-      data : []
+      result: "0",
+      error: "whatsapp_num must be a positive integer.",
+      data: []
     });
   }
 
   try {
-    const [[user]] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
-    if (!user) return res.status(200).json({ success: "0", 
-      error: 'User not found.',
-    data : [] });
+    // User check
+    const [[user]] = await db.query(`SELECT U_ID FROM users WHERE U_ID = ?`, [user_id]);
+    if (!user) {
+      return res.status(200).json({
+        result: "0",
+        error: "User not found.",
+        data: []
+      });
+    }
 
-    const [[post]] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ?`, [recever_posts_id]);
-    if (!post) return res.status(200).json({ success: "0", 
-      error: 'Post not found.',
-    data : [] });
+    // Post check
+    const [[post]] = await db.query(
+      `SELECT user_post_id, U_ID FROM user_posts WHERE user_post_id = ?`,
+      [recever_posts_id]
+    );
+    if (!post) {
+      return res.status(200).json({
+        result: "0",
+        error: "Post not found.",
+        data: []
+      });
+    }
 
-    const [[landType]] = await db.query(`SELECT * FROM land_types WHERE land_type_id = ?`, [land_type_id]);
-    if (!landType) return res.status(200).json({ success: "0", 
-      error: 'Land type not found',
-      data : []});
+    //  Block check (either user blocked the other)
+    const [[blockCheck]] = await db.query(
+      `SELECT block_id FROM blocks 
+       WHERE (blocker_id = ? AND user_id = ?) 
+          OR (blocker_id = ? AND user_id = ?) 
+       LIMIT 1`,
+      [user_id, post.U_ID, post.U_ID, user_id]
+    );
+    if (blockCheck) {
+      return res.status(200).json({
+        result: "0",
+        error: "You cannot send enquiry because one of you has blocked the other.",
+        data: []
+      });
+    }
 
-    const [[landCat]] = await db.query(`SELECT * FROM land_categories WHERE land_categorie_id = ?`, [land_categorie_id]);
-    if (!landCat) return res.status(200).json({ success: "0", 
-      error: 'Land category not found.',
-      data : []});
+    // Land type check
+    const [[landType]] = await db.query(`SELECT land_type_id FROM land_types WHERE land_type_id = ?`, [land_type_id]);
+    if (!landType) {
+      return res.status(200).json({
+        result: "0",
+        error: "Land type not found.",
+        data: []
+      });
+    }
 
-  
+    // Land category check
+    const [[landCat]] = await db.query(`SELECT land_categorie_id FROM land_categories WHERE land_categorie_id = ?`, [land_categorie_id]);
+    if (!landCat) {
+      return res.status(200).json({
+        result: "0",
+        error: "Land category not found.",
+        data: []
+      });
+    }
+
+    // Duplicate enquiry check
     const [existing] = await db.query(
       `SELECT enquire_id FROM enquiries WHERE user_id = ? AND recever_posts_id = ?`,
       [user_id, recever_posts_id]
     );
-
     if (existing.length > 0) {
-      return res.status(409).json({
-        result : "0",
-        error: 'You have already submitted an enquiry for this post.',
-        data :[]
+      return res.status(200).json({
+        result: "0",
+        error: "You have already submitted an enquiry for this post.",
+        data: []
       });
     }
 
+    // Insert enquiry
     await db.query(
       `INSERT INTO enquiries
         (user_id, recever_posts_id, land_type_id, land_categorie_id, name, phone_number, whatsapp_num, email, land_category_para)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        user_id,
-        recever_posts_id,
-        land_type_id,
-        land_categorie_id,
-        name.trim(),
-        phone_num || null,
-        whatsapp_num || null,
-        email || null,
-        land_category_para || null
-      ]
-    );
+      [ user_id, recever_posts_id, land_type_id, land_categorie_id, name.trim(), phone_num || null, whatsapp_num || null, email?.trim() || null, land_category_para?.trim() || null ] );
 
-    return res.json({ result : "1", message: 'Enquiry submitted successfully.' });
+    return res.status(200).json({
+      result: "1",
+      message: "Enquiry submitted successfully."
+    });
 
   } catch (err) {
-    console.error('Enquiry error:', err);
-    return res.status(500).json({ result : "0", error: 'Server error.', data : [] });
+    console.error("Enquiry error:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error.",
+      data: []
+    });
   }
 };
 

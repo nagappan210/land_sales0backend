@@ -212,7 +212,7 @@ exports.getuser = async (req, res) => {
 exports.getpost = async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT  u.user_post_id,  u.U_ID,  u.user_type,  u.land_type_id,  u.land_categorie_id,  u.video,u.image_ids,  u.status,  
+      SELECT  u.user_post_id,  u.U_ID,  u.user_type,  u.land_type_id,  u.land_categorie_id,  u.video,u.image_ids,  u.status, u.is_sold,
       u.post_type,CASE 
         WHEN u.post_type = 2 THEN i.image_path 
         ELSE NULL 
@@ -238,5 +238,120 @@ exports.getpost = async (req, res) => {
       error: "Server error",
       data: []
     });
+  }
+};
+
+exports.enquire_table = async (req,res)=>{
+  try{
+    const [rows] = await db.query(`
+  SELECT  
+    e.enquire_id,  
+    e.recever_posts_id,  
+    e.user_id,  
+    e.land_type_id,  
+    e.land_categorie_id,  
+    e.name AS enquirer_name,  
+    e.phone_number,  
+    e.whatsapp_num,  
+    e.email,  
+    e.land_category_para,  
+    u.U_ID AS post_user_id,  
+    u.user_post_id,  
+    u.video,  
+    post_owner.name AS post_owner_name,  
+    post_owner.U_ID AS post_owner_id
+  FROM enquiries AS e
+  JOIN user_posts AS u 
+    ON u.user_post_id = e.recever_posts_id
+  JOIN users AS post_owner
+    ON u.U_ID = post_owner.U_ID     
+  JOIN users AS enquirer
+    ON e.user_id = enquirer.U_ID;   
+`);
+
+
+    if(rows.length === 0){
+      return res.status(200).json({
+        result : "0",
+        error : "No data",
+        data : []
+      });
+    }
+
+    return res.status(200).json({
+      result : "1",
+      error : "",
+      data : rows
+    });
+
+  } catch(err){
+    console.log(err);
+    return res.status(500).json({
+      result : "0",
+      error : "server error",
+      data : []
+    });
+  }
+}
+
+exports.decline_enquire = async (req,res) =>{
+  try{
+    const [row] = await db.query (`select declining_enquire_id , name , para from  declining_enquire` );
+    return res.status(200).json({
+      result : "1",
+      data : row,
+    });
+  }
+  catch(err){
+    console.log(err);
+    return res.status(500).json({
+      result : "0",
+      error : "Server error",
+      data : []
+    });
+    
+  }
+}
+
+exports.edit_decline_enquire = async (req, res) => {
+  const { declining_enquire_id, name, para } = req.body;
+
+  try {
+    if (declining_enquire_id) {
+      let query = "";
+      let values = [];
+
+      if (name) {
+        query = "UPDATE declining_enquire SET name = ? WHERE declining_enquire_id = ?";
+        values = [name, declining_enquire_id];
+      } else if (para) {
+        query = "UPDATE declining_enquire SET para = ? WHERE declining_enquire_id = ?";
+        values = [para, declining_enquire_id];
+      } else {
+        return res.status(400).json({ result: "0", error: "Nothing to update" });
+      }
+
+      const [rows] = await db.query(query, values);
+      if (rows.affectedRows > 0) {
+        return res.status(200).json({ result: "1", message: "Updated successfully" });
+      } else {
+        return res.status(404).json({ result: "0", error: "Record not found" });
+      }
+    } 
+    else {
+      const [row] = await db.query(
+        "INSERT INTO declining_enquire (name, para, create_at) VALUES (?, ?, NOW())",
+        [name, para]
+      );
+
+      if (row.affectedRows > 0) {
+        return res.status(200).json({ result: "1", message: "Inserted successfully", id: row.insertId });
+      } else {
+        return res.status(400).json({ result: "0", error: "Insert failed" });
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ result: "0", error: "Internal server error" });
   }
 };
