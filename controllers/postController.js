@@ -43,9 +43,11 @@ exports.createPostStep1 = async (req, res) => {
   try {
     
     let { user_id, user_type, user_post_id } = req.body;
+    console.log(user_id , user_post_id , user_type);
+    
     user_id = Number(user_id);
     user_type = Number(user_type);
-    user_post_id = Number(user_post_id);
+    // user_post_id = Number(user_post_id);
     const draft = 1
 
     if (!user_id || isNaN(user_id) || ![0, 1].includes(user_type) ) {
@@ -64,6 +66,7 @@ exports.createPostStep1 = async (req, res) => {
         data: []
       });
     }
+    
     let exist_post = [];
     if (user_post_id) {
       [exist_post] = await db.query(
@@ -71,6 +74,8 @@ exports.createPostStep1 = async (req, res) => {
         [user_post_id, user_id]
       );
     }
+    
+    
 
     if (exist_post.length > 0) {
       await db.query(
@@ -85,7 +90,6 @@ exports.createPostStep1 = async (req, res) => {
       });
     }
 
-    if(user_post_id === 0){
       const [result] = await db.query(
       `INSERT INTO user_posts (U_ID, user_type, status , draft) VALUES (?, ?, 'draft' , ?)`,
       [user_id, user_type , draft]);
@@ -94,7 +98,7 @@ exports.createPostStep1 = async (req, res) => {
       message: "Step 1 completed: New post created.",
       data: { post_id: result.insertId }
     });
-    }
+    
 
   } catch (err) {
     console.error("Create Post Step 1 Error:", err);

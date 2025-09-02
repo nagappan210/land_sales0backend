@@ -1113,6 +1113,14 @@
               <td class="p-3">1</td>
             </tr>
             <tr class="border-t">
+              <td class="p-3">Others ID</td>
+              <td class="p-3"><input type="text" name="others_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">others_id</td>
+              <td class="p-3">No</td>
+              <td class="p-3">string</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
               <td class="p-3">Status</td>
               <td class="p-3"><input type="text" name="status" class="w-full border rounded p-2" /></td>
               <td class="p-3">status</td>
@@ -1128,6 +1136,15 @@
               <td class="p-3">No</td>
               <td class="p-3">string</td>
               <td class="p-3">Naga</td>
+              <td class="p-3">Optional</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">Page</td>
+              <td class="p-3"><input type="text" name="page" class="w-full border rounded p-2" /></td>
+              <td class="p-3">page</td>
+              <td class="p-3">No</td>
+              <td class="p-3">string</td>
+              <td class="p-3">1</td>
               <td class="p-3">Optional</td>
             </tr>
             <tr>
@@ -2634,7 +2651,7 @@
               <td class="p-3">1->like , 2->unlike</td>
             </tr>
             <tr>
-              <td colspan="6" class="text-center p-4">
+              <td colspan="7" class="text-center p-4">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
                   Submit
                 </button>
@@ -2860,7 +2877,7 @@
               <td class="p-3">1->like , 2->unlick</td>
             </tr>
             <tr>
-              <td colspan="6" class="text-center p-4">
+              <td colspan="7" class="text-center p-4">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
                   Submit
                 </button>
@@ -2910,6 +2927,14 @@
             </tr>
           </thead>
           <tbody>
+            <tr class="border-t">
+              <td class="p-3">User ID</td>
+              <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
             <tr class="border-t">
               <td class="p-3">User Post ID</td>
               <td class="p-3"><input type="text" name="user_post_id" class="w-full border rounded p-2" /></td>
@@ -2977,6 +3002,22 @@
             </tr>
           </thead>
           <tbody>
+            <tr class="border-t">
+              <td class="p-3">User ID</td>
+              <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">User Post ID</td>
+              <td class="p-3"><input type="text" name="user_post_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_post_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
             <tr class="border-t">
               <td class="p-3">Comment ID</td>
               <td class="p-3"><input type="text" name="comment_id" class="w-full border rounded p-2" /></td>
@@ -3365,7 +3406,7 @@
     </div>
   </div>
 
-  <div>
+  <!-- <div>
     <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Decline Form Name</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -3422,9 +3463,9 @@
         </table>
       </form>
     </div>
-  </div>
+  </div> -->
 
-  <div>
+  <!-- <div>
     <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Decline Form Para</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -3481,10 +3522,10 @@
         </table>
       </form>
     </div>
-  </div>
+  </div> -->
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">48.Decline Form</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Decline Form</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3559,7 +3600,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">49.Show Interest User Search</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Show Interest User Search</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3618,7 +3659,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">50.Search</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">48.Search</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -5252,75 +5293,75 @@
         }
       });
 
-      // GET  DECLINE FORM NAME
-      const declineForm = document.getElementById('declineForm');
-      declineForm.addEventListener('submit', async function (e) {
-        e.preventDefault();
+      // // GET  DECLINE FORM NAME
+      // const declineForm = document.getElementById('declineForm');
+      // declineForm.addEventListener('submit', async function (e) {
+      //   e.preventDefault();
 
-        const formData = new FormData(declineForm);
-        const data = {};
+      //   const formData = new FormData(declineForm);
+      //   const data = {};
 
-        formData.forEach((value, key) => {
-          if (value) data[key] = value;
-        });
+      //   formData.forEach((value, key) => {
+      //     if (value) data[key] = value;
+      //   });
 
-        console.log('Sending body:', data);
+      //   console.log('Sending body:', data);
 
-        try {
-          const res = await fetch('http://localhost:7000/api/auth/declineForm', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-          });
+      //   try {
+      //     const res = await fetch('http://localhost:7000/api/auth/declineForm', {
+      //       method: 'POST',
+      //       headers: {
+      //         'Content-Type': 'application/json'
+      //       },
+      //       body: JSON.stringify(data)
+      //     });
 
-          const json = await res.json();
+      //     const json = await res.json();
 
-          sessionStorage.setItem('registerResponse', JSON.stringify(json));
-          window.location.href = 'response';
+      //     sessionStorage.setItem('registerResponse', JSON.stringify(json));
+      //     window.location.href = 'response';
 
-        } catch (err) {
-          console.error("Request failed:", err.message);
-          sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-          window.location.href = 'response';
-        }
-      });
+      //   } catch (err) {
+      //     console.error("Request failed:", err.message);
+      //     sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
+      //     window.location.href = 'response';
+      //   }
+      // });
 
-      // GET  DECLINE FORM PARA
-      const declineFormpara = document.getElementById('declineFormpara');
-      declineFormpara.addEventListener('submit', async function (e) {
-        e.preventDefault();
+      // // GET  DECLINE FORM PARA
+      // const declineFormpara = document.getElementById('declineFormpara');
+      // declineFormpara.addEventListener('submit', async function (e) {
+      //   e.preventDefault();
 
-        const formData = new FormData(declineFormpara);
-        const data = {};
+      //   const formData = new FormData(declineFormpara);
+      //   const data = {};
 
-        formData.forEach((value, key) => {
-          if (value) data[key] = value;
-        });
+      //   formData.forEach((value, key) => {
+      //     if (value) data[key] = value;
+      //   });
 
-        console.log('Sending body:', data);
+      //   console.log('Sending body:', data);
 
-        try {
-          const res = await fetch('http://localhost:7000/api/auth/declineFormpara', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-          });
+      //   try {
+      //     const res = await fetch('http://localhost:7000/api/auth/declineFormpara', {
+      //       method: 'POST',
+      //       headers: {
+      //         'Content-Type': 'application/json'
+      //       },
+      //       body: JSON.stringify(data)
+      //     });
 
-          const json = await res.json();
+      //     const json = await res.json();
 
-          sessionStorage.setItem('registerResponse', JSON.stringify(json));
-          window.location.href = 'response';
+      //     sessionStorage.setItem('registerResponse', JSON.stringify(json));
+      //     window.location.href = 'response';
 
-        } catch (err) {
-          console.error("Request failed:", err.message);
-          sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-          window.location.href = 'response';
-        }
-      });
+      //   } catch (err) {
+      //     console.error("Request failed:", err.message);
+      //     sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
+      //     window.location.href = 'response';
+      //   }
+      // });
 
       // GET  DECLINE FORM 
       const decline = document.getElementById('decline');

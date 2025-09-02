@@ -5,71 +5,100 @@ const ffmpeg = require('fluent-ffmpeg');
 const db = require('../db');
 const { buffer } = require('stream/consumers');
 ffmpeg.setFfmpegPath('C:/ffmpeg/bin/ffmpeg.exe');
+const axios = require("axios");
+
 
 exports.createPostStep6 = async (req, res) => {
   try {
-    let { user_id, user_post_id, post_type , video_url , images_url  } = req.body;
+    let { user_id, user_post_id, post_type, video_url, image_urls } = req.body;
 
     user_id = Number(user_id);
     user_post_id = Number(user_post_id);
     post_type = String(post_type);
-
     const draft = 6;
 
-    if (!user_id || isNaN(user_id) || !user_post_id || isNaN(user_post_id)) {
+    if (isNaN(user_id) || isNaN(user_post_id)) {
       return res.status(400).json({
         result: "0",
-        error: "user_id and user_post_id are required and must be integers",
+        error: "user_id and user_post_id must be integers",
         data: []
       });
     }
 
     const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
     if (exist_user.length === 0) {
-      return res.status(404).json({
-        result: "0",
-        error: "User not found in database",
-        data: []
-      });
+      return res.status(404).json({ result: "0", error: "User not found", data: [] });
     }
 
+    // VIDEO POST
     if (post_type === "1" && video_url) {
-      const [video] = await db.query(
+      const thumbDir = "uploaded/posts/thumbs";
+      await fs.mkdir(thumbDir, { recursive: true });
+      const outputThumbPath = path.join(thumbDir, `thumb_${Date.now()}.jpg`);
+
+      await new Promise((resolve, reject) => {
+        ffmpeg(video_url)
+          .on("end", resolve)
+          .on("error", reject)
+          .screenshots({
+            count: 1,
+            filename: path.basename(outputThumbPath),
+            folder: path.dirname(outputThumbPath),
+            size: "640x360"
+          });
+      });
+
+      const [videoUpdate] = await db.query(
         `UPDATE user_posts 
-         SET video = ?, post_type = ?, image_ids = NULL, updated_at = NOW(), draft = ? 
+         SET video = ?, post_type = ?, image_ids = NULL, thumbnail = ?, updated_at = NOW(), draft = ? 
          WHERE U_ID = ? AND user_post_id = ?`,
-        [video_url, post_type, draft, user_id, user_post_id]
+        [video_url, post_type, outputThumbPath, draft, user_id, user_post_id]
       );
 
-      if (video.affectedRows === 0) {
-        return res.status(404).json({
-          result: "0",
-          error: "Post not found for given user_id/user_post_id",
-          data: []
-        });
+      if (videoUpdate.affectedRows === 0) {
+        return res.status(404).json({ result: "0", error: "Post not found", data: [] });
       }
 
       return res.json({
         result: "1",
-        message: "Video URL saved successfully",
+        message: "Video URL and thumbnail saved",
         post_type,
-        video: video_url
+        video: video_url,
+        thumbnail: `${process.env.SERVER_ADDRESS}/${outputThumbPath.replace(/\\/g, "/")}`
       });
     }
 
-    if (post_type === "2" && Array.isArray(images_url) && images_url.length > 0) {
+    // IMAGE POST
+    if (post_type === "2" && Array.isArray(image_urls) && image_urls.length > 0) {
       const tempDir = `uploaded/posts/${Date.now()}_sequence`;
       await fs.mkdir(tempDir, { recursive: true });
 
       const insertedImageIds = [];
+      let firstImagePath = null;
 
-      for (let i = 0; i < images_url.length; i++) {
+      for (let i = 0; i < image_urls.length; i++) {
+        const url = image_urls[i];
         const destPath = path.join(tempDir, `img_${String(i).padStart(3, "0")}.jpg`);
 
-        await sharp(images_url[i])
-          .resize({ width: 1280, height: 720, fit: "contain", background: "#000" })
-          .jpeg()
-          .toFile(destPath);
+        // Download remote image
+        let response;
+        try {
+          response = await axios.get(url, { responseType: "arraybuffer" });
+        } catch {
+          return res.status(400).json({ result: "0", error: `Failed to download image: ${url}`, data: [] });
+        }
+
+        // Convert buffer to JPEG
+        try {
+          await sharp(response.data)
+            .resize({ width: 1280, height: 720, fit: "contain", background: "#000" })
+            .jpeg()
+            .toFile(destPath);
+        } catch {
+          return res.status(400).json({ result: "0", error: `Invalid image file at URL: ${url}`, data: [] });
+        }
+
+        if (i === 0) firstImagePath = destPath;
 
         const [result] = await db.query(
           `INSERT INTO post_images (U_ID, user_post_id, image_path) VALUES (?, ?, ?)`,
@@ -80,11 +109,10 @@ exports.createPostStep6 = async (req, res) => {
 
       const outputVideoPath = `uploaded/posts/post_${Date.now()}.mp4`;
 
-      
       await new Promise((resolve, reject) => {
         ffmpeg()
           .input(path.join(tempDir, "img_%03d.jpg"))
-          .inputOptions(["-framerate 0.4"]) 
+          .inputOptions(["-framerate 0.4"])
           .outputOptions(["-c:v libx264", "-r 30", "-pix_fmt yuv420p"])
           .on("end", resolve)
           .on("error", reject)
@@ -95,30 +123,28 @@ exports.createPostStep6 = async (req, res) => {
 
       const [imageUpdate] = await db.query(
         `UPDATE user_posts 
-         SET video = ?, image_ids = ?, post_type = ?, updated_at = NOW(), draft = ? 
+         SET video = ?, image_ids = ?, post_type = ?, thumbnail = ?, updated_at = NOW(), draft = ? 
          WHERE U_ID = ? AND user_post_id = ?`,
-        [outputVideoPath, imageIdsStr, post_type, draft, user_id, user_post_id]
+        [outputVideoPath, imageIdsStr, post_type, firstImagePath, draft, user_id, user_post_id]
       );
 
       if (imageUpdate.affectedRows === 0) {
-        return res.status(404).json({
-          result: "0",
-          error: "Post not found for given user_id/user_post_id",
-          data: []
-        });
+        return res.status(404).json({ result: "0", error: "Post not found", data: [] });
       }
 
       return res.json({
         result: "1",
-        message: "Images converted to video successfully",
+        message: "Image URLs converted to video + thumbnail",
         post_type,
         video: `${process.env.SERVER_ADDRESS}/${outputVideoPath.replace(/\\/g, "/")}`,
+        thumbnail: `${process.env.SERVER_ADDRESS}/${firstImagePath.replace(/\\/g, "/")}`,
         image_ids: insertedImageIds
       });
     }
+
     return res.status(400).json({
       result: "0",
-      error: "Invalid post_type or missing files.",
+      error: "Invalid post_type or missing URLs",
       data: []
     });
 
@@ -131,6 +157,7 @@ exports.createPostStep6 = async (req, res) => {
     });
   }
 };
+
 
 exports.createPostStep7 = async (req, res) => {
   const { user_id, user_post_id } = req.body;

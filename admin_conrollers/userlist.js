@@ -318,18 +318,24 @@ exports.edit_decline_enquire = async (req, res) => {
 
   try {
     if (declining_enquire_id) {
-      let query = "";
+      let fields = [];
       let values = [];
 
-      if (name) {
-        query = "UPDATE declining_enquire SET name = ? WHERE declining_enquire_id = ?";
-        values = [name, declining_enquire_id];
-      } else if (para) {
-        query = "UPDATE declining_enquire SET para = ? WHERE declining_enquire_id = ?";
-        values = [para, declining_enquire_id];
-      } else {
+      if (name !== undefined) {
+        fields.push("name = ?");
+        values.push(name);
+      }
+      if (para !== undefined) {
+        fields.push("para = ?");
+        values.push(para);
+      }
+
+      if (fields.length === 0) {
         return res.status(400).json({ result: "0", error: "Nothing to update" });
       }
+
+      values.push(declining_enquire_id);
+      const query = `UPDATE declining_enquire SET ${fields.join(", ")} WHERE declining_enquire_id = ?`;
 
       const [rows] = await db.query(query, values);
       if (rows.affectedRows > 0) {
@@ -337,15 +343,18 @@ exports.edit_decline_enquire = async (req, res) => {
       } else {
         return res.status(404).json({ result: "0", error: "Record not found" });
       }
-    } 
-    else {
+    } else {
       const [row] = await db.query(
         "INSERT INTO declining_enquire (name, para, create_at) VALUES (?, ?, NOW())",
         [name, para]
       );
 
       if (row.affectedRows > 0) {
-        return res.status(200).json({ result: "1", message: "Inserted successfully", id: row.insertId });
+        return res.status(200).json({
+          result: "1",
+          message: "Inserted successfully",
+          id: row.insertId,
+        });
       } else {
         return res.status(400).json({ result: "0", error: "Insert failed" });
       }
@@ -355,3 +364,27 @@ exports.edit_decline_enquire = async (req, res) => {
     return res.status(500).json({ result: "0", error: "Internal server error" });
   }
 };
+
+
+exports.delete_decline_enquire = async (req,res) =>{
+  const {declining_enquire_id} = req.body;
+
+  try{
+    const [row] = await db.query(`delete from declining_enquire where declining_enquire_id = ?` , [declining_enquire_id])
+    if(row.affectedRows === 0){
+      return res.status(200).json({
+        result : "0",
+        error : "Db not updated",
+        data : []
+      });
+    }
+    return res.status(200).json({
+      result : '1',
+      message : " Delata sucessfully"
+    });
+  }
+  catch (err) {
+    console.error(err);
+    return res.status(500).json({ result: "0", error: "Internal server error" });
+  }
+}

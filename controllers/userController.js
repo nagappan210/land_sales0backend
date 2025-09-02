@@ -391,8 +391,6 @@ exports.getProfileStats = async (req, res) => {
     });
   }
 
-  const profile_images_path = process.env.SERVER_ADDRESS + "uploaded/profile_images/";
-
   const othersIdNum = Number(others_id) || 0;
   const targetId = othersIdNum !== 0 ? othersIdNum : user_id;
 
@@ -459,7 +457,7 @@ exports.getProfileStats = async (req, res) => {
       phone_num_cc: profile.phone_num_cc || "",
       phone_num: profile.phone_num || "",
       bio: profile.bio || "",
-      profile_image: profile.profile_image ? profile_images_path + profile.profile_image : "",
+      profile_image: profile.profile_image || "" , 
       posts: profile.posts || 0,
       followers: profile.followers || 0,
       following: profile.following || 0,
@@ -483,6 +481,37 @@ exports.getProfileStats = async (req, res) => {
     });
   }
 };
+
+exports.post_property = async(req,res) =>{
+  const {user_id , others_id , page = 1} = req.body;
+
+  page = parseInt(page , 10) || 1;
+  const limit = 10;
+  const offset = (page -1) * limit;
+
+  try{
+    let query = "";
+    let countQuery = "";
+    let params = [];
+    let countParams = [];
+
+    const base_url = process.env.SERVER_ADDRESS + "uploaded/posts/";
+    
+    const targetId = others_id || user_id;
+
+    query = `select user_post_id , U_ID , user_type , land_categoies_id  , country , state , city ,  locality , video , `
+  }
+ catch (err) {
+    console.error("Error in searchfollower:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error",
+      data: []
+    });
+  }
+
+
+}
 
 exports.followUser = async (req, res) => {
   try {
@@ -789,42 +818,53 @@ exports.getFollowData = async (req, res) => {
   }
 };
 
-
 exports.searchfollower = async (req, res) => {
-  const { user_id, status, search } = req.body;
+  let { user_id, others_id, status, search, page = 1 } = req.body;
+
+  page = parseInt(page, 10) || 1;
+  const limit = 10;
+  const offset = (page - 1) * limit;
+
+  if (!user_id) {
+    return res.status(200).json({
+      result: "0",
+      error: "User_id is required",
+      data: []
+    });
+  }
 
   try {
     let query = "";
     let params = [];
-
     const base_url = process.env.SERVER_ADDRESS + "uploaded/profile_image/";
+    const targetId = others_id || user_id;
 
     if (status === 2) {
       query = `
-        SELECT  
-          u.U_ID, 
-          u.name, 
-          u.username, 
-          u.profile_image
+        SELECT u.U_ID, u.name, u.username, u.profile_image
         FROM followers AS f
         JOIN users AS u ON u.U_ID = f.following_id
         WHERE f.user_id = ?
+          AND NOT EXISTS (
+            SELECT 1 FROM blocks b
+            WHERE (b.user_id = u.U_ID AND b.blocker_id = ?)
+               OR (b.user_id = ? AND b.blocker_id = u.U_ID)
+          )
       `;
-      params.push(user_id);
-
+      params.push(targetId, user_id, user_id);
     } else if (status === 1) {
       query = `
-        SELECT  
-          u.U_ID, 
-          u.name, 
-          u.username, 
-          u.profile_image
+        SELECT u.U_ID, u.name, u.username, u.profile_image
         FROM followers AS f
         JOIN users AS u ON u.U_ID = f.user_id
         WHERE f.following_id = ?
+          AND NOT EXISTS (
+            SELECT 1 FROM blocks b
+            WHERE (b.user_id = u.U_ID AND b.blocker_id = ?)
+               OR (b.user_id = ? AND b.blocker_id = u.U_ID)
+          )
       `;
-      params.push(user_id);
-
+      params.push(targetId, user_id, user_id);
     } else {
       return res.status(400).json({
         result: "0",
@@ -833,46 +873,41 @@ exports.searchfollower = async (req, res) => {
       });
     }
 
-    // Search filter (if given and >= 3 chars)
     if (search && search.length >= 3) {
-      query += ` AND (LOWER(u.name) LIKE ? OR LOWER(u.username) LIKE ?) `;
+      query += ` AND (LOWER(u.name) LIKE ? OR LOWER(u.username) LIKE ?)`;
       params.push(`%${search.toLowerCase()}%`, `%${search.toLowerCase()}%`);
+    } 
+    else {
+      query += ` LIMIT ? OFFSET ?`;
+      params.push(limit, offset);
     }
 
     const [rows] = await db.query(query, params);
 
     if (rows.length === 0) {
       return res.status(200).json({
-        result: "0",
-        error: "No data",
-        data: []
+        result: search ? "1" : "0",
+        data: [],
+        recCnt: 0,
+        totalPages: 0,
+        nxtpage: 0
       });
     }
 
     const data = await Promise.all(
       rows.map(async (user) => {
-        // check if I follow him
         const [[userFollows]] = await db.query(
           `SELECT COUNT(*) as cnt FROM followers WHERE user_id = ? AND following_id = ?`,
           [user_id, user.U_ID]
         );
-
-        // check if he follows me
         const [[otherFollows]] = await db.query(
           `SELECT COUNT(*) as cnt FROM followers WHERE user_id = ? AND following_id = ?`,
           [user.U_ID, user_id]
         );
-
-        let im_followed = userFollows.cnt > 0 ? 1 : 0;
-        let is_followed = otherFollows.cnt > 0 ? 1 : 0;
-
-        // followers count of this user
         const [[followersCount]] = await db.query(
           `SELECT COUNT(*) as count FROM followers WHERE following_id = ?`,
           [user.U_ID]
         );
-
-        // following count of this user
         const [[followingCount]] = await db.query(
           `SELECT COUNT(*) as count FROM followers WHERE user_id = ?`,
           [user.U_ID]
@@ -880,21 +915,40 @@ exports.searchfollower = async (req, res) => {
 
         return {
           user_id: user.U_ID,
-          name: user.name,
+          name: user.name ?? "",
           username: user.username ?? "",
           profile_image: user.profile_image ? base_url + user.profile_image : "",
-          im_followed,
-          is_followed,
+          im_followed: userFollows.cnt > 0 ? 1 : 0,
+          is_followed: otherFollows.cnt > 0 ? 1 : 0,
           followers_count: followersCount.count,
           following_count: followingCount.count
         };
       })
     );
 
+    if (search && search.length >= 3) {
+      return res.status(200).json({
+        result: "1",
+        data,
+        recCnt: 0,
+        totalPages: 0,
+        nxtpage: 0
+
+      });
+    }
+
+    const totalCountQuery = `SELECT COUNT(*) AS total FROM (${query.replace(/LIMIT.*OFFSET.*/, "")}) AS sub`;
+    const [countRows] = await db.query(totalCountQuery, params.slice(0, -2)); // remove limit & offset
+    const totalCount = countRows[0]?.total || 0;
+    const totalPages = Math.ceil(totalCount / limit);
+    const nextPage = page < totalPages ? page + 1 : 0;
+
     return res.status(200).json({
       result: "1",
-      error: "",
-      data: data
+      data,
+      totalPages,
+      nxtpage: nextPage,
+      recCnt: totalCount
     });
 
   } catch (err) {
@@ -1376,6 +1430,15 @@ exports.blockOrUnblockUser = async (req, res) => {
         [blocker_id,user_id ]
       );
 
+      await db.query(`
+        UPDATE post_comments SET deleted_at = Now() WHERE user_id = ? AND
+         user_post_id IN ( SELECT user_post_id FROM user_posts WHERE U_ID = ?) `, [blocker_id,user_id]);
+
+      await db.query(`
+        UPDATE post_comments SET deleted_at = NOW() WHERE replies_comment_id IN (SELECT comment_id FROM post_comments WHERE user_id = ? AND user_post_id IN (SELECT user_post_id FROM user_posts WHERE U_ID = ?))
+      `, [blocker_id, user_id ]);
+
+
       return res.json({
         result: "1",
         message: "User blocked successfully.",
@@ -1385,7 +1448,6 @@ exports.blockOrUnblockUser = async (req, res) => {
 
 
     } else if (status === 2) {
-      // UNBLOCK USER
       if (existing.length === 0) {
         return res.status(200).json({
           result: "0",
@@ -1398,6 +1460,14 @@ exports.blockOrUnblockUser = async (req, res) => {
         `DELETE FROM blocks WHERE user_id = ? AND blocker_id = ?`,
         [user_id, blocker_id]
       );
+
+      await db.query(`
+        UPDATE post_comments SET deleted_at = null WHERE user_id = ? AND
+         user_post_id IN ( SELECT user_post_id FROM user_posts WHERE U_ID = ?) `, [blocker_id,user_id]);
+
+      await db.query(`
+        UPDATE post_comments SET deleted_at = null WHERE replies_comment_id IN (SELECT comment_id FROM post_comments WHERE user_id = ? AND user_post_id IN (SELECT user_post_id FROM user_posts WHERE U_ID = ?))
+      `, [blocker_id, user_id ]);
 
       return res.json({
         result: "1",
@@ -1566,10 +1636,14 @@ exports.getReels = async (req, res) => {
   const limit = 10;
 
   if (!user_id) {
-    return res.status(200).json({ result: "0", error: "user_id is required", data: [] });
+    return res.status(200).json({
+      result: "0",
+      error: "user_id is required",
+      data: []
+    });
   }
 
-  const offset = (parseInt(page) - 1) * limit;
+  const offset = (parseInt(page, 10) - 1) * limit;
 
   try {
     const [user] = await db.query(
@@ -1578,26 +1652,38 @@ exports.getReels = async (req, res) => {
     );
 
     if (!user.length) {
-      return res.status(200).json({ result: "0", error: "User not found", data: [] });
+      return res.status(200).json({
+        result: "0",
+        error: "User not found",
+        data: []
+      });
     }
 
     const interestIds = user[0].user_interest ? user[0].user_interest.split(",") : [];
     if (interestIds.length === 0) {
-      return res.status(200).json({ result: "1", data: [], total: 0 });
+      return res.status(200).json({
+        result: "0",
+        error: "Interest is not found",
+        data: []
+      });
     }
+
     const [blocked] = await db.query(
       `SELECT user_id, blocker_id 
        FROM blocks 
        WHERE user_id = ? OR blocker_id = ?`,
       [user_id, user_id]
     );
-    const blockedUserIds = blocked.reduce((acc, b) => {
-      if (b.user_id !== user_id) acc.push(b.user_id);
-      if (b.blocker_id !== user_id) acc.push(b.blocker_id);
-      return acc;
-    }, []);
 
-    const [countRows] = await db.query(
+    const blockedUserIds = [
+      ...new Set(
+        blocked.map(b =>
+          b.user_id === user_id ? b.blocker_id : b.user_id
+        )
+      )
+    ];
+
+    const [[{ total }]] = await db.query(
       `SELECT COUNT(*) AS total
        FROM user_posts up
        JOIN users u ON u.U_ID = up.U_ID
@@ -1609,53 +1695,143 @@ exports.getReels = async (req, res) => {
       [interestIds.join(",")]
     );
 
-    const total = countRows[0].total;
+    const totalPages = Math.ceil(total / limit);
+    const nxtpage = parseInt(page, 10) < totalPages ? parseInt(page, 10) + 1 : 0;
 
     const [reels] = await db.query(
-      `SELECT 
-         up.user_post_id,
-         up.video,
-         up.property_name,
-         up.land_categorie_id,
-         u.name AS owner_name,
-         COALESCE(pl.total_likes, 0) AS total_likes
-       FROM user_posts up
-       JOIN users u ON u.U_ID = up.U_ID
-       LEFT JOIN (
-         SELECT user_post_id, COUNT(*) AS total_likes
-         FROM post_likes
-         GROUP BY user_post_id
-       ) pl ON pl.user_post_id = up.user_post_id
-       WHERE FIND_IN_SET(up.land_categorie_id, ?)
-         AND up.status = 'published'
-         AND up.video IS NOT NULL
-         AND up.deleted_at IS NULL
-         ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.join(",")})` : ""}
-       ORDER BY up.created_at DESC
-       LIMIT ? OFFSET ?`,
-      [interestIds.join(","), limit, offset]
+      `
+      SELECT  
+        up.U_ID,
+        up.user_post_id,
+        up.video,
+        up.property_name,
+        up.land_type_id,
+        up.land_categorie_id,
+        up.country , up.state , up.city , up.locality , up.latitude , up.longitude , up.bhk_type , up.property_area ,  up.area_length , up.area_width , up.total_floors , up.floors_allowed , up.parking_available , up.is_boundary_wall , up.furnishing , up.price  , 
+        up.created_at,
+        u.name,
+        u.username,
+        u.profile_image,
+        u.country,
+        u.state,
+        u.cities,
+        u.phone_num,
+        u.latitude,
+        u.longitude,
+        COALESCE(pl.total_likes, 0) AS total_likes,
+        COALESCE(pc.total_comments, 0) AS total_comments,
+        CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
+        CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved,
+        CASE WHEN e.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS enquiry
+      FROM user_posts up
+      JOIN users u ON u.U_ID = up.U_ID
+      LEFT JOIN (
+          SELECT user_post_id, COUNT(*) AS total_likes
+          FROM post_likes
+          GROUP BY user_post_id
+      ) pl ON pl.user_post_id = up.user_post_id
+      LEFT JOIN (
+          SELECT user_post_id, COUNT(*) AS total_comments
+          FROM post_comments
+          WHERE deleted_at IS NULL
+          GROUP BY user_post_id
+      ) pc ON pc.user_post_id = up.user_post_id
+      LEFT JOIN post_likes ul 
+          ON ul.user_post_id = up.user_post_id AND ul.user_id = ?
+      LEFT JOIN saved_properties sp 
+          ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
+      LEFT JOIN enquiries e
+          ON e.recever_posts_id = up.user_post_id AND e.user_id = ?
+      WHERE up.status = 'published'
+        AND up.video IS NOT NULL
+        AND up.deleted_at IS NULL
+        AND FIND_IN_SET(up.land_categorie_id, ?)
+        ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.map(() => "?").join(",")})` : ""}
+      ORDER BY up.created_at DESC
+      LIMIT ? OFFSET ?;
+      `,
+      [
+        user_id,
+        user_id,
+        user_id,
+        interestIds.join(","),
+        ...blockedUserIds,
+        limit,
+        offset
+      ]
     );
 
-    if (reels.length === 0) {
+const normalizedReels = reels.map(r => ({
+  user_id: r.U_ID ?? 0,
+  user_post_id: r.user_post_id ?? 0,
+  name: r.name ?? "",
+  username: r.username ?? "",
+  country: r.country ?? "",
+  state: r.state ?? "",
+  cities: r.cities ?? "",
+  phone_num: r.phone_num ?? "",
+  profile_image: r.profile_image ?? "",
+  video: r.video ?? "",
+  total_likes: r.total_likes ?? 0,
+  total_comments: r.total_comments ?? 0,
+    is_liked: r.is_liked ?? 0,
+    is_saved: r.is_saved ?? 0,
+    enquiry: r.enquiry ?? 0,
+  post_property: {
+    video: r.video ?? [],
+    property_name: r.property_name ?? "",
+    land_categorie_id: r.land_categorie_id ?? "",
+    created_at: r.created_at ?? "",
+    
+    country: r.up_country ?? "",
+    state: r.up_state ?? "",
+    city: r.up_city ?? "",
+    locality: r.up_locality ?? "",
+    latitude: r.up_latitude ?? "",
+    longitude: r.up_longitude ?? "",
+    bhk_type: r.bhk_type ?? "",
+    property_area: r.property_area ?? "",
+    area_length: r.area_length ?? "",
+    area_width: r.area_width ?? "",
+    total_floors: r.total_floors ?? "",
+    floors_allowed: r.floors_allowed ?? "",
+    parking_available: r.parking_available ?? "",
+    is_boundary_wall: r.is_boundary_wall ?? "",
+    furnishing: r.furnishing ?? "",
+    price: r.price ?? ""
+  }
+}));
+
+
+
+    if (!normalizedReels.length) {
       return res.status(200).json({
         result: "0",
-        error: "No data for User_id",
-        data: []
+        error: "No reels available",
+        data: [],
+        page: parseInt(page, 10),
+        recCnt: total,
+        totalPages,
+        nxtpage
       });
     }
 
     return res.status(200).json({
       result: "1",
-      data: reels,
-      page: parseInt(page),
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit)
+      data: normalizedReels,
+      page: parseInt(page, 10),
+      recCnt: total,
+      totalPages,
+      nxtpage
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ result: "0", error: "Server error", data: [] });
+    console.error("getReels Error:", err);
+    res.status(500).json({
+      result: "0",
+      error: "Server error",
+      data: []
+    });
   }
 };
 
@@ -1832,13 +2008,13 @@ exports.add_firstcomment = async (req, res) => {
 };
 
 exports.getcomment = async (req, res) => {
-  const { user_post_id, page = 1 } = req.body;
+  const { user_post_id, user_id, page = 1 } = req.body;
   const limit = 10;
 
-  if (!user_post_id) {
+  if (!user_post_id || !user_id) {
     return res.status(200).json({
       result: "0",
-      error: "user_post_id is required",
+      error: "user_post_id and user_id are required",
       data: []
     });
   }
@@ -1855,6 +2031,8 @@ exports.getcomment = async (req, res) => {
     });
   }
 
+  const postOwnerId = exist_post[0].U_ID;
+
   try {
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 10;
@@ -1863,32 +2041,63 @@ exports.getcomment = async (req, res) => {
     const [[{ total }]] = await db.query(
       `SELECT COUNT(*) AS total
        FROM post_comments
-       WHERE user_post_id = ? AND replies_comment_id IS NULL`,
+       WHERE user_post_id = ? AND replies_comment_id IS NULL AND deleted_at IS NULL`,
       [user_post_id]
     );
 
+    // fetch main comments
     const [comments] = await db.query(
       `SELECT c.comment_id, c.user_id, c.comment, c.created_at,
-      u.username, u.profile_image,
-      (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.comment_id) AS like_count
+              u.username, u.profile_image,
+              (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.comment_id) AS like_count,
+              (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.comment_id AND user_id = ?) AS is_liked
        FROM post_comments c
        JOIN users u ON c.user_id = u.U_ID
-       WHERE c.user_post_id = ? AND c.replies_comment_id IS NULL
+       WHERE c.user_post_id = ? AND c.replies_comment_id IS NULL AND c.deleted_at IS NULL
        ORDER BY c.created_at DESC
        LIMIT ? OFFSET ?`,
-      [user_post_id, limitNum, offset]
+      [user_id, user_post_id, limitNum, offset]
     );
 
-    const normalizedComments = comments.map(comment => ({
-      comment_id: comment.comment_id ?? 0,
-      user_id: comment.user_id ?? 0,
-      comment: comment.comment ?? "",
-      created_at: comment.created_at ?? "",
-      username: comment.username ?? "",
-      profile_image: comment.profile_image ?? "",
-      like_count: comment.like_count ?? 0,
-      replies: comment.replies ?? []
-    }));
+    const normalizedComments = await Promise.all(
+      comments.map(async (comment) => {
+        const [lastReply] = await db.query(
+          `SELECT r.comment_id, r.user_id, r.comment, r.created_at,
+                  uu.username, uu.profile_image,
+                  (SELECT COUNT(*) FROM comment_likes WHERE comment_id = r.comment_id) AS like_count,
+                  (SELECT COUNT(*) FROM comment_likes WHERE comment_id = r.comment_id AND user_id = ?) AS is_liked
+           FROM post_comments r
+           JOIN users uu ON r.user_id = uu.U_ID
+           WHERE r.replies_comment_id = ? AND r.deleted_at IS NULL
+           ORDER BY r.created_at DESC
+           LIMIT 1`,
+          [user_id, comment.comment_id]
+        );
+
+        return {
+          comment_id: comment.comment_id ?? 0,
+          user_id: comment.user_id ?? 0,
+          comment: comment.comment ?? "",
+          created_at: comment.created_at ?? "",
+          username: comment.username ?? "",
+          profile_image: comment.profile_image ?? "",
+          like_count: comment.like_count ?? 0,
+          is_liked: comment.is_liked > 0 ? 1 : 0,   
+          author: comment.user_id === postOwnerId ? 1 : 0,
+          last_reply: lastReply.length > 0 ? {
+            comment_id: lastReply[0].comment_id ?? "",
+            user_id: lastReply[0].user_id ?? "",
+            comment: lastReply[0].comment ?? "",
+            created_at: lastReply[0].created_at ?? "",
+            username: lastReply[0].username ?? "",
+            profile_image: lastReply[0].profile_image ?? "",
+            like_count: lastReply[0].like_count ?? 0,
+            is_liked: lastReply[0].is_liked > 0 ? 1 : 0,   
+            author: lastReply[0].user_id === postOwnerId ? 1 : 0,
+          } : {}
+        };
+      })
+    );
 
     if (comments.length === 0) {
       return res.status(200).json({
@@ -1901,11 +2110,11 @@ exports.getcomment = async (req, res) => {
 
     res.json({
       result: "1",
+      error: "",
       data: normalizedComments,
       totalPages: Math.ceil(total / limitNum),
       nxtpage: pageNum < Math.ceil(total / limitNum) ? pageNum + 1 : 0,
-      recCnt: total,
-      
+      recCnt: total
     });
 
   } catch (err) {
@@ -1913,47 +2122,180 @@ exports.getcomment = async (req, res) => {
     res.status(500).json({
       result: "0",
       error: "Internal server error",
-      totalPages: 0, nxtpage: 0, recCnt: 0 ,
+      totalPages: 0, nxtpage: 0, recCnt: 0,
       data: []
     });
   }
 };
 
+// exports.getreplay_comment = async (req, res) => {
+//   const { user_post_id , comment_id, page = 1 } = req.body;
+//   const limit = 10;
+//   if (!comment_id || isNaN(comment_id)) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "comment_id is required and it must be an Integer",
+//       data: []
+//     });
+//   }
+
+//   const [exist_comment] = await db.query(
+//     `SELECT * FROM post_comments WHERE comment_id = ?`,
+//     [comment_id]
+//   );
+//   if (exist_comment.length === 0) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "comment id is not existing in database",
+//       data: []
+//     });
+//   }
+
+//   try {
+//     const pageNum = parseInt(page, 10) || 1;
+//     const limitNum = parseInt(limit, 10) || 10;
+//     const offset = (pageNum - 1) * limitNum;
+
+//     const [[{ total }]] = await db.query(
+//       `SELECT COUNT(*) AS total
+//        FROM post_comments
+//        WHERE replies_comment_id = ?`,
+//       [comment_id]
+//     );
+//     if (total === 0) {
+//       return res.status(200).json({
+//         result: "0",
+//         error: "No replies found for this comment",
+//         totalPages: 0,
+//         nxtpage: 0,
+//         recCnt: 0,
+//         data: []
+//       });
+//     }
+
+//     const [replies] = await db.query(
+//       `SELECT c.comment_id, c.user_id, c.comment, c.created_at,
+//               u.username, u.profile_image,
+//               (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.comment_id) AS like_count
+//        FROM post_comments c
+//        JOIN users u ON c.user_id = u.U_ID
+//        WHERE c.replies_comment_id = ?
+//        ORDER BY c.created_at ASC
+//        LIMIT ? OFFSET ?`,
+//       [comment_id, limitNum, offset]
+//     );
+
+//     const normalized = replies.map(r => ({
+//       comment_id: r.comment_id ?? 0,
+//       user_id: r.user_id ?? 0,
+//       comment: r.comment ?? "",
+//       created_at: r.created_at ?? "",
+//       username: r.username ?? "",
+//       profile_image: r.profile_image ?? "",
+//       like_count: r.like_count ?? 0
+//     }));
+
+//     res.json({
+//       result: "1",
+//       data: normalized,
+//       totalPages: Math.ceil(total / limitNum),
+//       nxtpage: pageNum < Math.ceil(total / limitNum) ? pageNum + 1 : 0,
+//       recCnt: total
+      
+//     });
+
+//   } catch (err) {
+//     console.error("Get replies error:", err);
+//     res.status(500).json({
+//       result: "0",
+//       error: "Internal server error",
+//       totalPages: 0, nxtpage: 0, recCnt: 0,
+//       data: []
+//     });
+//   }
+// };
+
 exports.getreplay_comment = async (req, res) => {
-  const { comment_id, page = 1 } = req.body;
+  const { user_post_id, comment_id, user_id, page = 1 } = req.body;
   const limit = 10;
-  if (!comment_id || isNaN(comment_id)) {
+
+  if (!user_post_id || isNaN(user_post_id)) {
     return res.status(200).json({
       result: "0",
-      error: "comment_id is required and it must be an Integer",
+      error: "user_post_id is required and must be an Integer",
       data: []
     });
   }
 
-  const [exist_comment] = await db.query(
-    `SELECT * FROM post_comments WHERE comment_id = ?`,
-    [comment_id]
+  const [exist_post] = await db.query(
+    `SELECT * FROM user_posts WHERE user_post_id = ?`,
+    [user_post_id]
   );
-  if (exist_comment.length === 0) {
+  if (exist_post.length === 0) {
     return res.status(200).json({
       result: "0",
-      error: "comment id is not existing in database",
+      error: "Post does not exist in database",
       data: []
     });
   }
+
+  const postOwnerId = exist_post[0].U_ID;
 
   try {
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 10;
     const offset = (pageNum - 1) * limitNum;
 
-    const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) AS total
-       FROM post_comments
-       WHERE replies_comment_id = ?`,
-      [comment_id]
+    const [replies] = await db.query(
+      `
+      WITH RECURSIVE reply_tree AS (
+        SELECT c.comment_id, c.replies_comment_id, c.user_id, c.comment, c.created_at
+        FROM post_comments c
+        WHERE c.replies_comment_id = ?
+          AND c.user_post_id = ?
+          AND c.deleted_at IS NULL
+
+        UNION ALL
+
+        SELECT pc.comment_id, pc.replies_comment_id, pc.user_id, pc.comment, pc.created_at
+        FROM post_comments pc
+        INNER JOIN reply_tree rt ON pc.replies_comment_id = rt.comment_id
+        WHERE pc.deleted_at IS NULL
+      )
+      SELECT rt.comment_id, rt.replies_comment_id, rt.user_id, rt.comment, rt.created_at,
+             u.username, u.profile_image,
+             (SELECT COUNT(*) FROM comment_likes WHERE comment_id = rt.comment_id) AS like_count,
+             (SELECT COUNT(*) FROM comment_likes WHERE comment_id = rt.comment_id AND user_id = ?) AS is_liked
+      FROM reply_tree rt
+      JOIN users u ON rt.user_id = u.U_ID
+      ORDER BY rt.created_at DESC
+      LIMIT ? OFFSET ?
+      `,
+      [comment_id, user_post_id, user_id, limitNum, offset]
     );
-    if (total === 0) {
+
+    const [[{ total }]] = await db.query(
+      `
+      WITH RECURSIVE reply_tree AS (
+        SELECT c.comment_id
+        FROM post_comments c
+        WHERE c.replies_comment_id = ?
+          AND c.user_post_id = ?
+          AND c.deleted_at IS NULL
+
+        UNION ALL
+
+        SELECT pc.comment_id
+        FROM post_comments pc
+        INNER JOIN reply_tree rt ON pc.replies_comment_id = rt.comment_id
+        WHERE pc.deleted_at IS NULL
+      )
+      SELECT COUNT(*) AS total FROM reply_tree
+      `,
+      [comment_id, user_post_id]
+    );
+
+    if (!total || total === 0) {
       return res.status(200).json({
         result: "0",
         error: "No replies found for this comment",
@@ -1964,35 +2306,28 @@ exports.getreplay_comment = async (req, res) => {
       });
     }
 
-    const [replies] = await db.query(
-      `SELECT c.comment_id, c.user_id, c.comment, c.created_at,
-              u.username, u.profile_image,
-              (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.comment_id) AS like_count
-       FROM post_comments c
-       JOIN users u ON c.user_id = u.U_ID
-       WHERE c.replies_comment_id = ?
-       ORDER BY c.created_at ASC
-       LIMIT ? OFFSET ?`,
-      [comment_id, limitNum, offset]
-    );
-
     const normalized = replies.map(r => ({
       comment_id: r.comment_id ?? 0,
+      parent_comment_id: r.replies_comment_id ?? 0,
       user_id: r.user_id ?? 0,
       comment: r.comment ?? "",
       created_at: r.created_at ?? "",
       username: r.username ?? "",
       profile_image: r.profile_image ?? "",
-      like_count: r.like_count ?? 0
+      author: r.user_id === postOwnerId ? 1 : 0,
+      like_count: r.like_count ?? 0,
+      is_liked: r.is_liked > 0 ? 1 : 0
     }));
+
+    const filtered = normalized.slice(1);
 
     res.json({
       result: "1",
-      data: normalized,
+      error: "",
+      data: filtered,
       totalPages: Math.ceil(total / limitNum),
       nxtpage: pageNum < Math.ceil(total / limitNum) ? pageNum + 1 : 0,
       recCnt: total
-      
     });
 
   } catch (err) {
@@ -2000,7 +2335,9 @@ exports.getreplay_comment = async (req, res) => {
     res.status(500).json({
       result: "0",
       error: "Internal server error",
-      totalPages: 0, nxtpage: 0, recCnt: 0,
+      totalPages: 0,
+      nxtpage: 0,
+      recCnt: 0,
       data: []
     });
   }

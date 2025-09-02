@@ -111,14 +111,15 @@ router.post('/post_like',userController.post_like);
 router.post('/getpost_like_count',userController.getPostLikeCount);
 router.post('/add_firstcomment',userController.add_firstcomment);
 router.post('/getcomment',userController.getcomment);
+
 router.post('/getreplay_comment',userController.getreplay_comment);
 router.post('/likeComment',userController.likeComment);
 
 router.post('/search',userController.search);
 router.post('/getInterestedSearchers',userController.getInterestedSearchers);
 
-router.post('/declineForm',enquireController.declineForm);
-router.post('/declineFormpara',enquireController.declineFormpara);
+// router.post('/declineForm',enquireController.declineForm);
+// router.post('/declineFormpara',enquireController.declineFormpara);
 
 
 module.exports = router;

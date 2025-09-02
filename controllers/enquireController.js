@@ -100,7 +100,6 @@ exports.land_categories_para = async (req, res) => {
 exports.enquire = async (req, res) => {
   const { user_id, recever_posts_id, land_type_id, land_categorie_id, name, phone_num, whatsapp_num, email, land_category_para } = req.body;
 
-  // Required fields check
   if (!user_id || !recever_posts_id || !land_type_id || !land_categorie_id || !name?.trim()) {
     return res.status(200).json({
       result: "0",
@@ -109,22 +108,21 @@ exports.enquire = async (req, res) => {
     });
   }
 
-  // Number validations
-  if (phone_num && (!Number.isInteger(Number(phone_num)) || Number(phone_num) <= 0)) {
-    return res.status(200).json({
-      result: "0",
-      error: "phone_num must be a positive integer.",
-      data: []
-    });
-  }
+  // if (phone_num && (!Number.isInteger(Number(phone_num)) || Number(phone_num) <= 0)) {
+  //   return res.status(200).json({
+  //     result: "0",
+  //     error: "phone_num must be a positive integer.",
+  //     data: []
+  //   });
+  // }
 
-  if (whatsapp_num && (!Number.isInteger(Number(whatsapp_num)) || Number(whatsapp_num) <= 0)) {
-    return res.status(200).json({
-      result: "0",
-      error: "whatsapp_num must be a positive integer.",
-      data: []
-    });
-  }
+  // if (whatsapp_num && (!Number.isInteger(Number(whatsapp_num)) || Number(whatsapp_num) <= 0)) {
+  //   return res.status(200).json({
+  //     result: "0",
+  //     error: "whatsapp_num must be a positive integer.",
+  //     data: []
+  //   });
+  // }
 
   try {
     // User check
@@ -343,114 +341,114 @@ exports.self_enquiry = async (req, res) => {
   }
 };
 
-exports.declineForm = async (req, res) => {
-  try {
-    let { page = 1 } = req.body;
-    let limit = 10;
+// exports.declineForm = async (req, res) => {
+//   try {
+//     let { page = 1 } = req.body;
+//     let limit = 10;
 
-    if(isNaN(page)){
-      return res.status(200).json({
-        result : "0",
-        error : "error page is only in Integer",
-        data : []
-      })
-    }
+//     if(isNaN(page)){
+//       return res.status(200).json({
+//         result : "0",
+//         error : "error page is only in Integer",
+//         data : []
+//       })
+//     }
 
-    page = parseInt(page) || 1;
-    limit = parseInt(limit) || 10;
+//     page = parseInt(page) || 1;
+//     limit = parseInt(limit) || 10;
 
-    const offset = (page - 1) * limit;
-    const [[{ total }]] = await db.query(`
-      SELECT COUNT(*) as total FROM declining_enquire
-    `);
+//     const offset = (page - 1) * limit;
+//     const [[{ total }]] = await db.query(`
+//       SELECT COUNT(*) as total FROM declining_enquire
+//     `);
 
-    const totalPages = Math.ceil(total / limit);
-    if (total === 0) {
-      return res.json({
-        result: "0",
-        error: "No records found",
-        data: [],
-        current_page: page,
-        per_page: limit,
-        total_records: total,
-        total_pages: totalPages
-      });
-    }
-    if (page > totalPages) {
-      return res.json({
-        result: "0",
-        error: "Page not found",
-        data: [],
-        current_page: page,
-        per_page: limit,
-        total_records: total,
-        total_pages: totalPages
-      });
-    }
-    const [rows] = await db.query(`
-      SELECT declining_enquire_id, name
-      FROM declining_enquire
-      LIMIT ? OFFSET ?
-    `, [limit, offset]);
+//     const totalPages = Math.ceil(total / limit);
+//     if (total === 0) {
+//       return res.json({
+//         result: "0",
+//         error: "No records found",
+//         data: [],
+//         current_page: page,
+//         per_page: limit,
+//         total_records: total,
+//         total_pages: totalPages
+//       });
+//     }
+//     if (page > totalPages) {
+//       return res.json({
+//         result: "0",
+//         error: "Page not found",
+//         data: [],
+//         current_page: page,
+//         per_page: limit,
+//         total_records: total,
+//         total_pages: totalPages
+//       });
+//     }
+//     const [rows] = await db.query(`
+//       SELECT declining_enquire_id, name
+//       FROM declining_enquire
+//       LIMIT ? OFFSET ?
+//     `, [limit, offset]);
 
-    return res.json({
-      result: "1",
-      data: rows,
-      current_page: page,
-      per_page: limit,
-      total_records: total,
-      total_pages: totalPages
-    });
+//     return res.json({
+//       result: "1",
+//       data: rows,
+//       current_page: page,
+//       per_page: limit,
+//       total_records: total,
+//       total_pages: totalPages
+//     });
 
-  } catch (err) {
-    console.error("Decline Form error:", err);
-    return res.status(500).json({
-      result: "0",
-      error: err.message,
-      data: []
-    });
-  }
-};
+//   } catch (err) {
+//     console.error("Decline Form error:", err);
+//     return res.status(500).json({
+//       result: "0",
+//       error: err.message,
+//       data: []
+//     });
+//   }
+// };
 
-exports.declineFormpara = async (req, res) => {
-  try {
-    const { name } = req.body;
+// exports.declineFormpara = async (req, res) => {
+//   try {
+//     const { name } = req.body;
 
-    if (!name) {
-      return res.status(200).json({
-        result: "0",
-        error: "Name is required",
-        data: []
-      });
-    }
+//     if (!name) {
+//       return res.status(200).json({
+//         result: "0",
+//         error: "Name is required",
+//         data: []
+//       });
+//     }
 
-    const [rows] = await db.query(
-      `SELECT para FROM declining_enquire WHERE name = ?`,
-      [name]
-    );
+//     const [rows] = await db.query(
+//       `SELECT para FROM declining_enquire WHERE name = ?`,
+//       [name]
+//     );
 
-    if (!rows.length) {
-      return res.json({
-        result: "0",
-        error: "No matching record found",
-        data: []
-      });
-    }
+//     if (!rows.length) {
+//       return res.json({
+//         result: "0",
+//         error: "No matching record found",
+//         data: []
+//       });
+//     }
 
-    return res.json({
-      result: "1",
-      data: rows
-    });
+//     return res.json({
+//       result: "1",
+//       data: rows
+//     });
 
-  } catch (err) {
-    console.error("Decline Form Para error:", err);
-    return res.status(500).json({
-      result: "0",
-      error: "Server error: " + err.message,
-      data: []
-    });
-  }
-};
+//   } catch (err) {
+//     console.error("Decline Form Para error:", err);
+//     return res.status(500).json({
+//       result: "0",
+//       error: "Server error: " + err.message,
+//       data: []
+//     });
+//   }
+// };
 
 exports.declineEnquiry = async (req, res) => {
   const { enquire_id, user_posts_id, custom_para } = req.body;
