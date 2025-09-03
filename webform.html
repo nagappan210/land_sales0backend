@@ -1578,7 +1578,7 @@
               <td class="p-3">0->Owner , 1->Broker</td>
             </tr>
             <tr>
-              <td colspan="6" class="text-center p-4">
+              <td colspan="7" class="text-center p-4">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
                   Submit
                 </button>
@@ -1995,11 +1995,11 @@
             </tr>
             <tr class="border-t">
               <td class="p-3">Upload Video</td>
-              <td class="p-3"><input type="text" name="video_base64" class="w-full border rounded p-2" /></td>
-              <td class="p-3">video_base64</td>
+              <td class="p-3"><input type="text" name="video_url" class="w-full border rounded p-2" /></td>
+              <td class="p-3">video_url</td>
               <td class="p-3">Only if Post Type = 1</td>
+              <td class="p-3">string</td>
               <td class="p-3">url</td>
-              <td class="p-3">base64_url</td>
             </tr>
             <tr class="border-t">
               <td class="p-3">Upload Images</td>
@@ -2007,8 +2007,8 @@
               </td>
               <td class="p-3">images_base64</td>
               <td class="p-3">Only if Post Type = 2</td>
-              <td class="p-3">url</td>
-              <td class="p-3">[ base64_url1 , base64_url12 ] </td>
+              <td class="p-3">string</td>
+              <td class="p-3">[ url1 , url12 ] </td>
             </tr>
             <tr>
               <td colspan="7" class="text-center p-4">
@@ -2377,7 +2377,7 @@
               <td class="p-3">1->sold , 2->unsold</td>
             </tr>
             <tr>
-              <td colspan="6" class="text-center p-4">
+              <td colspan="7" class="text-center p-4">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
                   Submit
                 </button>
@@ -2755,6 +2755,7 @@
               <th class="p-3 text-left">Mandatory</th>
               <th class="p-3 text-left">Note</th>
               <th class="p-3 text-left">Sample</th>
+              <th class="p-3 text-left">Value</th>
 
             </tr>
           </thead>
@@ -2776,6 +2777,23 @@
               <td class="p-3">1</td>
             </tr>
             <tr class="border-t">
+              <td class="p-3">Comment ID</td>
+              <td class="p-3"><input type="text" name="comment_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">comment_id</td>
+              <td class="p-3">No</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">Status</td>
+              <td class="p-3"><input type="text" name="status" class="w-full border rounded p-2" /></td>
+              <td class="p-3">status</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">string</td>
+              <td class="p-3">1 or 2 or 3</td>
+              <td class="p-3">1->add comments , <br>2-> Edit comment , <br> 3-> delete comment</td>
+            </tr>
+            <tr class="border-t">
               <td class="p-3">Comment</td>
               <td class="p-3"><input type="text" name="comment" class="w-full border rounded p-2" /></td>
               <td class="p-3">comment</td>
@@ -2792,7 +2810,7 @@
               <td class="p-3">1</td>
             </tr>
             <tr>
-              <td colspan="6" class="text-center p-4">
+              <td colspan="7" class="text-center p-4">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
                   Submit
                 </button>
@@ -3406,124 +3424,6 @@
     </div>
   </div>
 
-  <!-- <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Decline Form Name</h2>
-    <div class="mb-6">
-      <table class="w-full bg-white border rounded shadow text-sm mb-6">
-        <tbody>
-          <tr class="border-b">
-            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
-            <td class="p-3 text-blue-700">http://localhost:7000/api/auth/declineForm</td>
-          </tr>
-          <tr class="border-b">
-            <td class="font-semibold p-3 bg-gray-50">Method:</td>
-            <td class="p-3">POST</td>
-          </tr>
-          <tr class="border-b">
-            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
-            <td class="p-3">multipart/form-data</td>
-          </tr>
-          <tr>
-            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
-            <td class="p-3">Development</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <form id="declineForm" enctype="multipart/form-data">
-        <table class="w-full text-sm bg-white border rounded shadow mb-6">
-          <thead class="bg-slate-900 text-white">
-            <tr>
-              <th class="p-3 text-left">Label Name</th>
-              <th class="p-3 text-left">Value</th>
-              <th class="p-3 text-left">Variable Name</th>
-              <th class="p-3 text-left">Mandatory</th>
-              <th class="p-3 text-left">Note</th>
-              <th class="p-3 text-left">Sample</th>
-
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="border-t">
-              <td class="p-3">Page</td>
-              <td class="p-3"><input type="text" name="page" class="w-full border rounded p-2" /></td>
-              <td class="p-3">page</td>
-              <td class="p-3">Yes</td>
-              <td class="p-3">int</td>
-              <td class="p-3">1</td>
-            </tr>
-            <tr>
-              <td colspan="6" class="text-center p-4">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
-                  Submit
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </form>
-    </div>
-  </div> -->
-
-  <!-- <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Decline Form Para</h2>
-    <div class="mb-6">
-      <table class="w-full bg-white border rounded shadow text-sm mb-6">
-        <tbody>
-          <tr class="border-b">
-            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
-            <td class="p-3 text-blue-700">http://localhost:7000/api/auth/declineFormpara</td>
-          </tr>
-          <tr class="border-b">
-            <td class="font-semibold p-3 bg-gray-50">Method:</td>
-            <td class="p-3">POST</td>
-          </tr>
-          <tr class="border-b">
-            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
-            <td class="p-3">multipart/form-data</td>
-          </tr>
-          <tr>
-            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
-            <td class="p-3">Development</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <form id="declineFormpara" enctype="multipart/form-data">
-        <table class="w-full text-sm bg-white border rounded shadow mb-6">
-          <thead class="bg-slate-900 text-white">
-            <tr>
-              <th class="p-3 text-left">Label Name</th>
-              <th class="p-3 text-left">Value</th>
-              <th class="p-3 text-left">Variable Name</th>
-              <th class="p-3 text-left">Mandatory</th>
-              <th class="p-3 text-left">Note</th>
-              <th class="p-3 text-left">Sample</th>
-
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="border-t">
-              <td class="p-3">Name</td>
-              <td class="p-3"><input type="text" name="name" class="w-full border rounded p-2" /></td>
-              <td class="p-3">name</td>
-              <td class="p-3">Yes</td>
-              <td class="p-3">string</td>
-              <td class="p-3">Already Sold</td>
-            </tr>
-            <tr>
-              <td colspan="6" class="text-center p-4">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
-                  Submit
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </form>
-    </div>
-  </div> -->
-
   <div>
     <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Decline Form</h2>
     <div class="mb-6">
@@ -3735,6 +3635,14 @@
               <td class="p-3">Yes</td>
               <td class="p-3">int</td>
               <td class="p-3">950000</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">Page</td>
+              <td class="p-3"><input type="text" name="page" class="w-full border rounded p-2" /></td>
+              <td class="p-3">page</td>
+              <td class="p-3">No</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
             </tr>
             <tr>
               <td colspan="6" class="text-center p-4">
