@@ -904,7 +904,82 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">12. Follow & Unfollow User</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">12. Get User post</h2>
+    <div class="mb-6">
+      <table class="w-full bg-white border rounded shadow text-sm mb-6">
+        <tbody>
+          <tr class="border-b">
+            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+            <td class="p-3 text-blue-700">http://localhost:7000/api/auth/getpost_property</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Method:</td>
+            <td class="p-3">POST</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+            <td class="p-3">application/json; charset=utf-8</td>
+          </tr>
+          <tr>
+            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+            <td class="p-3">Development</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="getpost_property">
+        <table class="w-full text-sm bg-white border rounded shadow mb-6">
+          <thead class="bg-slate-900 text-white">
+            <tr>
+              <th class="p-3 text-left">Label Name</th>
+              <th class="p-3 text-left">Value</th>
+              <th class="p-3 text-left">Variable Name</th>
+              <th class="p-3 text-left">Mandatory</th>
+              <th class="p-3 text-left">Note</th>
+              <th class="p-3 text-left">Sample</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="p-3">User ID</td>
+              <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">Others ID</td>
+              <td class="p-3"><input type="text" name="others_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">others_id</td>
+              <td class="p-3">No</td>
+              <td class="p-3">string</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">Page</td>
+              <td class="p-3"><input type="text" name="page" class="w-full border rounded p-2" /></td>
+              <td class="p-3">page</td>
+              <td class="p-3">No</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr>
+              <td colspan="6" class="text-center p-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+                  Submit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">13. Follow & Unfollow User</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -981,7 +1056,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">13. Follow List</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">14. Follow List</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -1067,7 +1142,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">14.Search Follow</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">15.Search Follow</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -1162,7 +1237,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">15. Get Notification Settings</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">16. Get Notification Settings</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -1221,7 +1296,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">16. Notification Settings</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">17. Notification Settings</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -1300,7 +1375,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">17. Block User Settings</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">18. Block User Settings</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -1378,7 +1453,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">18. Get Blocked Users</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">19. Get Blocked Users</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -1445,7 +1520,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">19. User Account Deactivate / Activate</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">20. User Account Deactivate / Activate</h2>
 
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1514,7 +1589,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">20. Post Video Step 1</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">21. Post Video Step 1</h2>
 
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1591,7 +1666,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">21. Get Land Categories</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">22. Get Land Categories</h2>
 
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1654,7 +1729,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">22. Post Video Step 2</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">23. Post Video Step 2</h2>
 
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1739,7 +1814,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">23. Post Video Step 3</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">24. Post Video Step 3</h2>
 
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1854,7 +1929,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">25. Post Video Step 5</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">26. Post Video Step 5</h2>
 
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -1929,7 +2004,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">26. Post Video Step 6</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">27. Post Video Step 6</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2024,8 +2099,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">
-      27. Post Video Step 7
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">28. Post Video Step 7
     </h2>
 
     <div class="mb-6">
@@ -2099,7 +2173,7 @@
 
   <div>
     <h2 class="text-xl font-semibold text-red-600 underline mb-4">
-      28. Published
+      29. Published
     </h2>
 
     <div class="mb-6">
@@ -2171,7 +2245,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">29. Save Post</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">30. Save Post</h2>
 
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -2248,7 +2322,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">30. Saved Post User</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">31. Saved Post User</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2314,7 +2388,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">31. Mark as Sold </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">32. Mark as Sold </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2390,7 +2464,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">32.Get Users Sold Video </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">33.Get Users Sold Video </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2456,7 +2530,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">33.Get Users Draft Video</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">34.Get Users Draft Video</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2522,7 +2596,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">34.Get Video Or Reels </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">35.Get Video Or Reels </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2588,7 +2662,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">35.Like and Unlike </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">36.Like and Unlike </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2664,7 +2738,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">36.Like Count </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">37.Like Count </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2722,7 +2796,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">37.Comment For Post </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">38.Comment For Post </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2823,7 +2897,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">38.Comment Like </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">39.Comment Like </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2908,7 +2982,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">39.Get Comment</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">40.Get Comment</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2983,7 +3057,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">40.Get Repley Comment</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">41.Get Repley Comment</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3066,7 +3140,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">41.Land Categorie Name</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">42.Land Categorie Name</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3125,7 +3199,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">42.Land Categorie Para</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">43.Land Categorie Para</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3184,7 +3258,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">43.Enquire Form</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">44.Enquire Form</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3307,7 +3381,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">44.My Leads</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">45.My Leads</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3366,7 +3440,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">45.Self Enquire</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Self Enquire</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3425,7 +3499,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Decline Form</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Decline Form</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3500,7 +3574,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Show Interest User Search</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">48.Show Interest User Search</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3559,7 +3633,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">48.Search</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">49.Search</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -4028,6 +4102,41 @@
           window.location.href = 'response';
         }
       });
+
+
+      // GET USER POST
+      const getpost_property = document.getElementById('getpost_property');
+      getpost_property.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(getpost_property);
+        const data = {};
+
+        formData.forEach((value, key) => {
+          if (value !== "" || value === 0) {
+            data[key] = value.trim();
+          }
+        });
+
+        try {
+          const res = await fetch('http://localhost:7000/api/auth/getpost_property', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
+
+          const json = await res.json();
+          sessionStorage.setItem('registerResponse', JSON.stringify(json, null, 2));
+          window.location.href = 'response';
+        } catch (err) {
+          const errorObj = { error: err.message };
+          sessionStorage.setItem('registerResponse', JSON.stringify(errorObj, null, 2));
+          window.location.href = 'response';
+        }
+      });
+
 
       // FOLLOW LIST
       const follower_listForm = document.getElementById('getFollowData');

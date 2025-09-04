@@ -62,6 +62,7 @@ router.post('/update_profile', userController.updateProfile);
 router.post('/update_username',userController.updateUsername);
 router.post('/follow', userController.followUser);
 router.post('/profile_status', userController.getProfileStats);
+router.post('/getpost_property' , userController.getpost_property);
 router.post('/contact', authController.contact);
 
 // router.get('/getcontact/:id',userController.getContact);

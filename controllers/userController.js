@@ -402,14 +402,6 @@ exports.getProfileStats = async (req, res) => {
     WHERE u.U_ID = ? AND u.deleted_at IS NULL
   `;
 
-  const [post] = await db.query(
-    `SELECT user_post_id , thumbnail, video, created_at 
-     FROM user_posts 
-     WHERE U_ID = ? AND deleted_at IS NULL AND status = 'published' 
-     ORDER BY created_at DESC`,
-    [targetId]
-  );
-
   try {
     const [results] = await db.query(query, [targetId]);
 
@@ -454,14 +446,7 @@ exports.getProfileStats = async (req, res) => {
       is_followed = followBackRows[0].cnt > 0 ? 1 : 0;
     }
 
-    const others_page = othersIdNum !== 0 ? 1 : 0;
-
-    
-    const normalizedPosts = post.map(p => ({
-      thumbnail: (process.env.SERVER_ADDRESS || "") + (p.thumbnail || ""),
-      video: p.video || "",
-      created_at: p.created_at || ""
-    }));    
+    const others_page = othersIdNum !== 0 ? 1 : 0;    
 
     const normalizeProfile = (profile) => ({
       user_id: profile.user_id,
@@ -477,8 +462,7 @@ exports.getProfileStats = async (req, res) => {
       is_blocked: isBlocked,
       others_page,
       is_followed,
-      im_followed,
-      user_posts: normalizedPosts
+      im_followed
     });
 
     return res.json({
@@ -496,36 +480,221 @@ exports.getProfileStats = async (req, res) => {
   }
 };
 
-exports.post_property = async(req,res) =>{
-  const {user_id , others_id , page = 1} = req.body;
-
-  page = parseInt(page , 10) || 1;
+exports.getpost_property = async (req, res) => {
+  const { user_id, others_id, page = 1 } = req.body;
+  console.log(user_id, others_id);
+  
   const limit = 10;
-  const offset = (page -1) * limit;
 
-  try{
-    let query = "";
-    let countQuery = "";
-    let params = [];
-    let countParams = [];
-
-    const base_url = process.env.SERVER_ADDRESS + "uploaded/posts/";
-    
-    const targetId = others_id || user_id;
-
-    query = `select user_post_id , U_ID , user_type , land_categoies_id  , country , state , city ,  locality , video , `
-  }
- catch (err) {
-    console.error("Error in searchfollower:", err);
-    return res.status(500).json({
+  if (!user_id) {
+    return res.status(200).json({
       result: "0",
-      error: "Server error",
+      error: "user_id is required",
       data: []
     });
   }
 
+  const offset = (parseInt(page, 10) - 1) * limit;
+  const targetId = others_id ? others_id : user_id;
 
-}
+  const [blocked] = await db.query(
+    `SELECT * FROM blocks WHERE (user_id = ? AND blocker_id = ?) OR (user_id = ? AND blocker_id = ?)`,
+    [user_id, others_id, others_id, user_id]
+  );
+
+  if (blocked.length > 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "Blocked the users",
+      data: []
+    });
+  }
+
+  try {
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) AS total 
+       FROM user_posts 
+       WHERE U_ID = ? 
+         AND status = 'published' 
+         AND video IS NOT NULL 
+         AND deleted_at IS NULL`,
+      [targetId]
+    );
+
+    const totalPages = Math.ceil(total / limit);
+    const nxtpage = parseInt(page, 10) < totalPages ? parseInt(page, 10) + 1 : 0;
+
+    let query = `
+      SELECT 
+        up.U_ID, up.user_post_id, up.video, up.thumbnail, up.property_name, up.post_type, up.image_ids,
+        up.land_type_id, up.land_categorie_id, up.country AS up_country, up.state AS up_state, 
+        up.city AS up_city, up.locality AS up_locality, up.latitude AS up_latitude, 
+        up.longitude AS up_longitude, up.bhk_type, up.property_area, up.area_length, 
+        up.area_width, up.total_floors, up.floors_allowed, up.parking_available, 
+        up.is_boundary_wall, up.furnishing, up.price, up.created_at,
+        u.name, u.username, u.profile_image, u.country, u.state, u.cities, 
+        u.phone_num_cc, u.phone_num, u.whatsapp_num_cc, u.whatsapp_num, u.email, 
+        u.latitude AS user_latitude, u.longitude AS user_longitude,
+        COALESCE(pl.total_likes, 0) AS total_likes,
+        COALESCE(pc.total_comments, 0) AS total_comments,
+        CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
+        CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved
+    `;
+
+    if (others_id) {
+      query += `,
+        CASE WHEN e.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS enquiry
+      `;
+    }
+
+    query += `
+      FROM user_posts up
+      JOIN users u ON u.U_ID = up.U_ID
+      LEFT JOIN (
+          SELECT user_post_id, COUNT(*) AS total_likes
+          FROM post_likes
+          GROUP BY user_post_id
+      ) pl ON pl.user_post_id = up.user_post_id
+      LEFT JOIN (
+          SELECT user_post_id, COUNT(*) AS total_comments
+          FROM post_comments
+          WHERE deleted_at IS NULL
+          GROUP BY user_post_id
+      ) pc ON pc.user_post_id = up.user_post_id
+      LEFT JOIN post_likes ul ON ul.user_post_id = up.user_post_id AND ul.user_id = ?
+      LEFT JOIN saved_properties sp ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
+    `;
+
+    if (others_id) {
+      query += `
+        LEFT JOIN enquiries e ON e.recever_posts_id = up.user_post_id AND e.user_id = ?
+      `;
+    }
+
+    query += `
+      WHERE up.U_ID = ? 
+        AND up.status = 'published' 
+        AND up.video IS NOT NULL 
+        AND up.deleted_at IS NULL
+      ORDER BY up.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+
+    let params = [];
+    if (others_id) {
+      params = [user_id, user_id, user_id, targetId, limit, offset];
+    } else {
+      params = [user_id, user_id, targetId, limit, offset];
+    }
+
+    const [reels] = await db.query(query, params);
+    const others_page = (others_id && others_id !== 0 && others_id !== "") ? 1 : 0;
+
+    const posts = await Promise.all(reels.map(async (p) => {
+      let videoValue = p.video ?? "";
+      let imageUrls = [];
+      
+      if (p.image_ids && p.image_ids !== "Null" && p.image_ids !== "") {
+        try {
+          const [images] = await db.query(
+            `SELECT image_path FROM post_images 
+             WHERE user_post_id = ? AND image_id IN (?) 
+             ORDER BY FIELD(image_id, ?)`,
+            [p.user_post_id, p.image_ids.split(','), p.image_ids.split(',')]
+          );
+          
+          imageUrls = images.map(img => 
+            img.image_path ? `${process.env.SERVER_ADDRESS}${img.image_path}` : ""
+          );
+          
+          if (imageUrls.length > 0) {
+            videoValue = "";
+          }
+        } catch (error) {
+          console.error("Error fetching images:", error);
+        }
+      }
+
+      return {
+        user_id: p.U_ID ?? 0,
+        user_post_id: p.user_post_id ?? 0,
+        name: p.name ?? "",
+        username: p.username ?? "",
+        country: p.country ?? "",
+        state: p.state ?? "",
+        cities: p.cities ?? "",
+        phone_num_cc: p.phone_num_cc ?? "",
+        phone_num: p.phone_num ?? "",
+        whatsapp_num_cc: p.whatsapp_num_cc ?? "",
+        whatsapp_num: p.whatsapp_num ?? "",
+        email: p.email ?? "",
+        profile_image: p.profile_image ?? "",
+        thumbnail: p.thumbnail ? `${process.env.SERVER_ADDRESS}${p.thumbnail}` : 
+                  (imageUrls.length > 0 ? imageUrls[0] : ""),
+        video: p.video , 
+        total_likes: p.total_likes ?? 0,
+        total_comments: p.total_comments ?? 0,
+        is_liked: p.is_liked ?? 0,
+        is_saved: p.is_saved ?? 0,
+        enquiry: p.enquiry ?? 0,
+        others_page,
+        post_property: {
+          video: imageUrls.length > 0 ? "" : (p.video ? p.video : ""),
+          image_urls: imageUrls,
+          post_type: p.post_type ?? "",
+          property_name: p.property_name ?? "",
+          land_type_id: p.land_type_id ?? "",
+          land_categorie_id: p.land_categorie_id ?? "",
+          created_at: p.created_at ?? "",
+          country: p.up_country ?? "",
+          state: p.up_state ?? "",
+          city: p.up_city ?? "",
+          locality: p.up_locality ?? "",
+          latitude: p.up_latitude ?? "",
+          longitude: p.up_longitude ?? "",
+          bhk_type: p.bhk_type ?? "",
+          property_area: p.property_area ?? "",
+          area_length: p.area_length ?? "",
+          area_width: p.area_width ?? "",
+          total_floors: p.total_floors ?? "",
+          floors_allowed: p.floors_allowed ?? "",
+          parking_available: p.parking_available ?? "",
+          is_boundary_wall: p.is_boundary_wall ?? "",
+          furnishing: p.furnishing ?? "",
+          price: p.price ?? ""
+        }
+      };
+    }));
+
+    if (!posts.length) {
+      return res.status(200).json({
+        result: "0",
+        error: "No Post available",
+        data: [],
+        page: parseInt(page, 10),
+        recCnt: total,
+        totalPages,
+        nxtpage
+      });
+    }
+
+    return res.status(200).json({
+      result: "1",
+      data: posts,
+      page: parseInt(page, 10),
+      recCnt: total,
+      next_page: nxtpage,
+      totalPages
+    });
+  } catch (err) {
+    console.error("getpost_property Error:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Internal server error",
+      data: []
+    });
+  }
+};
 
 exports.followUser = async (req, res) => {
   try {
@@ -1647,6 +1816,218 @@ exports.delete_post = async (req, res) => {
   }
 };
 
+// exports.getReels = async (req, res) => {
+//   const { user_id, page = 1 } = req.body;
+//   const limit = 10;
+
+//   if (!user_id) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "user_id is required",
+//       data: []
+//     });
+//   }
+
+//   const offset = (parseInt(page, 10) - 1) * limit;
+
+//   try {
+//     const [user] = await db.query(
+//       "SELECT user_interest FROM users WHERE U_ID = ? AND deleted_at IS NULL",
+//       [user_id]
+//     );
+
+//     if (!user.length) {
+//       return res.status(200).json({
+//         result: "0",
+//         error: "User not found",
+//         data: []
+//       });
+//     }
+
+//     const interestIds = user[0].user_interest ? user[0].user_interest.split(",") : [];
+//     if (interestIds.length === 0) {
+//       return res.status(200).json({
+//         result: "0",
+//         error: "Interest is not found",
+//         data: []
+//       });
+//     }
+
+//     const [blocked] = await db.query(
+//       `SELECT user_id, blocker_id 
+//        FROM blocks 
+//        WHERE user_id = ? OR blocker_id = ?`,
+//       [user_id, user_id]
+//     );
+
+//     const blockedUserIds = [
+//       ...new Set(
+//         blocked.map(b =>
+//           b.user_id === user_id ? b.blocker_id : b.user_id
+//         )
+//       )
+//     ];
+
+//     const [[{ total }]] = await db.query(
+//       `SELECT COUNT(*) AS total
+//        FROM user_posts up
+//        JOIN users u ON u.U_ID = up.U_ID
+//        WHERE FIND_IN_SET(up.land_categorie_id, ?)
+//          AND up.status = 'published'
+//          AND up.video IS NOT NULL
+//          AND up.deleted_at IS NULL
+//          ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.join(",")})` : ""}`,
+//       [interestIds.join(",")]
+//     );
+
+//     const totalPages = Math.ceil(total / limit);
+//     const nxtpage = parseInt(page, 10) < totalPages ? parseInt(page, 10) + 1 : 0;
+
+//     const [reels] = await db.query(
+//       `
+//       SELECT  
+//         up.U_ID,
+//         up.user_post_id,
+//         up.video,
+//         up.property_name,
+//         up.land_type_id,
+//         up.land_categorie_id,
+//         up.country , up.state , up.city , up.locality , up.latitude , up.longitude , up.bhk_type , up.property_area ,  up.area_length , up.area_width , up.total_floors , up.floors_allowed , up.parking_available , up.is_boundary_wall , up.furnishing , up.price  , 
+//         up.created_at,
+//         u.name,
+//         u.username,
+//         u.profile_image,
+//         u.country,
+//         u.state,
+//         u.cities,
+//         u.phone_num_cc,
+//         u.phone_num,
+//         u.whatsapp_num,
+//         u.whatsapp_num_cc,
+//         u.email,
+//         u.latitude,
+//         u.longitude,
+//         COALESCE(pl.total_likes, 0) AS total_likes,
+//         COALESCE(pc.total_comments, 0) AS total_comments,
+//         CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
+//         CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved,
+//         CASE WHEN e.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS enquiry
+//       FROM user_posts up
+//       JOIN users u ON u.U_ID = up.U_ID
+//       LEFT JOIN (
+//           SELECT user_post_id, COUNT(*) AS total_likes
+//           FROM post_likes
+//           GROUP BY user_post_id
+//       ) pl ON pl.user_post_id = up.user_post_id
+//       LEFT JOIN (
+//           SELECT user_post_id, COUNT(*) AS total_comments
+//           FROM post_comments
+//           WHERE deleted_at IS NULL
+//           GROUP BY user_post_id
+//       ) pc ON pc.user_post_id = up.user_post_id
+//       LEFT JOIN post_likes ul 
+//           ON ul.user_post_id = up.user_post_id AND ul.user_id = ?
+//       LEFT JOIN saved_properties sp 
+//           ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
+//       LEFT JOIN enquiries e
+//           ON e.recever_posts_id = up.user_post_id AND e.user_id = ?
+//       WHERE up.status = 'published'
+//         AND up.video IS NOT NULL
+//         AND up.deleted_at IS NULL
+//         AND FIND_IN_SET(up.land_categorie_id, ?)
+//         ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.map(() => "?").join(",")})` : ""}
+//       ORDER BY up.created_at DESC
+//       LIMIT ? OFFSET ?;
+//       `,
+//       [
+//         user_id,
+//         user_id,
+//         user_id,
+//         interestIds.join(","),
+//         ...blockedUserIds,
+//         limit,
+//         offset
+//       ]
+//     );
+
+// const normalizedReels = reels.map(r => ({
+//   user_id: r.U_ID ?? 0,
+//   user_post_id: r.user_post_id ?? 0,
+//   name: r.name ?? "",
+//   username: r.username ?? "",
+//   country: r.country ?? "",
+//   state: r.state ?? "",
+//   cities: r.cities ?? "",
+//   phone_num_cc : r.phone_num_cc ?? "",
+//   phone_num: r.phone_num ?? "",
+//   whatsapp_num_cc : r.whatsapp_num_cc ?? "",
+//   whatsapp_num : r.whatsapp_num ?? "",
+//   email : r.email ?? "",
+//   profile_image: r.profile_image ?? "",
+//   video: r.video ?? "",
+//   total_likes: r.total_likes ?? 0,
+//   total_comments: r.total_comments ?? 0,
+//     is_liked: r.is_liked ?? 0,
+//     is_saved: r.is_saved ?? 0,
+//     enquiry: r.enquiry ?? 0,
+//   post_property: {
+//     video: r.video ?? [],
+//     property_name: r.property_name ?? "",
+//     land_type_id : r.land_type_id ?? "",
+//     land_categorie_id: r.land_categorie_id ?? "",
+//     created_at: r.created_at ?? "",
+//     country: r.up_country ?? "",
+//     state: r.up_state ?? "",
+//     city: r.up_city ?? "",
+//     locality: r.up_locality ?? "",
+//     latitude: r.up_latitude ?? "",
+//     longitude: r.up_longitude ?? "",
+//     bhk_type: r.bhk_type ?? "",
+//     property_area: r.property_area ?? "",
+//     area_length: r.area_length ?? "",
+//     area_width: r.area_width ?? "",
+//     total_floors: r.total_floors ?? "",
+//     floors_allowed: r.floors_allowed ?? "",
+//     parking_available: r.parking_available ?? "",
+//     is_boundary_wall: r.is_boundary_wall ?? "",
+//     furnishing: r.furnishing ?? "",
+//     price: r.price ?? ""
+//   }
+// }));
+
+
+
+//     if (!normalizedReels.length) {
+//       return res.status(200).json({
+//         result: "0",
+//         error: "No reels available",
+//         data: [],
+//         page: parseInt(page, 10),
+//         recCnt: total,
+//         totalPages,
+//         nxtpage
+//       });
+//     }
+
+//     return res.status(200).json({
+//       result: "1",
+//       data: normalizedReels,
+//       page: parseInt(page, 10),
+//       recCnt: total,
+//       totalPages,
+//       nxtpage
+//     });
+
+//   } catch (err) {
+//     console.error("getReels Error:", err);
+//     res.status(500).json({
+//       result: "0",
+//       error: "Server error",
+//       data: []
+//     });
+//   }
+// };
+
 exports.getReels = async (req, res) => {
   const { user_id, page = 1 } = req.body;
   const limit = 10;
@@ -1699,31 +2080,21 @@ exports.getReels = async (req, res) => {
       )
     ];
 
-    const [[{ total }]] = await db.query(
-      `SELECT COUNT(*) AS total
-       FROM user_posts up
-       JOIN users u ON u.U_ID = up.U_ID
-       WHERE FIND_IN_SET(up.land_categorie_id, ?)
-         AND up.status = 'published'
-         AND up.video IS NOT NULL
-         AND up.deleted_at IS NULL
-         ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.join(",")})` : ""}`,
-      [interestIds.join(",")]
-    );
-
-    const totalPages = Math.ceil(total / limit);
-    const nxtpage = parseInt(page, 10) < totalPages ? parseInt(page, 10) + 1 : 0;
-
     const [reels] = await db.query(
       `
       SELECT  
         up.U_ID,
         up.user_post_id,
         up.video,
+        up.thumbnail,
+        up.image_ids,
         up.property_name,
         up.land_type_id,
         up.land_categorie_id,
-        up.country , up.state , up.city , up.locality , up.latitude , up.longitude , up.bhk_type , up.property_area ,  up.area_length , up.area_width , up.total_floors , up.floors_allowed , up.parking_available , up.is_boundary_wall , up.furnishing , up.price  , 
+        up.country, up.state, up.city, up.locality, up.latitude, up.longitude, 
+        up.bhk_type, up.property_area, up.area_length, up.area_width, 
+        up.total_floors, up.floors_allowed, up.parking_available, 
+        up.is_boundary_wall, up.furnishing, up.price, 
         up.created_at,
         u.name,
         u.username,
@@ -1781,52 +2152,94 @@ exports.getReels = async (req, res) => {
       ]
     );
 
-const normalizedReels = reels.map(r => ({
-  user_id: r.U_ID ?? 0,
-  user_post_id: r.user_post_id ?? 0,
-  name: r.name ?? "",
-  username: r.username ?? "",
-  country: r.country ?? "",
-  state: r.state ?? "",
-  cities: r.cities ?? "",
-  phone_num_cc : r.phone_num_cc ?? "",
-  phone_num: r.phone_num ?? "",
-  whatsapp_num_cc : r.whatsapp_num_cc ?? "",
-  whatsapp_num : r.whatsapp_num ?? "",
-  email : r.email ?? "",
-  profile_image: r.profile_image ?? "",
-  video: r.video ?? "",
-  total_likes: r.total_likes ?? 0,
-  total_comments: r.total_comments ?? 0,
-    is_liked: r.is_liked ?? 0,
-    is_saved: r.is_saved ?? 0,
-    enquiry: r.enquiry ?? 0,
-  post_property: {
-    video: r.video ?? [],
-    property_name: r.property_name ?? "",
-    land_type_id : r.land_type_id ?? "",
-    land_categorie_id: r.land_categorie_id ?? "",
-    created_at: r.created_at ?? "",
-    country: r.up_country ?? "",
-    state: r.up_state ?? "",
-    city: r.up_city ?? "",
-    locality: r.up_locality ?? "",
-    latitude: r.up_latitude ?? "",
-    longitude: r.up_longitude ?? "",
-    bhk_type: r.bhk_type ?? "",
-    property_area: r.property_area ?? "",
-    area_length: r.area_length ?? "",
-    area_width: r.area_width ?? "",
-    total_floors: r.total_floors ?? "",
-    floors_allowed: r.floors_allowed ?? "",
-    parking_available: r.parking_available ?? "",
-    is_boundary_wall: r.is_boundary_wall ?? "",
-    furnishing: r.furnishing ?? "",
-    price: r.price ?? ""
-  }
-}));
+    const [[{ total }]] = await db.query(
+      `SELECT COUNT(*) AS total
+       FROM user_posts up
+       JOIN users u ON u.U_ID = up.U_ID
+       WHERE FIND_IN_SET(up.land_categorie_id, ?)
+         AND up.status = 'published'
+         AND up.video IS NOT NULL
+         AND up.deleted_at IS NULL
+         ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.join(",")})` : ""}`,
+      [interestIds.join(",")]
+    );
 
+    const totalPages = Math.ceil(total / limit);
+    const nxtpage = parseInt(page, 10) < totalPages ? parseInt(page, 10) + 1 : 0;
 
+    const normalizedReels = await Promise.all(reels.map(async (r) => {
+      let videoValue = r.video ?? "";
+      let imageUrls = [];
+
+      if (r.image_ids && r.image_ids !== "Null" && r.image_ids !== "") {
+        try {
+          const [images] = await db.query(
+            `SELECT image_path FROM post_images 
+             WHERE user_post_id = ? AND image_id IN (?) 
+             ORDER BY FIELD(image_id, ?)`,
+            [r.user_post_id, r.image_ids.split(','), r.image_ids.split(',')]
+          );
+
+          imageUrls = images.map(img => 
+            img.image_path ? `${process.env.SERVER_ADDRESS}${img.image_path}` : ""
+          );
+
+          if (imageUrls.length > 0) {
+            videoValue = "";
+          }
+        } catch (error) {
+          console.error("Error fetching images:", error);
+        }
+      }
+
+      return {
+        user_id: r.U_ID ?? 0,
+        user_post_id: r.user_post_id ?? 0,
+        name: r.name ?? "",
+        username: r.username ?? "",
+        country: r.country ?? "",
+        state: r.state ?? "",
+        cities: r.cities ?? "",
+        phone_num_cc: r.phone_num_cc ?? "",
+        phone_num: r.phone_num ?? "",
+        whatsapp_num_cc: r.whatsapp_num_cc ?? "",
+        whatsapp_num: r.whatsapp_num ?? "",
+        email: r.email ?? "",
+        profile_image: r.profile_image ?? "",
+        thumbnail: r.thumbnail ? `${process.env.SERVER_ADDRESS}${r.thumbnail}` : 
+                  (imageUrls.length > 0 ? imageUrls[0] : ""),
+        video: r.video ,
+        total_likes: r.total_likes ?? 0,
+        total_comments: r.total_comments ?? 0,
+        is_liked: r.is_liked ?? 0,
+        is_saved: r.is_saved ?? 0,
+        enquiry: r.enquiry ?? 0,
+        post_property: {
+          video: imageUrls.length > 0 ? "" : (r.video ? r.video : ""),
+          image_urls: imageUrls,
+          property_name: r.property_name ?? "",
+          land_type_id: r.land_type_id ?? "",
+          land_categorie_id: r.land_categorie_id ?? "",
+          created_at: r.created_at ?? "",
+          country: r.country ?? "",
+          state: r.state ?? "",
+          city: r.city ?? "",
+          locality: r.locality ?? "",
+          latitude: r.latitude ?? "",
+          longitude: r.longitude ?? "",
+          bhk_type: r.bhk_type ?? "",
+          property_area: r.property_area ?? "",
+          area_length: r.area_length ?? "",
+          area_width: r.area_width ?? "",
+          total_floors: r.total_floors ?? "",
+          floors_allowed: r.floors_allowed ?? "",
+          parking_available: r.parking_available ?? "",
+          is_boundary_wall: r.is_boundary_wall ?? "",
+          furnishing: r.furnishing ?? "",
+          price: r.price ?? ""
+        }
+      };
+    }));
 
     if (!normalizedReels.length) {
       return res.status(200).json({
@@ -1977,178 +2390,178 @@ exports.getPostLikeCount = async (req, res) => {
   }
 };
 
-exports.add_firstcomment = async (req, res) => {
-  let { user_id, user_post_id, comment, replies_comment_id, status, comment_id } = req.body;
+// exports.add_firstcomment = async (req, res) => {
+//   let { user_id, user_post_id, comment, replies_comment_id, status, comment_id } = req.body;
 
-  if (!user_id || !user_post_id) {
-    return res.status(200).json({
-      result: "0",
-      error: "user_id and user_post_id are required"
-    });
-  }
+//   if (!user_id || !user_post_id) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "user_id and user_post_id are required"
+//     });
+//   }
 
-  if (!replies_comment_id || replies_comment_id === "0" || replies_comment_id === 0) {
-    replies_comment_id = null;
-  }
+//   if (!replies_comment_id || replies_comment_id === "0" || replies_comment_id === 0) {
+//     replies_comment_id = null;
+//   }
 
-  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
-  if (exist_user.length === 0) {
-    return res.status(200).json({
-      result: "0",
-      error: "User not found in database",
-      data: []
-    });
-  }
+//   const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+//   if (exist_user.length === 0) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "User not found in database",
+//       data: []
+//     });
+//   }
 
-  const [exist_post] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ?`, [user_post_id]);
-  if (exist_post.length === 0) {
-    return res.status(200).json({
-      result: "0",
-      error: "User post not found in database",
-      data: []
-    });
-  }
+//   const [exist_post] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ?`, [user_post_id]);
+//   if (exist_post.length === 0) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "User post not found in database",
+//       data: []
+//     });
+//   }
 
-  const postOwnerId = exist_post[0].U_ID;
+//   const postOwnerId = exist_post[0].U_ID;
 
-  try {
-    if (String(status) === "1") {
-      if (!comment) {
-        return res.status(200).json({
-          result: "0",
-          error: "comment is required for insert"
-        });
-      }
+//   try {
+//     if (String(status) === "1") {
+//       if (!comment) {
+//         return res.status(200).json({
+//           result: "0",
+//           error: "comment is required for insert"
+//         });
+//       }
 
-      const [insertResult] = await db.query(
-        `INSERT INTO post_comments (user_id, user_post_id, comment, replies_comment_id) VALUES (?, ?, ?, ?)`,
-        [user_id, user_post_id, comment, replies_comment_id]
-      );
+//       const [insertResult] = await db.query(
+//         `INSERT INTO post_comments (user_id, user_post_id, comment, replies_comment_id) VALUES (?, ?, ?, ?)`,
+//         [user_id, user_post_id, comment, replies_comment_id]
+//       );
 
-      const [newCommentData] = await db.query(`SELECT c.comment_id, c.comment, c.created_at,u.U_ID AS user_id, u.username, u.profile_image FROM post_comments c JOIN users u ON c.user_id = u.U_ID WHERE c.comment_id = ?`,
-        [insertResult.insertId] );
+//       const [newCommentData] = await db.query(`SELECT c.comment_id, c.comment, c.created_at,u.U_ID AS user_id, u.username, u.profile_image FROM post_comments c JOIN users u ON c.user_id = u.U_ID WHERE c.comment_id = ?`,
+//         [insertResult.insertId] );
 
-      const data = newCommentData.map(c => ({
-        comment_id: c.comment_id ?? "",
-        user_id: c.user_id ?? "",
-        comment: c.comment ?? "",
-        created_at: c.created_at ?? "",
-        username : c.username ?? "",
-        profile_image : c.profile_image ?? "",
-        like_count :  0,
-        is_liked :  0,
-        author: c.user_id === postOwnerId ? 1 : 0,
-        total_reply : 0,
-        last_reply : {},
-      }));
+//       const data = newCommentData.map(c => ({
+//         comment_id: c.comment_id ?? "",
+//         user_id: c.user_id ?? "",
+//         comment: c.comment ?? "",
+//         created_at: c.created_at ?? "",
+//         username : c.username ?? "",
+//         profile_image : c.profile_image ?? "",
+//         like_count :  0,
+//         is_liked :  0,
+//         author: c.user_id === postOwnerId ? 1 : 0,
+//         total_reply : 0,
+//         last_reply : {},
+//       }));
 
 
-      return res.json({
-        result: "1",
-        message: "Inserted comment successfully",
-        data: data 
-      });
-    }
+//       return res.json({
+//         result: "1",
+//         message: "Inserted comment successfully",
+//         data: data 
+//       });
+//     }
 
-    if (String(status) === "2") {
-      if (!comment || !comment_id) {
-        return res.status(200).json({
-          result: "0",
-          error: "comment and comment_id are required for update"
-        });
-      }
+//     if (String(status) === "2") {
+//       if (!comment || !comment_id) {
+//         return res.status(200).json({
+//           result: "0",
+//           error: "comment and comment_id are required for update"
+//         });
+//       }
 
-      const [match] = await db.query(
-        `SELECT * FROM post_comments WHERE comment_id = ? AND user_id = ?`,
-        [comment_id, user_id]
-      );
+//       const [match] = await db.query(
+//         `SELECT * FROM post_comments WHERE comment_id = ? AND user_id = ?`,
+//         [comment_id, user_id]
+//       );
 
-      if (match.length === 0) {
-        return res.status(200).json({
-          result: "0",
-          error: "You cannot edit this comment",
-          data: []
-        });
-      }
+//       if (match.length === 0) {
+//         return res.status(200).json({
+//           result: "0",
+//           error: "You cannot edit this comment",
+//           data: []
+//         });
+//       }
 
-      await db.query(
-        `UPDATE post_comments SET comment = ? WHERE comment_id = ?`,
-        [comment, comment_id]
-      );
+//       await db.query(
+//         `UPDATE post_comments SET comment = ? WHERE comment_id = ?`,
+//         [comment, comment_id]
+//       );
 
-      const [newCommentData] = await db.query(`SELECT c.comment_id, c.comment, c.created_at,u.U_ID AS user_id, u.username, u.profile_image FROM post_comments c JOIN users u ON c.user_id = u.U_ID WHERE c.comment_id = ?`,
-        [comment_id] );
+//       const [newCommentData] = await db.query(`SELECT c.comment_id, c.comment, c.created_at,u.U_ID AS user_id, u.username, u.profile_image FROM post_comments c JOIN users u ON c.user_id = u.U_ID WHERE c.comment_id = ?`,
+//         [comment_id] );
 
-      const data = newCommentData.map(c => ({
-        comment_id: c.comment_id ?? "",
-        user_id: c.user_id ?? "",
-        comment: c.comment ?? "",
-        created_at: c.created_at ?? "",
-        username : c.username ?? "",
-        profile_image : c.profile_image ?? "",
-        like_count :  0,
-        is_liked :  0,
-        author: c.user_id === postOwnerId ? 1 : 0,
-        total_reply : 0,
-        last_reply : {},
-      }));
+//       const data = newCommentData.map(c => ({
+//         comment_id: c.comment_id ?? "",
+//         user_id: c.user_id ?? "",
+//         comment: c.comment ?? "",
+//         created_at: c.created_at ?? "",
+//         username : c.username ?? "",
+//         profile_image : c.profile_image ?? "",
+//         like_count :  0,
+//         is_liked :  0,
+//         author: c.user_id === postOwnerId ? 1 : 0,
+//         total_reply : 0,
+//         last_reply : {},
+//       }));
 
       
 
-      return res.json({
-        result: "1",
-        message: "Updated successfully",
-        data : data 
-      });
-    }
+//       return res.json({
+//         result: "1",
+//         message: "Updated successfully",
+//         data : data 
+//       });
+//     }
 
-    if (String(status) === "3") {
-      if (!comment_id) {
-        return res.status(200).json({
-          result: "0",
-          error: "comment_id is required for delete"
-        });
-      }
+//     if (String(status) === "3") {
+//       if (!comment_id) {
+//         return res.status(200).json({
+//           result: "0",
+//           error: "comment_id is required for delete"
+//         });
+//       }
 
-      const [match] = await db.query(
-        `SELECT * FROM post_comments WHERE comment_id = ? AND user_id = ?`,
-        [comment_id, user_id]
-      );
+//       const [match] = await db.query(
+//         `SELECT * FROM post_comments WHERE comment_id = ? AND user_id = ?`,
+//         [comment_id, user_id]
+//       );
 
-      if (match.length === 0) {
-        return res.status(200).json({
-          result: "0",
-          error: "You cannot delete this comment",
-          data: []
-        });
-      }
+//       if (match.length === 0) {
+//         return res.status(200).json({
+//           result: "0",
+//           error: "You cannot delete this comment",
+//           data: []
+//         });
+//       }
 
-      await db.query(
-        `UPDATE post_comments SET deleted_at = NOW() WHERE comment_id = ?`,
-        [comment_id]
-      );
+//       await db.query(
+//         `UPDATE post_comments SET deleted_at = NOW() WHERE comment_id = ?`,
+//         [comment_id]
+//       );
 
-      return res.json({
-        result: "1",
-        message: "Deleted successfully",
-        comment_id
-      });
-    }
+//       return res.json({
+//         result: "1",
+//         message: "Deleted successfully",
+//         comment_id
+//       });
+//     }
 
-    return res.status(200).json({
-      result: "0",
-      error: "Invalid status value. Use 1=insert, 2=update, 3=delete",
-      data: []
-    });
+//     return res.status(200).json({
+//       result: "0",
+//       error: "Invalid status value. Use 1=insert, 2=update, 3=delete",
+//       data: []
+//     });
 
-  } catch (err) {
-    console.error("Add Comment Error:", err);
-    res.status(500).json({
-      result: "0",
-      error: "Internal server error"
-    });
-  }
-};
+//   } catch (err) {
+//     console.error("Add Comment Error:", err);
+//     res.status(500).json({
+//       result: "0",
+//       error: "Internal server error"
+//     });
+//   }
+// };
 
 // exports.getcomment = async (req, res) => {
 //   const { user_post_id, user_id, page = 1 } = req.body;
@@ -2390,6 +2803,223 @@ exports.add_firstcomment = async (req, res) => {
 //   }
 // };
 
+exports.add_firstcomment = async (req, res) => {
+  let { user_id, user_post_id, comment, replies_comment_id, status, comment_id } = req.body;
+
+  if (!user_id || !user_post_id) {
+    return res.status(200).json({
+      result: "0",
+      error: "user_id and user_post_id are required"
+    });
+  }
+
+  if (!replies_comment_id || replies_comment_id === "0" || replies_comment_id === 0) {
+    replies_comment_id = null;
+  }
+
+  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+  if (exist_user.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "User not found in database",
+      data: []
+    });
+  }
+
+  const [exist_post] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ?`, [user_post_id]);
+  if (exist_post.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "User post not found in database",
+      data: []
+    });
+  }
+
+  const postOwnerId = exist_post[0].U_ID;
+
+  try {
+if (String(status) === "1") {
+  if (!comment) {
+    return res.status(200).json({
+      result: "0",
+      error: "comment is required for insert"
+    });
+  }
+
+  let replies_comment_id = req.body.replies_comment_id || null;
+
+  // Insert new comment
+  const [insertResult] = await db.query(
+    `INSERT INTO post_comments 
+      (user_id, user_post_id, comment, replies_comment_id)
+     VALUES (?, ?, ?, ?)`,
+    [user_id, user_post_id, comment, replies_comment_id]
+  );
+
+  // Get the inserted comment
+  const [newCommentData] = await db.query(
+    `SELECT c.comment_id, c.comment, c.created_at,
+            c.replies_comment_id,
+            u.U_ID AS user_id, u.username, u.profile_image
+     FROM post_comments c
+     JOIN users u ON c.user_id = u.U_ID
+     WHERE c.comment_id = ?`,
+    [insertResult.insertId]
+  );
+
+  let parent_comment_id = 0; // default 0 for top-level comments
+
+  if (newCommentData.length > 0 && newCommentData[0].replies_comment_id) {
+    const currentCommentId = newCommentData[0].comment_id;
+
+    // Recursive query to find root parent (main comment)
+    const [rootParent] = await db.query(
+      `WITH RECURSIVE parent_path AS (
+          SELECT comment_id, replies_comment_id
+          FROM post_comments
+          WHERE comment_id = ?
+          UNION ALL
+          SELECT pc.comment_id, pc.replies_comment_id
+          FROM post_comments pc
+          INNER JOIN parent_path pp ON pc.comment_id = pp.replies_comment_id
+      )
+      SELECT comment_id 
+      FROM parent_path 
+      WHERE replies_comment_id IS NULL 
+      LIMIT 1`,
+      [currentCommentId]
+    );
+
+    if (rootParent.length > 0) {
+      parent_comment_id = rootParent[0].comment_id;
+    }
+  }
+
+  const data = newCommentData.map(c => ({
+    comment_id: c.comment_id ?? "",
+    parent_comment_id, // ✅ 0 if top-level, else root parent
+    user_id: c.user_id ?? "",
+    comment: c.comment ?? "",
+    created_at: c.created_at ?? "",
+    username: c.username ?? "",
+    profile_image: c.profile_image ?? "",
+    like_count: 0,
+    is_liked: 0,
+    author: c.user_id === postOwnerId ? 1 : 0,
+    total_reply: 0,
+    last_reply: {},
+  }));
+
+  return res.json({
+    result: "1",
+    message: "Inserted comment successfully",
+    data: data
+  });
+}
+
+
+
+
+    if (String(status) === "2") {
+      if (!comment || !comment_id) {
+        return res.status(200).json({
+          result: "0",
+          error: "comment and comment_id are required for update"
+        });
+      }
+
+      const [match] = await db.query(
+        `SELECT * FROM post_comments WHERE comment_id = ? AND user_id = ?`,
+        [comment_id, user_id]
+      );
+
+      if (match.length === 0) {
+        return res.status(200).json({
+          result: "0",
+          error: "You cannot edit this comment",
+          data: []
+        });
+      }
+
+      await db.query(
+        `UPDATE post_comments SET comment = ? WHERE comment_id = ?`,
+        [comment, comment_id]
+      );
+
+      const [newCommentData] = await db.query(`SELECT c.comment_id, c.comment, c.created_at,u.U_ID AS user_id, u.username, u.profile_image FROM post_comments c JOIN users u ON c.user_id = u.U_ID WHERE c.comment_id = ?`,
+        [comment_id] );
+
+      const data = newCommentData.map(c => ({
+        comment_id: c.comment_id ?? "",
+        user_id: c.user_id ?? "",
+        comment: c.comment ?? "",
+        created_at: c.created_at ?? "",
+        username : c.username ?? "",
+        profile_image : c.profile_image ?? "",
+        like_count :  0,
+        is_liked :  0,
+        author: c.user_id === postOwnerId ? 1 : 0,
+        total_reply : 0,
+        last_reply : {},
+      }));
+
+      
+
+      return res.json({
+        result: "1",
+        message: "Updated successfully",
+        data : data 
+      });
+    }
+
+    if (String(status) === "3") {
+      if (!comment_id) {
+        return res.status(200).json({
+          result: "0",
+          error: "comment_id is required for delete"
+        });
+      }
+
+      const [match] = await db.query(
+        `SELECT * FROM post_comments WHERE comment_id = ? AND user_id = ?`,
+        [comment_id, user_id]
+      );
+
+      if (match.length === 0) {
+        return res.status(200).json({
+          result: "0",
+          error: "You cannot delete this comment",
+          data: []
+        });
+      }
+
+      await db.query(
+        `UPDATE post_comments SET deleted_at = NOW() WHERE comment_id = ?`,
+        [comment_id]
+      );
+
+      return res.json({
+        result: "1",
+        message: "Deleted successfully",
+        comment_id
+      });
+    }
+
+    return res.status(200).json({
+      result: "0",
+      error: "Invalid status value. Use 1=insert, 2=update, 3=delete",
+      data: []
+    });
+
+  } catch (err) {
+    console.error("Add Comment Error:", err);
+    res.status(500).json({
+      result: "0",
+      error: "Internal server error"
+    });
+  }
+};
+
 exports.getcomment = async (req, res) => {
   const { user_post_id, user_id, page = 1 } = req.body;
   const limit = 10;
@@ -2456,15 +3086,15 @@ exports.getcomment = async (req, res) => {
     const normalizedComments = await Promise.all(
       comments.map(async (comment) => {
         const [lastReply] = await db.query(
-          `SELECT r.comment_id, r.user_id, r.comment, r.created_at,
+          `SELECT r.comment_id, r.replies_comment_id AS parent_comment_id, r.user_id, r.comment, r.created_at,
                   uu.username, uu.profile_image,
                   (SELECT COUNT(*) FROM comment_likes WHERE comment_id = r.comment_id) AS like_count,
                   (SELECT COUNT(*) FROM comment_likes WHERE comment_id = r.comment_id AND user_id = ?) AS is_liked
-           FROM post_comments r
-           JOIN users uu ON r.user_id = uu.U_ID
-           WHERE r.replies_comment_id = ? AND r.deleted_at IS NULL
-           ORDER BY r.created_at DESC
-           LIMIT 1`,
+          FROM post_comments r
+          JOIN users uu ON r.user_id = uu.U_ID
+          WHERE r.replies_comment_id = ? AND r.deleted_at IS NULL
+          ORDER BY r.created_at DESC
+          LIMIT 1`,
           [user_id, comment.comment_id]
         );
 
@@ -2481,6 +3111,7 @@ exports.getcomment = async (req, res) => {
           total_reply: comment.total_reply ?? 0, 
           last_reply: lastReply.length > 0 ? {
             comment_id: lastReply[0].comment_id ?? "",
+            parent_comment_id: lastReply[0].parent_comment_id ?? 0,
             user_id: lastReply[0].user_id ?? "",
             comment: lastReply[0].comment ?? "",
             created_at: lastReply[0].created_at ?? "",

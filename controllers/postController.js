@@ -47,7 +47,7 @@ exports.createPostStep1 = async (req, res) => {
     
     user_id = Number(user_id);
     user_type = Number(user_type);
-    // user_post_id = Number(user_post_id);
+    user_post_id = Number(user_post_id);
     const draft = 1
 
     if (!user_id || isNaN(user_id) || ![0, 1].includes(user_type) ) {
