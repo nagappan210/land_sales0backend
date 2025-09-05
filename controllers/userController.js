@@ -29,14 +29,6 @@ exports.location = async (req, res) => {
       });
     }
 
-    if(isNaN(latitude || longitude)){
-      return res.status(200).json({
-        result : "0",
-        error : "Latitude and Longitude are in double",
-        data :[]
-      })
-    }
-
     const [existing_user] = await db.query(`select * from users where U_ID = ?` , [user_id]);
     if(existing_user.length ===0){
       return res.status(200).json({
@@ -1816,218 +1808,6 @@ exports.delete_post = async (req, res) => {
   }
 };
 
-// exports.getReels = async (req, res) => {
-//   const { user_id, page = 1 } = req.body;
-//   const limit = 10;
-
-//   if (!user_id) {
-//     return res.status(200).json({
-//       result: "0",
-//       error: "user_id is required",
-//       data: []
-//     });
-//   }
-
-//   const offset = (parseInt(page, 10) - 1) * limit;
-
-//   try {
-//     const [user] = await db.query(
-//       "SELECT user_interest FROM users WHERE U_ID = ? AND deleted_at IS NULL",
-//       [user_id]
-//     );
-
-//     if (!user.length) {
-//       return res.status(200).json({
-//         result: "0",
-//         error: "User not found",
-//         data: []
-//       });
-//     }
-
-//     const interestIds = user[0].user_interest ? user[0].user_interest.split(",") : [];
-//     if (interestIds.length === 0) {
-//       return res.status(200).json({
-//         result: "0",
-//         error: "Interest is not found",
-//         data: []
-//       });
-//     }
-
-//     const [blocked] = await db.query(
-//       `SELECT user_id, blocker_id 
-//        FROM blocks 
-//        WHERE user_id = ? OR blocker_id = ?`,
-//       [user_id, user_id]
-//     );
-
-//     const blockedUserIds = [
-//       ...new Set(
-//         blocked.map(b =>
-//           b.user_id === user_id ? b.blocker_id : b.user_id
-//         )
-//       )
-//     ];
-
-//     const [[{ total }]] = await db.query(
-//       `SELECT COUNT(*) AS total
-//        FROM user_posts up
-//        JOIN users u ON u.U_ID = up.U_ID
-//        WHERE FIND_IN_SET(up.land_categorie_id, ?)
-//          AND up.status = 'published'
-//          AND up.video IS NOT NULL
-//          AND up.deleted_at IS NULL
-//          ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.join(",")})` : ""}`,
-//       [interestIds.join(",")]
-//     );
-
-//     const totalPages = Math.ceil(total / limit);
-//     const nxtpage = parseInt(page, 10) < totalPages ? parseInt(page, 10) + 1 : 0;
-
-//     const [reels] = await db.query(
-//       `
-//       SELECT  
-//         up.U_ID,
-//         up.user_post_id,
-//         up.video,
-//         up.property_name,
-//         up.land_type_id,
-//         up.land_categorie_id,
-//         up.country , up.state , up.city , up.locality , up.latitude , up.longitude , up.bhk_type , up.property_area ,  up.area_length , up.area_width , up.total_floors , up.floors_allowed , up.parking_available , up.is_boundary_wall , up.furnishing , up.price  , 
-//         up.created_at,
-//         u.name,
-//         u.username,
-//         u.profile_image,
-//         u.country,
-//         u.state,
-//         u.cities,
-//         u.phone_num_cc,
-//         u.phone_num,
-//         u.whatsapp_num,
-//         u.whatsapp_num_cc,
-//         u.email,
-//         u.latitude,
-//         u.longitude,
-//         COALESCE(pl.total_likes, 0) AS total_likes,
-//         COALESCE(pc.total_comments, 0) AS total_comments,
-//         CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
-//         CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved,
-//         CASE WHEN e.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS enquiry
-//       FROM user_posts up
-//       JOIN users u ON u.U_ID = up.U_ID
-//       LEFT JOIN (
-//           SELECT user_post_id, COUNT(*) AS total_likes
-//           FROM post_likes
-//           GROUP BY user_post_id
-//       ) pl ON pl.user_post_id = up.user_post_id
-//       LEFT JOIN (
-//           SELECT user_post_id, COUNT(*) AS total_comments
-//           FROM post_comments
-//           WHERE deleted_at IS NULL
-//           GROUP BY user_post_id
-//       ) pc ON pc.user_post_id = up.user_post_id
-//       LEFT JOIN post_likes ul 
-//           ON ul.user_post_id = up.user_post_id AND ul.user_id = ?
-//       LEFT JOIN saved_properties sp 
-//           ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
-//       LEFT JOIN enquiries e
-//           ON e.recever_posts_id = up.user_post_id AND e.user_id = ?
-//       WHERE up.status = 'published'
-//         AND up.video IS NOT NULL
-//         AND up.deleted_at IS NULL
-//         AND FIND_IN_SET(up.land_categorie_id, ?)
-//         ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.map(() => "?").join(",")})` : ""}
-//       ORDER BY up.created_at DESC
-//       LIMIT ? OFFSET ?;
-//       `,
-//       [
-//         user_id,
-//         user_id,
-//         user_id,
-//         interestIds.join(","),
-//         ...blockedUserIds,
-//         limit,
-//         offset
-//       ]
-//     );
-
-// const normalizedReels = reels.map(r => ({
-//   user_id: r.U_ID ?? 0,
-//   user_post_id: r.user_post_id ?? 0,
-//   name: r.name ?? "",
-//   username: r.username ?? "",
-//   country: r.country ?? "",
-//   state: r.state ?? "",
-//   cities: r.cities ?? "",
-//   phone_num_cc : r.phone_num_cc ?? "",
-//   phone_num: r.phone_num ?? "",
-//   whatsapp_num_cc : r.whatsapp_num_cc ?? "",
-//   whatsapp_num : r.whatsapp_num ?? "",
-//   email : r.email ?? "",
-//   profile_image: r.profile_image ?? "",
-//   video: r.video ?? "",
-//   total_likes: r.total_likes ?? 0,
-//   total_comments: r.total_comments ?? 0,
-//     is_liked: r.is_liked ?? 0,
-//     is_saved: r.is_saved ?? 0,
-//     enquiry: r.enquiry ?? 0,
-//   post_property: {
-//     video: r.video ?? [],
-//     property_name: r.property_name ?? "",
-//     land_type_id : r.land_type_id ?? "",
-//     land_categorie_id: r.land_categorie_id ?? "",
-//     created_at: r.created_at ?? "",
-//     country: r.up_country ?? "",
-//     state: r.up_state ?? "",
-//     city: r.up_city ?? "",
-//     locality: r.up_locality ?? "",
-//     latitude: r.up_latitude ?? "",
-//     longitude: r.up_longitude ?? "",
-//     bhk_type: r.bhk_type ?? "",
-//     property_area: r.property_area ?? "",
-//     area_length: r.area_length ?? "",
-//     area_width: r.area_width ?? "",
-//     total_floors: r.total_floors ?? "",
-//     floors_allowed: r.floors_allowed ?? "",
-//     parking_available: r.parking_available ?? "",
-//     is_boundary_wall: r.is_boundary_wall ?? "",
-//     furnishing: r.furnishing ?? "",
-//     price: r.price ?? ""
-//   }
-// }));
-
-
-
-//     if (!normalizedReels.length) {
-//       return res.status(200).json({
-//         result: "0",
-//         error: "No reels available",
-//         data: [],
-//         page: parseInt(page, 10),
-//         recCnt: total,
-//         totalPages,
-//         nxtpage
-//       });
-//     }
-
-//     return res.status(200).json({
-//       result: "1",
-//       data: normalizedReels,
-//       page: parseInt(page, 10),
-//       recCnt: total,
-//       totalPages,
-//       nxtpage
-//     });
-
-//   } catch (err) {
-//     console.error("getReels Error:", err);
-//     res.status(500).json({
-//       result: "0",
-//       error: "Server error",
-//       data: []
-//     });
-//   }
-// };
-
 exports.getReels = async (req, res) => {
   const { user_id, page = 1 } = req.body;
   const limit = 10;
@@ -2804,17 +2584,22 @@ exports.getPostLikeCount = async (req, res) => {
 // };
 
 exports.add_firstcomment = async (req, res) => {
-  let { user_id, user_post_id, comment, replies_comment_id, status, comment_id } = req.body;
+  let { user_id, user_post_id, comment, replies_comment_id, status, comment_id , mention_id } = req.body;
 
   if (!user_id || !user_post_id) {
     return res.status(200).json({
       result: "0",
-      error: "user_id and user_post_id are required"
+      error: "user_id and user_post_id are required",
+      data : []
     });
   }
 
   if (!replies_comment_id || replies_comment_id === "0" || replies_comment_id === 0) {
     replies_comment_id = null;
+  }
+
+  if (!mention_id || mention_id === "0" || mention_id === 0) {
+    mention_id = null;
   }
 
   const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
@@ -2848,31 +2633,22 @@ if (String(status) === "1") {
 
   let replies_comment_id = req.body.replies_comment_id || null;
 
-  // Insert new comment
   const [insertResult] = await db.query(
     `INSERT INTO post_comments 
-      (user_id, user_post_id, comment, replies_comment_id)
-     VALUES (?, ?, ?, ?)`,
-    [user_id, user_post_id, comment, replies_comment_id]
-  );
+      (user_id, user_post_id, comment, replies_comment_id , mention_id)
+     VALUES (?, ?, ?, ?, ?)`,
+    [user_id, user_post_id, comment, replies_comment_id , mention_id] );
 
-  // Get the inserted comment
   const [newCommentData] = await db.query(
-    `SELECT c.comment_id, c.comment, c.created_at,
-            c.replies_comment_id,
-            u.U_ID AS user_id, u.username, u.profile_image
-     FROM post_comments c
-     JOIN users u ON c.user_id = u.U_ID
-     WHERE c.comment_id = ?`,
+    `SELECT c.comment_id, c.comment, c.created_at, c.replies_comment_id, c.mention_id ,  u.U_ID AS user_id, u.username, u.profile_image FROM post_comments c JOIN users u ON c.user_id = u.U_ID WHERE c.comment_id = ?`,
     [insertResult.insertId]
   );
 
-  let parent_comment_id = 0; // default 0 for top-level comments
+  let parent_comment_id = 0;
 
   if (newCommentData.length > 0 && newCommentData[0].replies_comment_id) {
     const currentCommentId = newCommentData[0].comment_id;
 
-    // Recursive query to find root parent (main comment)
     const [rootParent] = await db.query(
       `WITH RECURSIVE parent_path AS (
           SELECT comment_id, replies_comment_id
@@ -2897,7 +2673,8 @@ if (String(status) === "1") {
 
   const data = newCommentData.map(c => ({
     comment_id: c.comment_id ?? "",
-    parent_comment_id, // ✅ 0 if top-level, else root parent
+    mention_id : c.mention_id ?? "",
+    parent_comment_id,
     user_id: c.user_id ?? "",
     comment: c.comment ?? "",
     created_at: c.created_at ?? "",
@@ -2907,7 +2684,7 @@ if (String(status) === "1") {
     is_liked: 0,
     author: c.user_id === postOwnerId ? 1 : 0,
     total_reply: 0,
-    last_reply: {},
+    last_reply: [],
   }));
 
   return res.json({
@@ -2946,13 +2723,20 @@ if (String(status) === "1") {
         [comment, comment_id]
       );
 
-      const [newCommentData] = await db.query(`SELECT c.comment_id, c.comment, c.created_at,u.U_ID AS user_id, u.username, u.profile_image FROM post_comments c JOIN users u ON c.user_id = u.U_ID WHERE c.comment_id = ?`,
-        [comment_id] );
+      const [newCommentData] = await db.query(`SELECT  c.comment_id,  c.comment,  c.created_at, c.user_id, u.username,  u.profile_image, c.mention_id, mu.username AS mention_username
+        FROM post_comments c
+        JOIN users u ON c.user_id = u.U_ID
+        LEFT JOIN users mu ON c.mention_id = mu.U_ID
+        WHERE c.comment_id = ?`,
+        [comment_id]
+      );
 
       const data = newCommentData.map(c => ({
         comment_id: c.comment_id ?? "",
         user_id: c.user_id ?? "",
         comment: c.comment ?? "",
+        mention_id : c.mention_id ?? 0,
+        mention_username : c.mention_username ?? "",
         created_at: c.created_at ?? "",
         username : c.username ?? "",
         profile_image : c.profile_image ?? "",
@@ -2960,7 +2744,7 @@ if (String(status) === "1") {
         is_liked :  0,
         author: c.user_id === postOwnerId ? 1 : 0,
         total_reply : 0,
-        last_reply : {},
+        last_reply : [],
       }));
 
       
@@ -3001,7 +2785,21 @@ if (String(status) === "1") {
       return res.json({
         result: "1",
         message: "Deleted successfully",
-        comment_id
+        data: [{
+          comment_id: comment_id ?? 0,
+          user_id: "",
+          comment: "",
+          mention_id: 0,
+          mention_username: "",
+          created_at: "",
+          username: "",
+          profile_image: "",
+          like_count: 0,
+          is_liked: 0,
+          author: 0,
+          total_reply: 0,
+          last_reply: []
+        }]
       });
     }
 
@@ -3086,14 +2884,16 @@ exports.getcomment = async (req, res) => {
     const normalizedComments = await Promise.all(
       comments.map(async (comment) => {
         const [lastReply] = await db.query(
-          `SELECT r.comment_id, r.replies_comment_id AS parent_comment_id, r.user_id, r.comment, r.created_at,
+          `SELECT r.comment_id, r.replies_comment_id AS parent_comment_id, r.user_id, r.comment, r.created_at, r.mention_id,
                   uu.username, uu.profile_image,
+                  mu.username AS mention_username,
                   (SELECT COUNT(*) FROM comment_likes WHERE comment_id = r.comment_id) AS like_count,
                   (SELECT COUNT(*) FROM comment_likes WHERE comment_id = r.comment_id AND user_id = ?) AS is_liked
           FROM post_comments r
           JOIN users uu ON r.user_id = uu.U_ID
+          LEFT JOIN users mu ON r.mention_id = mu.U_ID
           WHERE r.replies_comment_id = ? AND r.deleted_at IS NULL
-          ORDER BY r.created_at DESC
+          ORDER BY r.created_at ASC
           LIMIT 1`,
           [user_id, comment.comment_id]
         );
@@ -3109,8 +2909,10 @@ exports.getcomment = async (req, res) => {
           is_liked: comment.is_liked > 0 ? 1 : 0,
           author: comment.user_id === postOwnerId ? 1 : 0,
           total_reply: comment.total_reply ?? 0, 
-          last_reply: lastReply.length > 0 ? {
+          last_reply: lastReply.length > 0 ? [{
             comment_id: lastReply[0].comment_id ?? "",
+            mention_id : lastReply[0].mention_id ?? 0,
+            mention_username: lastReply[0].mention_username ?? "",
             parent_comment_id: lastReply[0].parent_comment_id ?? 0,
             user_id: lastReply[0].user_id ?? "",
             comment: lastReply[0].comment ?? "",
@@ -3120,7 +2922,7 @@ exports.getcomment = async (req, res) => {
             like_count: lastReply[0].like_count ?? 0,
             is_liked: lastReply[0].is_liked > 0 ? 1 : 0,
             author: lastReply[0].user_id === postOwnerId ? 1 : 0,
-          } : {}
+          }] : []
         };
       })
     );
@@ -3129,8 +2931,11 @@ exports.getcomment = async (req, res) => {
       return res.status(200).json({
         result: "0",
         error: "no data in database",
-        pagination: { totalPages: 0, nxtpage: 0, recCnt: 0 },
-        data: []
+        data: [],
+        totalPages: 0,
+         nxtpage: 0, 
+         recCnt: 0 ,
+        
       });
     }
 
@@ -3188,7 +2993,7 @@ exports.getreplay_comment = async (req, res) => {
     const [replies] = await db.query(
       `
       WITH RECURSIVE reply_tree AS (
-        SELECT c.comment_id, c.replies_comment_id, c.user_id, c.comment, c.created_at
+        SELECT c.comment_id, c.replies_comment_id, c.user_id, c.comment, c.created_at, c.mention_id
         FROM post_comments c
         WHERE c.replies_comment_id = ?
           AND c.user_post_id = ?
@@ -3196,22 +3001,26 @@ exports.getreplay_comment = async (req, res) => {
 
         UNION ALL
 
-        SELECT pc.comment_id, pc.replies_comment_id, pc.user_id, pc.comment, pc.created_at
+        SELECT pc.comment_id, pc.replies_comment_id, pc.user_id, pc.comment, pc.created_at, pc.mention_id
         FROM post_comments pc
         INNER JOIN reply_tree rt ON pc.replies_comment_id = rt.comment_id
         WHERE pc.deleted_at IS NULL
       )
       SELECT rt.comment_id, rt.replies_comment_id, rt.user_id, rt.comment, rt.created_at,
-             u.username, u.profile_image,
-             (SELECT COUNT(*) FROM comment_likes WHERE comment_id = rt.comment_id) AS like_count,
-             (SELECT COUNT(*) FROM comment_likes WHERE comment_id = rt.comment_id AND user_id = ?) AS is_liked
+            rt.mention_id,
+            u.username, u.profile_image,
+            mu.username AS mention_username,
+            (SELECT COUNT(*) FROM comment_likes WHERE comment_id = rt.comment_id) AS like_count,
+            (SELECT COUNT(*) FROM comment_likes WHERE comment_id = rt.comment_id AND user_id = ?) AS is_liked
       FROM reply_tree rt
       JOIN users u ON rt.user_id = u.U_ID
+      LEFT JOIN users mu ON rt.mention_id = mu.U_ID
       ORDER BY rt.created_at DESC
       LIMIT ? OFFSET ?
       `,
       [comment_id, user_post_id, user_id, limitNum, offset]
     );
+
 
     const [[{ total }]] = await db.query(
       `
@@ -3250,6 +3059,8 @@ exports.getreplay_comment = async (req, res) => {
       parent_comment_id: r.replies_comment_id ?? 0,
       user_id: r.user_id ?? 0,
       comment: r.comment ?? "",
+      mention_id: r.mention_id ?? 0,
+      mention_username: r.mention_username ?? "",
       created_at: r.created_at ?? "",
       username: r.username ?? "",
       profile_image: r.profile_image ?? "",
@@ -3588,5 +3399,98 @@ exports.getInterestedSearchers = async (req, res) => {
       error: "Internal Server Error",
       data: []
     });
+  }
+};
+
+exports.report_users = async (req, res) => {
+  const { user_id ,user_post_id, receiver_id, status } = req.body;
+  try {
+
+    const [exit_user] = await db.query(`SELECT * FROM users WHERE U_ID = ? and deleted_at is null`, [user_id]);
+    if (exit_user.length === 0) {
+      return res.status(200).json({ result: "0", error: "user not found in database", data: [] });
+    }
+
+    const [exit_receiver] = await db.query(`SELECT * FROM users WHERE U_ID = ? and deleted_at is null`, [receiver_id]);
+    if (exit_receiver.length === 0) {
+      return res.status(200).json({ result: "0", error: "receiver not found in database", data: [] });
+    }
+
+    if (Number(status) === 1) {
+
+      const [report_users] = await db.query(
+        `SELECT * FROM report WHERE user_id = ? AND receiver_id = ? AND status = 1`,
+        [user_id, receiver_id]
+      );
+      if (report_users.length > 0) {
+        return res.status(200).json({ result: "0", error: "You have already sent report", data: [] });
+      }
+
+      const [rows] = await db.query(
+        `SELECT COUNT(*) AS total_reports FROM report WHERE status = 1 AND receiver_id = ?`,
+        [receiver_id]
+      );
+      const reportCount = rows[0]?.total_reports || 0;
+
+      if (reportCount >= 10) {
+        await db.query(
+          `UPDATE users SET deleted_at = NOW() WHERE U_ID = ?`,
+          [receiver_id]
+        );
+        await db.query(
+          `UPDATE user_posts SET deleted_at = NOW() WHERE U_ID = ?`,
+          [receiver_id]
+        );
+        return res.status(200).json({ result: "1", message: "User deleted after too many reports", data: [] });
+      }
+    }
+
+    if (Number(status) === 2) {
+
+      const [exit_posts] = await db.query(
+        `SELECT * FROM user_posts WHERE user_post_id = ? AND U_ID = ? and deleted_at is null`,
+        [user_post_id, receiver_id]
+      );
+      if (exit_posts.length === 0) {
+        return res.status(200).json({ result: "0", error: "post not found in database", data: [] });
+      }
+
+      const [report_users] = await db.query(
+        `SELECT * FROM report WHERE user_id = ? AND receiver_id = ? AND user_post_id = ? AND status = 2 `,
+        [user_id, receiver_id, user_post_id]
+      );
+      if (report_users.length > 0) {
+        return res.status(200).json({ result: "0", error: "You have already sent report", data: [] });
+      }
+
+      const [rows] = await db.query(
+        `SELECT COUNT(*) AS total_count FROM report WHERE status = 2 AND receiver_id = ? AND user_post_id = ?`,
+        [receiver_id, user_post_id]
+      );
+      const reportCount = rows[0]?.total_count || 0;
+
+      if (reportCount >= 10) {
+        await db.query(
+          `UPDATE user_posts SET deleted_at = NOW() WHERE U_ID = ? AND user_post_id = ?`,
+          [receiver_id, user_post_id]
+        );
+        return res.status(200).json({ result: "1", message: "Post deleted after too many reports", data: [] });
+      }
+    }
+
+    const [insert_data] = await db.query(
+      `INSERT INTO report (user_post_id, receiver_id, user_id, status) VALUES (?, ?, ?, ?)`,
+      [user_post_id || null, receiver_id, user_id, status]
+    );
+
+    if (insert_data.affectedRows === 0) {
+      return res.status(200).json({ result: "0", error: "Insert fail", data: [] });
+    }
+
+    return res.status(200).json({ result: "1", message: "Report submitted successfully", data: [] });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ result: "0", error: "server error", data: [] });
   }
 };

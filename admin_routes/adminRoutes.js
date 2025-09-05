@@ -38,6 +38,9 @@ router.post('/edituser/:user_id', upload.single('profile_image'), adminControlle
 router.post('/deleteuser/:user_id', adminController.deleteuser);
 router.post('/getuser/:user_id',adminController.getuser);
 router.get('/userpost',adminController.getpost);
+router.post('/account_band',adminController.account_band);
+router.post('/activate_account',adminController.activate_account);
+router.post('/delete_account',adminController.delete_account);
 
 router.get('/landtype',landController.landtype);
 router.post('/addland_types',landController.addlandtypes)

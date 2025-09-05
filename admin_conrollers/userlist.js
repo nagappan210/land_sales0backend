@@ -365,7 +365,6 @@ exports.edit_decline_enquire = async (req, res) => {
   }
 };
 
-
 exports.delete_decline_enquire = async (req,res) =>{
   const {declining_enquire_id} = req.body;
 
@@ -388,3 +387,143 @@ exports.delete_decline_enquire = async (req,res) =>{
     return res.status(500).json({ result: "0", error: "Internal server error" });
   }
 }
+
+exports.account_band = async (req, res) => {
+  const { status } = req.body;
+
+  try {
+    if (Number(status) === 1) {
+      const [data] = await db.query(`SELECT r.report_id ,r.user_id , r.receiver_id, COUNT(*) AS total_reports, u.username, u.name, u.profile_image,U.U_ID ,  u.phone_num FROM report AS r JOIN users AS u ON r.receiver_id = u.U_ID WHERE r.status = 1 GROUP BY r.receiver_id HAVING total_reports >= 10`);
+
+      return res.status(200).json({
+        result: "1",
+        message: "Blocked users list (profiles)",
+        data: data,
+      });
+    }
+
+    if (Number(status) === 2) {
+      const [data] = await db.query(`SELECT r.report_id, r.user_id ,  r.receiver_id, r.user_post_id, COUNT(*) AS total_reports, u.username, u.name,u.U_ID, u.profile_image, u.phone_num FROM report AS r JOIN users AS u ON r.receiver_id = u.U_ID WHERE r.status = 2 GROUP BY r.receiver_id, r.user_post_id HAVING total_reports >= 10`);
+
+      return res.status(200).json({
+        result: "1",
+        message: "Blocked posts list",
+        data: data,
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value",
+      data: [],
+    });
+
+  } catch (err) {
+    console.log("account_band error:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error",
+      data: [],
+    });
+  }
+};
+
+
+exports.activate_account = async (req, res) => {
+
+  const { user_id, user_post_id } = req.body;
+
+  try {
+    let userResult = { affectedRows: 0 };
+    let postResult = { affectedRows: 0 };
+    let removeUserReports = { affectedRows: 0 };
+    let removePostReports = { affectedRows: 0 };
+
+    if (user_id) {
+      [userResult] = await db.query(
+        `UPDATE users SET deleted_at = NULL WHERE U_ID = ?`,
+        [user_id]
+      );
+
+      [removeUserReports] = await db.query(
+        `DELETE FROM report WHERE receiver_id = ? AND user_post_id IS NULL`,
+        [user_id]
+      );
+    }
+
+    [postResult] = await db.query(
+        `UPDATE user_posts SET deleted_at = NULL WHERE U_ID = ?`,
+        [user_id]
+      );
+
+      [removePostReports] = await db.query(
+        `DELETE FROM report WHERE receiver_id = ? AND user_post_id = ?`,
+        [user_id, user_post_id]
+      );
+
+    if (
+      userResult.affectedRows > 0 ||
+      postResult.affectedRows > 0 ||
+      removeUserReports.affectedRows > 0 ||
+      removePostReports.affectedRows > 0
+    ) {
+      return res.status(200).json({
+        result: "1",
+        message: user_post_id
+          ? "Post activated successfully"
+          : "Account activated successfully",
+        data: [],
+      });
+    } else {
+      return res.status(404).json({
+        result: "0",
+        error: "No matching user or post found",
+        data: [],
+      });
+    }
+  } catch (err) {
+    console.error("Error activating account:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error",
+      data: [],
+    });
+  }
+};
+
+exports.delete_account = async (req, res) => {
+  const { user_id } = req.body;
+
+  try {
+    const [postResult] = await db.query(
+      `DELETE FROM user_posts WHERE U_ID = ?`,
+      [user_id]
+    );
+
+    const [userResult] = await db.query(
+      `DELETE FROM users WHERE U_ID = ?`,
+      [user_id]
+    );
+
+    if (userResult.affectedRows>0  || postResult.affectedRows > 0) {
+      return res.status(200).json({
+        result: "1",
+        message: "Account and related posts deleted permanently",
+        data: [],
+      });
+    } else {
+      return res.status(404).json({
+        result: "0",
+        error: "User not found",
+        data: [],
+      });
+    }
+  } catch (err) {
+    console.error("Error deleting account:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error",
+      data: [],
+    });
+  }
+};

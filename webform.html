@@ -2876,6 +2876,14 @@
               <td class="p-3">Intha Deva yaarunu thearinjea <br> yeakittayea velayadi irukka ?</td>
             </tr>
             <tr class="border-t">
+              <td class="p-3">Mention User ID</td>
+              <td class="p-3"><input type="text" name="mention_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">mention_id</td>
+              <td class="p-3">No</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
               <td class="p-3">Repley Comment ID</td>
               <td class="p-3"><input type="text" name="replies_comment_id" class="w-full border rounded p-2" /></td>
               <td class="p-3">replies_comment_id</td>
@@ -3720,6 +3728,91 @@
             </tr>
             <tr>
               <td colspan="6" class="text-center p-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+                  Submit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">50.Report</h2>
+    <div class="mb-6">
+      <table class="w-full bg-white border rounded shadow text-sm mb-6">
+        <tbody>
+          <tr class="border-b">
+            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+            <td class="p-3 text-blue-700">http://localhost:7000/api/auth/report_users</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Method:</td>
+            <td class="p-3">POST</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+            <td class="p-3">multipart/form-data</td>
+          </tr>
+          <tr>
+            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+            <td class="p-3">Development</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="report_users" enctype="multipart/form-data">
+        <table class="w-full text-sm bg-white border rounded shadow mb-6">
+          <thead class="bg-slate-900 text-white">
+            <tr>
+              <th class="p-3 text-left">Label Name</th>
+              <th class="p-3 text-left">Value</th>
+              <th class="p-3 text-left">Variable Name</th>
+              <th class="p-3 text-left">Mandatory</th>
+              <th class="p-3 text-left">Note</th>
+              <th class="p-3 text-left">Sample</th>
+              <th class="p-3 text-left">Value</th>
+
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="p-3">User ID</td>
+              <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">Receiver ID</td>
+              <td class="p-3"><input type="text" name="receiver_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">receiver_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">User Post ID</td>
+              <td class="p-3"><input type="text" name="user_post_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_post_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">Status</td>
+              <td class="p-3"><input type="text" name="status" class="w-full border rounded p-2" /></td>
+              <td class="p-3">status</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1 opr 2</td>
+              <td class="p-3">1->user profile , 2->user post</td>
+            </tr>
+            <tr>
+              <td colspan="7" class="text-center p-4">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
                   Submit
                 </button>
@@ -5310,76 +5403,7 @@
         }
       });
 
-      // // GET  DECLINE FORM NAME
-      // const declineForm = document.getElementById('declineForm');
-      // declineForm.addEventListener('submit', async function (e) {
-      //   e.preventDefault();
-
-      //   const formData = new FormData(declineForm);
-      //   const data = {};
-
-      //   formData.forEach((value, key) => {
-      //     if (value) data[key] = value;
-      //   });
-
-      //   console.log('Sending body:', data);
-
-      //   try {
-      //     const res = await fetch('http://localhost:7000/api/auth/declineForm', {
-      //       method: 'POST',
-      //       headers: {
-      //         'Content-Type': 'application/json'
-      //       },
-      //       body: JSON.stringify(data)
-      //     });
-
-      //     const json = await res.json();
-
-      //     sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      //     window.location.href = 'response';
-
-      //   } catch (err) {
-      //     console.error("Request failed:", err.message);
-      //     sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      //     window.location.href = 'response';
-      //   }
-      // });
-
-      // // GET  DECLINE FORM PARA
-      // const declineFormpara = document.getElementById('declineFormpara');
-      // declineFormpara.addEventListener('submit', async function (e) {
-      //   e.preventDefault();
-
-      //   const formData = new FormData(declineFormpara);
-      //   const data = {};
-
-      //   formData.forEach((value, key) => {
-      //     if (value) data[key] = value;
-      //   });
-
-      //   console.log('Sending body:', data);
-
-      //   try {
-      //     const res = await fetch('http://localhost:7000/api/auth/declineFormpara', {
-      //       method: 'POST',
-      //       headers: {
-      //         'Content-Type': 'application/json'
-      //       },
-      //       body: JSON.stringify(data)
-      //     });
-
-      //     const json = await res.json();
-
-      //     sessionStorage.setItem('registerResponse', JSON.stringify(json));
-      //     window.location.href = 'response';
-
-      //   } catch (err) {
-      //     console.error("Request failed:", err.message);
-      //     sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
-      //     window.location.href = 'response';
-      //   }
-      // });
-
+      
       // GET  DECLINE FORM 
       const decline = document.getElementById('decline');
       decline.addEventListener('submit', async function (e) {
@@ -5472,6 +5496,7 @@
             },
             body: JSON.stringify(data)
           });
+          console.log('data', data)
 
           const json = await res.json();
 
@@ -5485,6 +5510,38 @@
         }
       });
 
+       // REPORT USER
+      const report_users = document.getElementById('report_users');
+      report_users.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(report_users);
+        const data = {};
+
+        formData.forEach((value, key) => {
+          if (value) data[key] = value;
+        });
+
+        try {
+          const res = await fetch('http://localhost:7000/api/auth/report_users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
+
+        const json = await res.json();
+
+          sessionStorage.setItem('registerResponse', JSON.stringify(json));
+          window.location.href = 'response';
+
+        }  catch (err) {
+                console.error("Request failed:", err.message);
+                sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
+                window.location.href = 'response';
+              }
+      });
 
   </script>
 </body>

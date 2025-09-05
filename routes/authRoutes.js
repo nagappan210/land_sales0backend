@@ -122,5 +122,5 @@ router.post('/getInterestedSearchers',userController.getInterestedSearchers);
 // router.post('/declineForm',enquireController.declineForm);
 // router.post('/declineFormpara',enquireController.declineFormpara);
 
-
+router.post('/report_users',userController.report_users);
 module.exports = router;
