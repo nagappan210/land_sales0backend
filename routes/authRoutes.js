@@ -82,6 +82,9 @@ router.post('/land_categories', landTypeController.getCategoriesByLandType);
 
 router.post('/poststep1',landTypeController.createPostStep1);
 router.post('/poststep2',landTypeController.createPostStep2);
+router.post('/getform_details_residential', landTypeController.getform_details_residential);
+router.post('/getform_details_commercial', landTypeController.getform_details_commercial);
+router.post('/getform_details_agriculture', landTypeController.getform_details_agriculture);
 router.post('/poststep3',landTypeController.createPostStep3);
 router.post('/poststep4',landTypeController.createPostStep4);
 router.post('/poststep5',landTypeController.createPostStep5);

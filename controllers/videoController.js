@@ -578,7 +578,6 @@ if (image_urls.length > 2) {
   }
 };
 
-
 exports.createPostStep7 = async (req, res) => {
   const { user_id, user_post_id } = req.body;
 
@@ -624,31 +623,48 @@ exports.createPostStep7 = async (req, res) => {
 
   try {
     const [rows] = await db.query(
-      `SELECT property_name,city, locality, property_area, price, description, amenities, facing_direction, video, image_ids, created_at
-      FROM user_posts
-      WHERE user_post_id = ? AND U_ID = ?
-      `,
+      `SELECT * 
+       FROM user_posts
+       WHERE user_post_id = ? AND U_ID = ?`,
       [user_post_id, user_id]
     );
-    const normalizedData = rows.map((property) => ({
-      property_name: property.property_name ?? "",
-      city: property.city ?? "",
-      locality: property.locality ?? "",
-      property_area: property.property_area ?? "",
-      price: property.price ?? "",
-      description: property.description ?? "",
-      amenities: property.amenities ?? "",
-      facing_direction: property.facing_direction ?? "",
-      video: property.video ?? "",
-      image_ids: property.image_ids ?? "",
-      created_at: property.created_at ?? ""
-    }));
 
-    return res.json({
-      result: "1",
-      error: "",
-      data: normalizedData
-    });
+ const hiddenFields = [
+  "is_sold",
+  "sold_at",
+  "created_at",
+  "updated_at",
+  "deleted_at",
+  "status",
+  "post_type",
+  "draft"
+];
+
+  const normalizedData = rows.map((row) => {
+    const cleanObj = {};
+    for (let key in row) {
+      if (!hiddenFields.includes(key)) {
+        cleanObj[key] = row[key] == null ? "" : row[key];
+      }
+    }
+    const addressParts = [
+      cleanObj.locality,
+      cleanObj.city,
+      cleanObj.state,
+      cleanObj.country
+    ].filter(part => part && part.trim() !== "");
+
+    cleanObj.address = addressParts.join(", ");
+
+    return cleanObj;
+  });
+
+  return res.json({
+    result: "1",
+    error: "",
+    data: normalizedData
+  });
+
   } catch (err) {
     console.error("Server error:", err);
     return res.status(500).json({

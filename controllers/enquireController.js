@@ -220,32 +220,45 @@ exports.enquire = async (req, res) => {
 };
 
 exports.my_leads = async (req, res) => {
-  const user_id = req.body.user_id || req.query.user_id;
+  let { user_id, page = 1, limit = 10 } = req.body;
 
   if (!user_id || isNaN(user_id)) {
-    return res.status(200).json({ 
-    result: "0",
-    error : 'User ID is required and it must be an Integer',
-    data : [] });
+    return res.status(200).json({
+      result: "0",
+      error: "User ID is required and it must be an Integer",
+      data: []
+    });
   }
+
   const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
-    if (exist_user.length === 0) 
-    {return res.status(200).json({ result : "0", 
-    error: 'User not found.',
-    data : [] });}
+  if (exist_user.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "User not found.",
+      data: []
+    });
+  }
 
-    const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE recever_posts_id = ?`, [user_id]);
-    if (exist_enquire.length === 0) 
-    {return res.status(200).json({ result : "0", 
-    error: 'User Enquire is not found.',
-    data : [] });}
-
-
-
-
-  console.log("Fetching leads for user_id:", user_id);
+  const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE user_id = ?`, [user_id]);
+  if (exist_enquire.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "User Enquire is not found.",
+      data: []
+    });
+  }
 
   try {
+    const offset = (page - 1) * limit;
+
+    const [countResult] = await db.query(
+      `SELECT COUNT(*) AS total FROM enquiries e 
+       JOIN user_posts up ON e.recever_posts_id = up.user_post_id 
+       WHERE up.U_ID = ?`,
+      [user_id]
+    );
+    const total = countResult[0].total;
+
     const [rows] = await db.query(
       `
       SELECT 
@@ -266,47 +279,76 @@ exports.my_leads = async (req, res) => {
       JOIN users u ON e.user_id = u.U_ID
       WHERE up.U_ID = ?
       ORDER BY e.created_at DESC
+      LIMIT ? OFFSET ?
       `,
-      [user_id]
+      [user_id, Number(limit), Number(offset)]
     );
 
-    console.log(`Found ${rows.length} leads for user_id ${user_id}`);
+    const normalizedData = rows.map(row => {
+      const cleanObj = {};
+      for (let key in row) {
+        cleanObj[key] = row[key] == null ? "" : row[key];
+      }
+      return cleanObj;
+    });
 
     return res.json({
       result: "1",
-      count: rows.length,
-      data : rows
+      error: "",
+      data: normalizedData,
+      totalPages: Math.ceil(total / limit),
+      nxtpage: page < Math.ceil(total / limit) ? Number(page) + 1 : 0,
+      recCnt: normalizedData.length
     });
 
   } catch (err) {
-    console.error('Get received enquiries error:', err);
-    return res.status(500).json({ result: "0", 
-    error : 'Server error.',
-    data : [] });
+    console.error("Get received enquiries error:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error.",
+      data: []
+    });
   }
 };
 
 exports.self_enquiry = async (req, res) => {
-  const { user_id } = req.body;
+  let { user_id, page = 1, limit = 10 } = req.body;
 
   if (!user_id || isNaN(user_id)) {
-    return res.status(200).json({ result : "0", error: 'User ID is required and it must be an Integer.' , data : [] });
+    return res.status(200).json({
+      result: "0",
+      error: "User ID is required and it must be an Integer.",
+      data: []
+    });
   }
 
   const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
-    if (exist_user.length === 0) 
-    {return res.status(200).json({ result : "0", 
-    error: 'User not found.',
-    data : [] });}
+  if (exist_user.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "User not found.",
+      data: []
+    });
+  }
 
-    const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE user_id = ?`, [user_id]);
-    if (exist_enquire.length === 0) 
-    {return res.status(200).json({ result : "0", 
-    error: 'You Enquiry is not found.',
-    data : [] });}
-
+  const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE user_id = ?`, [user_id]);
+  if (exist_enquire.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "You Enquiry is not found.",
+      data: []
+    });
+  }
 
   try {
+    const offset = (page - 1) * limit;
+
+    const [countResult] = await db.query(
+      `SELECT COUNT(*) AS total FROM enquiries WHERE user_id = ?`,
+      [user_id]
+    );
+    const total = countResult[0].total;
+
     const [rows] = await db.query(
       `
       SELECT 
@@ -325,19 +367,35 @@ exports.self_enquiry = async (req, res) => {
       JOIN users u ON e.user_id = u.U_ID
       WHERE e.user_id = ?
       ORDER BY e.created_at DESC
+      LIMIT ? OFFSET ?
       `,
-      [user_id]
+      [user_id, Number(limit), Number(offset)]
     );
 
+    const normalizedData = rows.map(row => {
+      const cleanObj = {};
+      for (let key in row) {
+        cleanObj[key] = row[key] == null ? "" : row[key];
+      }
+      return cleanObj;
+    });
+
     return res.json({
-      result : "1",
-      count: rows.length,
-      data : rows
+      result: "1",
+      error: "",
+      data: normalizedData,
+      totalPages: Math.ceil(total / limit),
+      nxtpage: page < Math.ceil(total / limit) ? Number(page) + 1 : 0,
+      recCnt: normalizedData.length
     });
 
   } catch (err) {
-    console.error('Fetch my enquiries error:', err);
-    return res.status(500).json({ result : "0", error : 'Server error.' , data : [] });
+    console.error("Fetch my enquiries error:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error.",
+      data: []
+    });
   }
 };
 

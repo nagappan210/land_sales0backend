@@ -660,7 +660,7 @@
               <td class="p-3"><input type="text" name="latitude" class="w-full border rounded p-2" /></td>
               <td class="p-3">latitude</td>
               <td class="p-3">Yes</td>
-              <td class="p-3">double</td>
+              <td class="p-3">string</td>
               <td class="p-3">11.2345678</td>
             </tr>
             <tr class="border-t">
@@ -668,7 +668,7 @@
               <td class="p-3"><input type="text" name="longitude" class="w-full border rounded p-2" /></td>
               <td class="p-3">longitude</td>
               <td class="p-3">Yes</td>
-              <td class="p-3">double</td>
+              <td class="p-3">string</td>
               <td class="p-3">11.456789</td>
             </tr>
             <tr>
@@ -1904,7 +1904,7 @@
               <td class="p-3"><input type="text" name="latitude" class="w-full border rounded p-2" /></td>
               <td class="p-3">latitude</td>
               <td class="p-3">Yes</td>
-              <td class="p-3">double</td>
+              <td class="p-3">string</td>
               <td class="p-3">11.234567</td>
             </tr>
             <tr class="border-t">
@@ -1912,7 +1912,7 @@
               <td class="p-3"><input type="text" name="longitude" class="w-full border rounded p-2" /></td>
               <td class="p-3">longitude</td>
               <td class="p-3">Yes</td>
-              <td class="p-3">double</td>
+              <td class="p-3">string</td>
               <td class="p-3">11.765432</td>
             </tr>
             <tr>
@@ -1929,7 +1929,421 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">26. Post Video Step 5</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">25.Residential Input Fileds</h2>
+
+    <div class="mb-6">
+      <table class="w-full bg-white border rounded shadow text-sm mb-6">
+        <tbody>
+          <tr class="border-b">
+            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+            <td class="p-3 text-blue-700">http://localhost:7000/api/auth/getform_details_residential</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Method:</td>
+            <td class="p-3">POST</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+            <td class="p-3">application/json; charset=utf-8</td>
+          </tr>
+          <tr>
+            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+            <td class="p-3">Development</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="getform_details_residential">
+        <table class="w-full text-sm bg-white border rounded shadow mb-6">
+          <thead class="bg-slate-900 text-white">
+            <tr>
+              <th class="p-3 text-left">Label Name</th>
+              <th class="p-3 text-left">Value</th>
+              <th class="p-3 text-left">Variable Name</th>
+              <th class="p-3 text-left">Mandatory</th>
+              <th class="p-3 text-left">Note</th>
+              <th class="p-3 text-left">Sample</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="p-3">Land Categories ID</td>
+              <td class="p-3"><input type="text" name="land_categorie_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">land_categorie_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr>
+              <td colspan="6" class="text-center p-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+                  Submit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">26.Commercial Input Fileds</h2>
+
+    <div class="mb-6">
+      <table class="w-full bg-white border rounded shadow text-sm mb-6">
+        <tbody>
+          <tr class="border-b">
+            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+            <td class="p-3 text-blue-700">http://localhost:7000/api/auth/getform_details_commercial</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Method:</td>
+            <td class="p-3">POST</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+            <td class="p-3">application/json; charset=utf-8</td>
+          </tr>
+          <tr>
+            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+            <td class="p-3">Development</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="getform_details_commercial">
+        <table class="w-full text-sm bg-white border rounded shadow mb-6">
+          <thead class="bg-slate-900 text-white">
+            <tr>
+              <th class="p-3 text-left">Label Name</th>
+              <th class="p-3 text-left">Value</th>
+              <th class="p-3 text-left">Variable Name</th>
+              <th class="p-3 text-left">Mandatory</th>
+              <th class="p-3 text-left">Note</th>
+              <th class="p-3 text-left">Sample</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="p-3">Land Categories ID</td>
+              <td class="p-3"><input type="text" name="land_categorie_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">land_categorie_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr>
+              <td colspan="6" class="text-center p-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+                  Submit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">27.Agriculture Input Fileds</h2>
+
+    <div class="mb-6">
+      <table class="w-full bg-white border rounded shadow text-sm mb-6">
+        <tbody>
+          <tr class="border-b">
+            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+            <td class="p-3 text-blue-700">http://localhost:7000/api/auth/getform_details_agriculture</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Method:</td>
+            <td class="p-3">POST</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+            <td class="p-3">application/json; charset=utf-8</td>
+          </tr>
+          <tr>
+            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+            <td class="p-3">Development</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="getform_details_agriculture">
+        <table class="w-full text-sm bg-white border rounded shadow mb-6">
+          <thead class="bg-slate-900 text-white">
+            <tr>
+              <th class="p-3 text-left">Label Name</th>
+              <th class="p-3 text-left">Value</th>
+              <th class="p-3 text-left">Variable Name</th>
+              <th class="p-3 text-left">Mandatory</th>
+              <th class="p-3 text-left">Note</th>
+              <th class="p-3 text-left">Sample</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="p-3">Land Categories ID</td>
+              <td class="p-3"><input type="text" name="land_categorie_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">land_categorie_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr>
+              <td colspan="6" class="text-center p-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+                  Submit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">
+      28. Step 4 (All Property Types)
+    </h2>
+
+    <div class="mb-6">
+      <table class="w-full bg-white border rounded shadow text-sm mb-6">
+        <tbody>
+          <tr class="border-b">
+            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+            <td class="p-3 text-blue-700">http://localhost:7000/api/auth/poststep4</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Method:</td>
+            <td class="p-3">POST</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+            <td class="p-3">application/json; charset=utf-8</td>
+          </tr>
+          <tr>
+            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+            <td class="p-3">Development</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="poststep4">
+        <table class="w-full text-sm bg-white border rounded shadow mb-6">
+          <thead class="bg-slate-900 text-white">
+            <tr>
+              <th class="p-3 text-left">Label Name</th>
+              <th class="p-3 text-left">Value</th>
+              <th class="p-3 text-left">Variable Name</th>
+              <th class="p-3 text-left">Mandatory</th>
+              <th class="p-3 text-left">Sample</th>
+            </tr>
+          </thead>
+          <tbody>
+
+            <tr><td class="p-3">User ID</td>
+              <td class="p-3"><input type="number" name="user_id" class="w-full border rounded p-2" required /></td>
+              <td class="p-3">user_id</td><td class="p-3">Yes</td><td class="p-3">1</td></tr>
+
+            <tr><td class="p-3">User Post ID</td>
+              <td class="p-3"><input type="number" name="user_post_id" class="w-full border rounded p-2" required /></td>
+              <td class="p-3">user_post_id</td><td class="p-3">Yes</td><td class="p-3">12</td></tr>
+
+            <tr><td class="p-3">Property Name</td>
+              <td class="p-3"><input type="text" name="property_name" class="w-full border rounded p-2" /></td>
+              <td class="p-3">property_name</td><td class="p-3">No</td><td class="p-3">Sunshine Residency</td></tr>
+
+            <tr><td class="p-3">Property Area</td>
+              <td class="p-3"><input type="text" name="property_area" class="w-full border rounded p-2" /></td>
+              <td class="p-3">property_area</td><td class="p-3">No</td><td class="p-3">1500</td></tr>
+
+            <tr><td class="p-3">Carpet Area</td>
+              <td class="p-3"><input type="text" name="carpet_area" class="w-full border rounded p-2" /></td>
+              <td class="p-3">carpet_area</td><td class="p-3">No</td><td class="p-3">1200</td></tr>
+
+            <tr><td class="p-3">Built Up Area</td>
+              <td class="p-3"><input type="text" name="built_up_area" class="w-full border rounded p-2" /></td>
+              <td class="p-3">built_up_area</td><td class="p-3">No</td><td class="p-3">1400</td></tr>
+
+            <tr><td class="p-3">Super Built Up Area</td>
+              <td class="p-3"><input type="text" name="super_built_up_area" class="w-full border rounded p-2" /></td>
+              <td class="p-3">super_built_up_area</td><td class="p-3">No</td><td class="p-3">1600</td></tr>
+
+            <tr><td class="p-3">Length</td>
+              <td class="p-3"><input type="text" name="area_length" class="w-full border rounded p-2" /></td>
+              <td class="p-3">area_length</td><td class="p-3">No</td><td class="p-3">40</td></tr>
+
+            <tr><td class="p-3">Width</td>
+              <td class="p-3"><input type="text" name="area_width" class="w-full border rounded p-2" /></td>
+              <td class="p-3">area_width</td><td class="p-3">No</td><td class="p-3">30</td></tr>
+
+            <tr><td class="p-3">Property Facing</td>
+              <td class="p-3"><input type="text" name="property_facing" class="w-full border rounded p-2" /></td>
+              <td class="p-3">property_facing</td><td class="p-3">No</td><td class="p-3">East</td></tr>
+
+            <tr><td class="p-3">Total Floors</td>
+              <td class="p-3"><input type="text" name="total_floor" class="w-full border rounded p-2" /></td>
+              <td class="p-3">total_floor</td><td class="p-3"> No</td><td class="p-3">10</td></tr>
+
+            <tr><td class="p-3">Your Floor No</td>
+              <td class="p-3"><input type="text" name="property_floor_no" class="w-full border rounded p-2" /></td>
+              <td class="p-3">property_floor_no</td><td class="p-3">No</td><td class="p-3">3</td></tr>
+
+            <tr><td class="p-3">Ownership</td>
+              <td class="p-3"><input type="text" name="property_ownership" class="w-full border rounded p-2" /></td>
+              <td class="p-3">property_ownership</td><td class="p-3">No</td><td class="p-3">Freehold</td></tr>
+
+            <tr><td class="p-3">Availability</td>
+              <td class="p-3"><input type="text" name="availability_status" class="w-full border rounded p-2" /></td>
+              <td class="p-3">availability_status</td><td class="p-3">No</td><td class="p-3">Ready</td></tr>
+
+            <tr><td class="p-3">Furnishing Status</td>
+              <td class="p-3"><input type="text" name="furnishing_status" class="w-full border rounded p-2" /></td>
+              <td class="p-3">furnishing_status</td><td class="p-3">No</td><td class="p-3">Semi</td></tr>
+
+            <tr><td class="p-3">Boundary Wall</td>
+              <td class="p-3"><input type="text" name="boundary_wall" class="w-full border rounded p-2" /></td>
+              <td class="p-3">boundary_wall</td><td class="p-3">No</td><td class="p-3">Yes</td></tr>
+
+            <tr><td class="p-3">Parking Available</td>
+              <td class="p-3"><input type="text" name="parking_available" class="w-full border rounded p-2" /></td>
+              <td class="p-3">parking_available</td><td class="p-3">No</td><td class="p-3">Yes</td></tr>
+
+            <tr><td class="p-3">Amenities</td>
+              <td class="p-3"><input type="text" name="amenities" class="w-full border rounded p-2" /></td>
+              <td class="p-3">amenities</td><td class="p-3">No</td><td class="p-3">Lift, Parking</td></tr>
+
+            <tr><td class="p-3">Property Highlights</td>
+              <td class="p-3"><input type="text" name="property_highlights" class="w-full border rounded p-2" /></td>
+              <td class="p-3">property_highlights</td><td class="p-3">No</td><td class="p-3">Near Metro</td></tr>
+
+            <tr><td class="p-3">BHK Type</td>
+              <td class="p-3"><input type="text" name="bhk_type" class="w-full border rounded p-2" /></td>
+              <td class="p-3">bhk_type</td><td class="p-3">No</td><td class="p-3">2BHK</td></tr>
+
+            <tr><td class="p-3">Bedrooms</td>
+              <td class="p-3"><input type="text" name="no_of_bedrooms" class="w-full border rounded p-2" /></td>
+              <td class="p-3">no_of_bedrooms</td><td class="p-3">No</td><td class="p-3">3</td></tr>
+
+            <tr><td class="p-3">Bathrooms</td>
+              <td class="p-3"><input type="text" name="no_of_bathrooms" class="w-full border rounded p-2" /></td>
+              <td class="p-3">no_of_bathrooms</td><td class="p-3">No</td><td class="p-3">2</td></tr>
+
+            <tr><td class="p-3">Balconies</td>
+              <td class="p-3"><input type="text" name="no_of_balconies" class="w-full border rounded p-2" /></td>
+              <td class="p-3">no_of_balconies</td><td class="p-3">No</td><td class="p-3">2</td></tr>
+
+            <tr><td class="p-3">Open Sides</td>
+              <td class="p-3"><input type="text" name="no_of_open_sides" class="w-full border rounded p-2" /></td>
+              <td class="p-3">no_of_open_sides</td><td class="p-3">No</td><td class="p-3">2</td></tr>
+
+            <tr><td class="p-3">Other Rooms</td>
+              <td class="p-3"><input type="text" name="other_rooms" class="w-full border rounded p-2" /></td>
+              <td class="p-3">other_rooms</td><td class="p-3">No</td><td class="p-3">Pooja Room</td></tr>
+
+            <tr><td class="p-3">No of Cabins</td>
+              <td class="p-3"><input type="text" name="no_of_cabins" class="w-full border rounded p-2" /></td>
+              <td class="p-3">no_of_cabins</td><td class="p-3">No</td><td class="p-3">5</td></tr>
+
+            <tr><td class="p-3">Meeting Rooms</td>
+              <td class="p-3"><input type="text" name="no_of_meeting_rooms" class="w-full border rounded p-2" /></td>
+              <td class="p-3">no_of_meeting_rooms</td><td class="p-3">No</td><td class="p-3">2</td></tr>
+
+            <tr><td class="p-3">Min Seats</td>
+              <td class="p-3"><input type="text" name="min_of_seats" class="w-full border rounded p-2" /></td>
+              <td class="p-3">min_of_seats</td><td class="p-3">No</td><td class="p-3">50</td></tr>
+
+            <tr><td class="p-3">Max Seats</td>
+              <td class="p-3"><input type="text" name="max_of_seats" class="w-full border rounded p-2" /></td>
+              <td class="p-3">max_of_seats</td><td class="p-3">No</td><td class="p-3">100</td></tr>
+
+            <tr><td class="p-3">Conference Room</td>
+              <td class="p-3"><input type="text" name="conference_room" class="w-full border rounded p-2" /></td>
+              <td class="p-3">conference_room</td><td class="p-3">No</td><td class="p-3">1</td></tr>
+
+            <tr><td class="p-3">Staircases</td>
+              <td class="p-3"><input type="text" name="no_of_staircases" class="w-full border rounded p-2" /></td>
+              <td class="p-3">no_of_staircases</td><td class="p-3">No</td><td class="p-3">2</td></tr>
+
+            <tr><td class="p-3">Reception Area</td>
+              <td class="p-3"><input type="text" name="reception_area" class="w-full border rounded p-2" /></td>
+              <td class="p-3">reception_area</td><td class="p-3">No</td><td class="p-3">Available</td></tr>
+
+            <tr><td class="p-3">Pantry</td>
+              <td class="p-3"><input type="text" name="pantry" class="w-full border rounded p-2" /></td>
+              <td class="p-3">pantry</td><td class="p-3">No</td><td class="p-3">Available</td></tr>
+
+            <tr><td class="p-3">Pantry Size</td>
+              <td class="p-3"><input type="text" name="pantry_size" class="w-full border rounded p-2" /></td>
+              <td class="p-3">pantry_size</td><td class="p-3">No</td><td class="p-3">200</td></tr>
+
+            <tr><td class="p-3">Central AC</td>
+              <td class="p-3"><input type="text" name="central_ac" class="w-full border rounded p-2" /></td>
+              <td class="p-3">central_ac</td><td class="p-3">No</td><td class="p-3">Available</td></tr>
+
+            <tr><td class="p-3">Oxygen Duct</td>
+              <td class="p-3"><input type="text" name="oxygen_duct" class="w-full border rounded p-2" /></td>
+              <td class="p-3">oxygen_duct</td><td class="p-3">No</td><td class="p-3">Available</td></tr>
+
+            <tr><td class="p-3">UPS</td>
+              <td class="p-3"><input type="text" name="ups" class="w-full border rounded p-2" /></td>
+              <td class="p-3">ups</td><td class="p-3">No</td><td class="p-3">Available</td></tr>
+
+            <tr><td class="p-3">Fire Safety</td>
+              <td class="p-3"><input type="text" name="fire_safety_measures" class="w-full border rounded p-2" /></td>
+              <td class="p-3">fire_safety_measures</td><td class="p-3">No</td><td class="p-3">Fire Extinguisher</td></tr>
+
+            <tr><td class="p-3">Lifts</td>
+              <td class="p-3"><input type="text" name="lifts" class="w-full border rounded p-2" /></td>
+              <td class="p-3">lifts</td><td class="p-3">No</td><td class="p-3">Available</td></tr>
+
+            <tr><td class="p-3">Pre Contract Status</td>
+              <td class="p-3"><input type="text" name="pre_contract_status" class="w-full border rounded p-2" /></td>
+              <td class="p-3">pre_contract_status</td><td class="p-3">No</td><td class="p-3">Yes</td></tr>
+
+            <tr><td class="p-3">NOC Certified</td>
+              <td class="p-3"><input type="text" name="noc_certified" class="w-full border rounded p-2" /></td>
+              <td class="p-3">noc_certified</td><td class="p-3">No</td><td class="p-3">Yes</td></tr>
+
+            <tr><td class="p-3">Occupancy Certificate</td>
+              <td class="p-3"><input type="text" name="occupancy_certificate" class="w-full border rounded p-2" /></td>
+              <td class="p-3">occupancy_certificate</td><td class="p-3">No</td><td class="p-3">Yes</td></tr>
+
+            <tr><td class="p-3">Previously Used For</td>
+              <td class="p-3"><input type="text" name="office_previously_used_for" class="w-full border rounded p-2" /></td>
+              <td class="p-3">office_previously_used_for</td><td class="p-3">No</td><td class="p-3">IT Office</td></tr>
+
+            <tr><td class="p-3">Washroom Details</td>
+              <td class="p-3"><input type="text" name="washroom_details" class="w-full border rounded p-2" /></td>
+              <td class="p-3">washroom_details</td><td class="p-3">No</td><td class="p-3">2 Attached</td></tr>
+
+            <tr><td class="p-3">Local Authority</td>
+              <td class="p-3"><input type="text" name="local_authority" class="w-full border rounded p-2" /></td>
+              <td class="p-3">local_authority</td><td class="p-3">No</td><td class="p-3">BBMP</td></tr>
+
+            <tr><td class="p-3">Suitable Business Type</td>
+              <td class="p-3"><input type="text" name="suitable_business_type" class="w-full border rounded p-2" /></td>
+              <td class="p-3">suitable_business_type</td><td class="p-3">No</td><td class="p-3">IT, BPO</td></tr>
+
+            <tr>
+              <td colspan="5" class="text-center p-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+                  Submit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">29. Post Video Step 5</h2>
 
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -2004,7 +2418,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">27. Post Video Step 6</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">30. Post Video Step 6</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2099,7 +2513,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">28. Post Video Step 7
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">31. Post Video Step 7
     </h2>
 
     <div class="mb-6">
@@ -2172,9 +2586,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">
-      29. Published
-    </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">32. Published</h2>
 
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -2245,7 +2657,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">30. Save Post</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">33. Save Post</h2>
 
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
@@ -2322,7 +2734,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">31. Saved Post User</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">34. Saved Post User</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2388,7 +2800,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">32. Mark as Sold </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">35. Mark as Sold </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2464,7 +2876,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">33.Get Users Sold Video </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">36.Get Users Sold Video </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2530,7 +2942,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">34.Get Users Draft Video</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">37.Get Users Draft Video</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2596,7 +3008,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">35.Get Video Or Reels </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">38.Get Video Or Reels </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2662,7 +3074,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">36.Like and Unlike </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">39.Like and Unlike </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2738,7 +3150,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">37.Like Count </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">40.Like Count </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2796,7 +3208,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">38.Comment For Post </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">41.Comment For Post </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2905,7 +3317,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">39.Comment Like </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">42.Comment Like </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -2990,7 +3402,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">40.Get Comment</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">43.Get Comment</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3065,7 +3477,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">41.Get Repley Comment</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">44.Get Repley Comment</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3148,7 +3560,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">42.Land Categorie Name</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">45.Land Categorie Name</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3207,7 +3619,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">43.Land Categorie Para</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Land Categorie Para</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3266,7 +3678,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">44.Enquire Form</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Enquire Form</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3389,7 +3801,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">45.My Leads</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">48.My Leads</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3448,7 +3860,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Self Enquire</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">49.Self Enquire</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3507,7 +3919,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Decline Form</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">50.Decline Form</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3582,7 +3994,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">48.Show Interest User Search</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">51.Show Interest User Search</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3641,7 +4053,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">49.Search</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">52.Search</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3740,7 +4152,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">50.Report</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">53.Report</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3798,7 +4210,15 @@
               <td class="p-3">User Post ID</td>
               <td class="p-3"><input type="text" name="user_post_id" class="w-full border rounded p-2" /></td>
               <td class="p-3">user_post_id</td>
-              <td class="p-3">Yes</td>
+              <td class="p-3">No</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">Comment ID</td>
+              <td class="p-3"><input type="text" name="comment_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">comment_id</td>
+              <td class="p-3">No</td>
               <td class="p-3">int</td>
               <td class="p-3">1</td>
             </tr>
@@ -3808,8 +4228,8 @@
               <td class="p-3">status</td>
               <td class="p-3">Yes</td>
               <td class="p-3">int</td>
-              <td class="p-3">1 opr 2</td>
-              <td class="p-3">1->user profile , 2->user post</td>
+              <td class="p-3">1 or 2 or 3</td>
+              <td class="p-3">1->user profile , 2->user post , 3->comment</td>
             </tr>
             <tr>
               <td colspan="7" class="text-center p-4">
@@ -4599,6 +5019,142 @@
         }
       });
 
+      // RESIDENTIAL INPUT FIELDS
+      const getform_details_residential = document.getElementById('getform_details_residential');
+      getform_details_residential.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(getform_details_residential);
+        const data = {};
+
+        formData.forEach((value, key) => {
+          if (value) {
+            if (['land_categorie_id'].includes(key)) {
+              data[key] = parseInt(value, 10);
+            } else {
+              data[key] = value.trim();
+            }
+          }
+        });
+
+        try {
+          const res = await fetch('http://localhost:7000/api/auth/getform_details_residential', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          const json = await res.json();
+          sessionStorage.setItem('registerResponse', JSON.stringify(json));
+          window.location.href = 'response';
+        } catch (err) {
+          const errorObj = { error: err.message };
+          sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
+          window.location.href = 'response';
+        }
+      });
+
+
+      // COMMERCIAL INPUT FIELDS
+      const getform_details_commercial = document.getElementById('getform_details_commercial');
+      getform_details_commercial.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(getform_details_commercial);
+        const data = {};
+
+        formData.forEach((value, key) => {
+          if (value) {
+            if (['land_categorie_id'].includes(key)) {
+              data[key] = parseInt(value, 10);
+            } else {
+              data[key] = value.trim();
+            }
+          }
+        });
+
+        try {
+          const res = await fetch('http://localhost:7000/api/auth/getform_details_commercial', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          const json = await res.json();
+          sessionStorage.setItem('registerResponse', JSON.stringify(json));
+          window.location.href = 'response';
+        } catch (err) {
+          const errorObj = { error: err.message };
+          sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
+          window.location.href = 'response';
+        }
+      });
+
+
+      // AGRICULTURE INPUT FIELDS
+      const getform_details_agriculture = document.getElementById('getform_details_agriculture');
+      getform_details_agriculture.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(getform_details_agriculture);
+        const data = {};
+
+        formData.forEach((value, key) => {
+          if (value) {
+            if (['land_categorie_id'].includes(key)) {
+              data[key] = parseInt(value, 10);
+            } else {
+              data[key] = value.trim();
+            }
+          }
+        });
+
+        try {
+          const res = await fetch('http://localhost:7000/api/auth/getform_details_agriculture', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          const json = await res.json();
+          sessionStorage.setItem('registerResponse', JSON.stringify(json));
+          window.location.href = 'response';
+        } catch (err) {
+          const errorObj = { error: err.message };
+          sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
+          window.location.href = 'response';
+        }
+      });
+
+      // POST VIDEO STEP 4
+      const poststep4 = document.getElementById('poststep4');
+      poststep4.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+           const formData = new FormData(e.target);
+            const data = {};
+
+            formData.forEach((value, key) => {
+              data[key] = value;
+            });
+
+        try {
+          const res = await fetch('http://localhost:7000/api/auth/poststep4', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+
+          const json = await res.json();
+          sessionStorage.setItem('registerResponse', JSON.stringify(json));
+          window.location.href = 'response';
+        } catch (err) {
+          const errorObj = { error: err.message };
+          sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
+          window.location.href = 'response';
+        }
+      });
+     
       // POST VIDEO STEP 5
       const poststep5FORM = document.getElementById('poststep5');
       poststep5FORM.addEventListener('submit', async function (e) {
