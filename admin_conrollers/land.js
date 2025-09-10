@@ -190,3 +190,509 @@ exports.delete_land_categoies = async (req,res)=>{
     });
   }
 }
+
+exports.getbhk_type = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      `SELECT bhk_type_id, bhk_type FROM bhk_type`
+    );
+
+    return res.status(200).json({
+      result: "1",
+      data: rows,
+    });
+  } catch (err) {
+    console.error("Error fetching bhk types:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to fetch BHK types",
+      data: [],
+    });
+  }
+};
+
+exports.addbhk_type = async (req, res) => {
+  const { bhk_type, status, bhk_type_id } = req.body;
+
+  try {
+    if (status === 1) {
+      await db.query(`INSERT INTO bhk_type (bhk_type) VALUES (?)`, [bhk_type]);
+      return res.status(200).json({
+        result: "1",
+        message: "BHK type added successfully",
+      });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE bhk_type SET bhk_type = ? WHERE bhk_type_id = ?`,
+        [bhk_type, bhk_type_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "BHK type updated successfully",
+      });
+    }
+
+    if (status === 3) {
+      await db.query(`DELETE FROM bhk_type WHERE bhk_type_id = ?`, [bhk_type_id]);
+      return res.status(200).json({
+        result: "1",
+        message: "BHK type deleted successfully",
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete",
+    });
+
+  } catch (err) {
+    console.error("Error in addbhk_type:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to process BHK type",
+    });
+  }
+};
+
+exports.property_facing = async (req, res) => {
+  let { property_facing, status, property_facing_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO property_facing (property_facing) VALUES (?)`,
+        [property_facing]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Property facing type added successfully",
+      });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE property_facing SET property_facing = ? WHERE property_facing_id = ?`,
+        [property_facing, property_facing_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Property facing type updated successfully",
+      });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM property_facing WHERE property_facing_id = ?`,
+        [property_facing_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Property facing type deleted successfully",
+      });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT property_facing_id, property_facing FROM property_facing`
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Property facing fetched successfully",
+        data: rows,
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in property_facing:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to process property_facing type",
+    });
+  }
+};
+
+exports.property_ownership = async (req, res) => {
+  let { property_ownership, status, property_ownership_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO property_ownership (property_ownership) VALUES (?)`,
+        [property_ownership]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "property_ownership added successfully",
+      });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE property_ownership SET property_ownership = ? WHERE property_ownership_id = ?`,
+        [property_ownership, property_ownership_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "property_ownership updated successfully",
+      });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM property_ownership WHERE property_ownership_id = ?`,
+        [property_ownership_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "property_ownership deleted successfully",
+      });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT property_ownership_id, property_ownership FROM property_ownership`
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "property_ownership fetched successfully",
+        data: rows,
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in property_ownership:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to process property_ownership type",
+    });
+  }
+};
+
+exports.availability_status = async (req, res) => {
+  let { availability_status, status, availability_status_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO availability_status (availability_status) VALUES (?)`,
+        [availability_status]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "availability_status added successfully",
+      });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE availability_status SET availability_status = ? WHERE availability_status_id = ?`,
+        [availability_status, availability_status_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "availability_status updated successfully",
+      });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM availability_status WHERE availability_status_id = ?`,
+        [availability_status_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "availability_status deleted successfully",
+      });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT availability_status_id, availability_status FROM availability_status`
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "availability_status fetched successfully",
+        data: rows,
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in availability_status:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to process availability_status type",
+    });
+  }
+};
+
+exports.other_rooms = async (req, res) => {
+  let { other_rooms, status, other_rooms_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO other_rooms (other_rooms) VALUES (?)`,
+        [other_rooms]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "other_rooms added successfully",
+      });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE other_rooms SET other_rooms = ? WHERE other_rooms_id = ?`,
+        [other_rooms, other_rooms_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "other_rooms updated successfully",
+      });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM other_rooms WHERE other_rooms_id = ?`,
+        [other_rooms_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "other_rooms deleted successfully",
+      });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT other_rooms_id, other_rooms FROM other_rooms`
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "other_rooms fetched successfully",
+        data: rows,
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in other_rooms:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to process other_rooms type",
+    });
+  }
+};
+
+exports.furnishing_status = async (req, res) => {
+  let { furnishing_status, status, furnishing_status_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO furnishing_status (furnishing_status) VALUES (?)`,
+        [furnishing_status]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "furnishing_status added successfully",
+      });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE furnishing_status SET furnishing_status = ? WHERE furnishing_status_id = ?`,
+        [furnishing_status, furnishing_status_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "furnishing_status updated successfully",
+      });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM furnishing_status WHERE furnishing_status_id = ?`,
+        [furnishing_status_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "furnishing_status deleted successfully",
+      });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT furnishing_status_id, furnishing_status FROM furnishing_status`
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "furnishing_status fetched successfully",
+        data: rows,
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in furnishing_status:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to process furnishing_status type",
+    });
+  }
+};
+
+exports.amenities = async (req, res) => {
+  let { amenities, status, amenities_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO amenities (amenities) VALUES (?)`,
+        [amenities]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Amenities added successfully",
+      });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE amenities SET amenities = ? WHERE amenities_id = ?`,
+        [amenities, amenities_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Amenities updated successfully",
+      });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM amenities WHERE amenities_id = ?`,
+        [amenities_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Amenities deleted successfully",
+      });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT amenities_id, amenities FROM amenities`
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Amenities fetched successfully",
+        data: rows,
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in amenities:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to process amenities",
+    });
+  }
+};
+
+exports.property_highlights = async (req, res) => {
+  let { property_highlight, status, property_highlight_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO property_highlights (property_highlights) VALUES (?)`,
+        [property_highlight]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Property highlight added successfully",
+      });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE property_highlights SET property_highlights = ? WHERE property_highlights_id = ?`,
+        [property_highlight, property_highlight_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Property highlight updated successfully",
+      });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM property_highlights WHERE property_highlights_id = ?`,
+        [property_highlight_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Property highlight deleted successfully",
+      });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT property_highlights_id, property_highlights FROM property_highlights`
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Property highlights fetched successfully",
+        data: rows,
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in property_highlights:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to process property_highlights",
+    });
+  }
+};

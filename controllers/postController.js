@@ -205,32 +205,38 @@ exports.getform_details_residential = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          floor_plane: floor_plane_rows.map(r => r.bhk_type),
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push({
+          property_name: "1",
+          select_floor_plane: floor_plane_rows.map(r => r.bhk_type),
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          availability_status: availability_status_rows.map(r => r.availability_status), 
+          availability_status: availability_status_rows.map(r => r.availability_status),
+          optional : [{
           no_of_bedrooms: ["1", "2", "3", "4"],
           no_of_bathrooms: ["1", "2", "3", "4"],
           no_of_balconies: ["1", "2", "3", "4"],
+          no_of_open_sides : [""],
+          is_boundary_wall_around_property : [""],
           other_rooms: other_rooms_rows.map(r => r.other_rooms),
           furnishing_status: furnishing_status_rows.map(r => r.furnishing_status),
           parking_available: ["Yes", "No"],
           amenities: amenities_rows.map(r => r.amenities),
           property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+        }]
+          
+        });
         break;
       }
       case 2: {
@@ -243,32 +249,38 @@ exports.getform_details_residential = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          floor_plane: floor_plane_rows.map(r => r.bhk_type),
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push( {
+          property_name: "1",
+          select_floor_plane: floor_plane_rows.map(r => r.bhk_type),
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          availability_status: availability_status_rows.map(r => r.availability_status), 
-          no_of_bedrooms: ["1", "2", "3", "4"],
-          no_of_bathrooms: ["1", "2", "3", "4"],
-          no_of_balconies: ["1", "2", "3", "4"],
-          other_rooms: other_rooms_rows.map(r => r.other_rooms),
-          furnishing_status: furnishing_status_rows.map(r => r.furnishing_status),
-          parking_available: ["Yes", "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          availability_status: availability_status_rows.map(r => r.availability_status),
+          optional : [{
+            no_of_bedrooms: ["1", "2", "3", "4"],
+            no_of_bathrooms: ["1", "2", "3", "4"],
+            no_of_balconies: ["1", "2", "3", "4"],
+            no_of_open_sides : [""],
+            is_boundary_wall_around_property : [""],
+            other_rooms: other_rooms_rows.map(r => r.other_rooms),
+            furnishing_status: furnishing_status_rows.map(r => r.furnishing_status),
+            parking_available: ["Yes", "No"],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        });
         break;
       }
       case 3: {
@@ -281,32 +293,41 @@ exports.getform_details_residential = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          floor_plane: floor_plane_rows.map(r => r.bhk_type),
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push(
+          {
+          property_name: "1",
+          select_floor_plane: floor_plane_rows.map(r => r.bhk_type),
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status), 
-          no_of_bedrooms: ["1", "2", "3", "4"],
-          no_of_bathrooms: ["1", "2", "3", "4"],
-          no_of_balconies: ["1", "2", "3", "4"],
-          other_rooms: other_rooms_rows.map(r => r.other_rooms),
-          furnishing_status: furnishing_status_rows.map(r => r.furnishing_status),
-          parking_available: ["Yes", "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          optional : [{
+            no_of_bedrooms: ["1", "2", "3", "4"],
+            no_of_bathrooms: ["1", "2", "3", "4"],
+            no_of_balconies: ["1", "2", "3", "4"],
+            no_of_open_sides : [""],
+            is_boundary_wall_around_property : [""],
+            other_rooms: other_rooms_rows.map(r => r.other_rooms),
+            furnishing_status: furnishing_status_rows.map(r => r.furnishing_status),
+            parking_available: ["Yes", "No"],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        }
+        ) 
+        ;
         break;
       }
       case 4: {
@@ -319,30 +340,41 @@ exports.getform_details_residential = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push(
+          {
+          property_name: "1",
+          select_floor_plane: "",
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status), 
-          no_of_bathrooms: ["1", "2", "3", "4"],
-          no_of_balconies: ["1", "2", "3", "4"],
-          other_rooms: other_rooms_rows.map(r => r.other_rooms),
-          furnishing_status: furnishing_status_rows.map(r => r.furnishing_status),
-          parking_available: ["Yes", "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          optional : [{
+            no_of_bedrooms : [""],
+            no_of_bathrooms: ["1", "2", "3", "4"],
+            no_of_balconies: ["1", "2", "3", "4"],
+            no_of_open_sides : [""],
+            is_boundary_wall_around_property : [""],
+            other_rooms: [""],
+            furnishing_status: [""],
+            parking_available: ["Yes", "No"],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        }
+        )
+        ;
         break;
       }
       case 5: {
@@ -355,20 +387,41 @@ exports.getform_details_residential = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          property_area: "",
+        data.push(
+          {
+          property_name: "1",
+          select_floor_plane: "",
+          property_area: "1",
+          Carpet_area: "",
+          built_up_area: "",
+          super_built_up_area: "",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
+          floor_details: [ {
+            total_floors_in_property: "",
+            your_property_floor_no: ""
+          }],
           property_ownership: property_ownership_rows.map(r => r.property_ownership),
-          no_of_open_sides: ["1", "2", "3", "4"],
-          is_boundary_wall_around_property: ["Yes", "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          availability_status : "",
+          optional : [{
+            no_of_bedrooms : [""],
+            no_of_bathrooms : [""],
+            no_of_balconies : [""],
+            no_of_open_sides: ["1", "2", "3", "4"],
+            is_boundary_wall_around_property: ["Yes", "No"],
+            other_rooms : [""],
+            furnishing_status : [""],
+            parking_available : [""],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        }
+        )
+        ;
         break;
       }
       case 6: {
@@ -381,28 +434,43 @@ exports.getform_details_residential = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push(
+          {
+          property_name: "1",
+          select_floor_plane: "",
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
-          ],
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" 
+          }],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          availability_status: availability_status_rows.map(r => r.availability_status), 
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          availability_status: availability_status_rows.map(r => r.availability_status),
+          optional : [{
+            no_of_bedrooms : [""],
+            no_of_bathrooms : [""],
+            no_of_balconies : [""],
+            no_of_open_sides: [""],
+            is_boundary_wall_around_property : [""],
+            other_rooms : [""],
+            furnishing_status : [""],
+            parking_available : [""],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        }
+        )
+        ;
         break;
       }
-
       default:
         return res.status(200).json({
           result: "0",
@@ -431,7 +499,7 @@ exports.getform_details_commercial = async (req, res) => {
   const { land_categorie_id } = req.body;
 
   try {
-    let data = {};
+    let data = [];
 
     switch (land_categorie_id) {
       case 7: {
@@ -452,41 +520,58 @@ exports.getform_details_commercial = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push({
+          property_name: "1",
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
+          area_dimensions : [{
+            length : "",
+            width : ""
+          }],
+          shop_facade : [{
+            facade_width : "",
+            facade_height : ""
+          }],
+          property_facing : "",
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          availability_status: availability_status_rows.map(r => r.availability_status), 
-          no_of_cabins: ["1", "2", "3", "4+"],
-          no_of_meeting_rooms: ["1", "2", "3", "4+"],
-          min_no_of_seats: ["1", "2", "3", "4+"],
-          max_no_of_seats: ["1", "2", "3", "4+"],
-          conference_room : ["0" , "1" , "2" , "3+"],
-          no_of_staircases: ["1", "2", "3", "4+"],
+          availability_status: availability_status_rows.map(r => r.availability_status),
+          optional : [{
+            no_of_cabins: ["1", "2", "3", "4+"],
+            no_of_meeting_rooms: ["1", "2", "3", "4+"],
+            min_no_of_seats: ["1", "2", "3", "4+"],
+            max_no_of_seats: ["1", "2", "3", "4+"],
+            conference_room : ["0" , "1" , "2" , "3+"],
+            no_of_staircases: ["1", "2", "3", "4+"],
+            no_of_open_sides : [""],
+            which_authority_the_property_is_approved_by : [""],
+            reception_area: reception_area.map(r => r.reception_area),
+            pantry: pantry.map(r => r.pantry),
+            pantry_size : "1",
+            washroom_details : [""],
+            suitable_business_type : [""],
+
+            central_ac: central_ac.map(r => r.central_ac),
+            oxygen_duct: oxygen_duct.map(r => r.oxygen_duct),
+            ups: ups.map(r => r.ups),
+            furnishing_status: furnishing_status.map(r => r.furnishing_status),
+            fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
+            lifts: lifts.map(r => r.lifts),
+            parking_available: ["Yes", "No"],
+            is_it_Pre_leased_pre_rented : ["Yes", "No"],
+            is_your_office_fire_noc_certified : ["Yes", "No"],
+            occupancy_certificate : ["Yes", "No"],
+            office__previously_used_for : office_previously_used_for.map(r=> r.office_previously_used_for),
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
           
-          reception_area: reception_area.map(r => r.reception_area),
-          pantry: pantry.map(r => r.pantry),
-          pantry_size : "",
-          central_ac: central_ac.map(r => r.central_ac),
-          oxygen_duct: oxygen_duct.map(r => r.oxygen_duct),
-          ups: ups.map(r => r.ups),
-          furnishing_status: furnishing_status.map(r => r.furnishing_status),
-          fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
-          lifts: lifts.map(r => r.lifts),
-          parking_available: ["Yes", "No"],
-          is_it_Pre_leased_Pre_Rented : ["Yes", "No"],
-          is_your_office_fire_noc_certified : ["Yes", "No"],
-          occupancy_certificate : ["Yes", "No"],
-          office__previously_used_for : office_previously_used_for.map(r=> r.office_previously_used_for),
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+        });
         break;
       }
       case 8: {
@@ -507,35 +592,57 @@ exports.getform_details_commercial = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push({
+          property_name: "1",
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
+          area_dimensions : [{
+            length : "",
+            width : ""
+          }],
+          shop_facade : [{
+            facade_width : "",
+            facade_height : ""
+          }],
+          property_facing : "",
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          availability_status: availability_status_rows.map(r => r.availability_status), 
-          no_of_cabins: ["1", "2", "3", "4+"],
-          no_of_meeting_rooms: ["1", "2", "3", "4+"],
-          max_no_of_seats: ["1", "2", "3", "4+"],
-          washroom_details : washroom_details.map(r =>r.washroom_details),
-          conference_room : ["0" , "1" , "2" , "3+"],
-          reception_area: reception_area.map(r => r.reception_area),
-          pantry: pantry.map(r => r.pantry),
-          pantry_size : "",
-          central_ac: central_ac.map(r => r.central_ac),
-          oxygen_duct: oxygen_duct.map(r => r.oxygen_duct),
-          ups: ups.map(r => r.ups),
-          furnishing_status: furnishing_status.map(r => r.furnishing_status),
-          fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
-          lifts: lifts.map(r => r.lifts),
-          parking_available: ["Yes", "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          availability_status: availability_status_rows.map(r => r.availability_status),
+          optional : [{
+            no_of_cabins: ["1", "2", "3", "4+"],
+            no_of_meeting_rooms: ["1", "2", "3", "4+"],
+            min_no_of_seats : [""],
+            max_no_of_seats: ["1", "2", "3", "4+"],
+            conference_room : ["0" , "1" , "2" , "3+"],
+            no_of_staircases : [""],
+            no_of_open_sides : [""],
+            which_authority_the_property_is_approved_by : [""],
+            reception_area: reception_area.map(r => r.reception_area),
+            pantry: pantry.map(r => r.pantry),
+            pantry_size : "1",
+            washroom_details : washroom_details.map(r =>r.washroom_details),
+            suitable_business_type : [""],
+            central_ac: central_ac.map(r => r.central_ac),
+            oxygen_duct: oxygen_duct.map(r => r.oxygen_duct),
+            ups: ups.map(r => r.ups),
+            furnishing_status: furnishing_status.map(r => r.furnishing_status),
+            fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
+            lifts: lifts.map(r => r.lifts),
+            parking_available: ["Yes", "No"],
+            is_it_Pre_leased_pre_rented : [""],
+            is_your_office_fire_noc_certified : [""],
+            occupancy_certificate : [""],
+            office_previously_used_for : [""],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        });
         break;
       }
       case 9: {
@@ -558,30 +665,57 @@ exports.getform_details_commercial = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push({
+          property_name: "1",
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
+          area_dimensions : [{
+            length : "",
+            width : ""
+          }],
           shop_facade: [ {
-            facade_width: "",
-            facade_height: "" }
+            facade_width: "1",
+            facade_height: "1" }
           ],
           property_facing: property_facing_rows.map(r => r.property_facing), 
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status), 
-        
-          washroom_details: washroom_details.map(r => r.washroom_details),
-          fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
-          parking_available: ["Yes", "No"],
-          is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          optional : [{
+            no_of_cabins: [""],
+            no_of_meeting_rooms: [""],
+            min_no_of_seats : [""],
+            max_no_of_seats: [""],
+            conference_room : [""],
+            no_of_staircases : [""],
+            no_of_open_sides : [""],
+            which_authority_the_property_is_approved_by : [""],
+            reception_area : [""],
+            pantry : [""],
+            pantry_size : "",
+            washroom_details: washroom_details.map(r => r.washroom_details),
+            suitable_business_type : [""],
+            central_ac : [""],
+            oxygen_duct : [""],
+            ups : [""],
+            furnishing_status : [""],
+            fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
+            lifts : [""],
+            parking_available: ["Yes", "No"],
+            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            is_your_office_fire_noc_certified : [""],
+            occupancy_certificate : [""],
+            office_previously_used_for : [""],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        });
         break;
       }
       case 10: {
@@ -604,31 +738,58 @@ exports.getform_details_commercial = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push({
+          property_name: "1",
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
+          area_dimensions : [{
+            length : "",
+            width : ""
+          }],
           shop_facade: [ {
-            facade_width: "",
-            facade_height: "" }
+            facade_width: "1",
+            facade_height: "1" }
           ],
-          property_facing_rows: property_facing_rows.map(r => r.property_facing), 
+          property_facing: property_facing_rows.map(r => r.property_facing), 
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status), 
-        
-          washroom_details: washroom_details.map(r => r.washroom_details),
-          fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
-          parking_available: ["Yes", "No"],
-          is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
-          suitable_business_type: suitable_business_type.map(r => r.suitable_bsiness_type),
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          optional : [{
+            no_of_cabins: [""],
+            no_of_meeting_rooms: [""],
+            min_no_of_seats : [""],
+            max_no_of_seats: [""],
+            conference_room : [""],
+            no_of_staircases : [""],
+            no_of_open_sides : [""],
+            which_authority_the_property_is_approved_by : [""],
+           
+            reception_area : [""],
+            pantry : [""],
+            pantry_size : "",
+            washroom_details: washroom_details.map(r => r.washroom_details),
+            suitable_business_type: suitable_business_type.map(r => r.suitable_bsiness_type),
+            central_ac : [""],
+            oxygen_duct : [""],
+            ups : [""],
+            furnishing_status : [""],
+            fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
+            lifts : [""],
+            parking_available: ["Yes", "No"],
+            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            is_your_office_fire_noc_certified : [""],
+            occupancy_certificate : [""],
+            office_previously_used_for : [""],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }] 
+          
+        });
         break;
       }
       case 11: {
@@ -650,21 +811,57 @@ exports.getform_details_commercial = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          property_area: "",
+        data.push({
+          property_name: "1",
+          property_area: "1",
+          carpet_area : "",
+          built_up_area : "",
+          super_built_up_area : "",
           area_dimensions: [ {
-            length: "",
-            width: "" }
+            length: "1",
+            width: "1" }
           ],
-          property_facing_rows: property_facing_rows.map(r => r.property_facing), 
-          property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          which_authority_the_property_is_approved_by : ["Yes" , "No"],
-          on_of_open_sides: ["1", "2" , "3" , "4"],
-          is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          shop_facade : [{
+            facade_width: "",
+            facade_height: ""
+          }],
+          property_facing: property_facing_rows.map(r => r.property_facing),
+          floor_details : [{
+            total_floors_in_property: "",
+            your_property_floor_no: "" 
+          }],
+          property_ownership: property_ownership_rows.map(r => r.property_ownership),
+          availability_status : [""],
+          optional : [{
+            no_of_cabins: [""],
+            no_of_meeting_rooms: [""],
+            min_no_of_seats : [""],
+            max_no_of_seats: [""],
+            conference_room : [""],
+            no_of_staircases : [""],
+            which_authority_the_property_is_approved_by : ["Yes" , "No"],
+            on_of_open_sides: ["1", "2" , "3" , "4"],
+            reception_area : [""],
+            pantry : [""],
+            pantry_size : "",
+            washroom_details: [""],
+            suitable_business_type: [""],
+            central_ac : [""],
+            oxygen_duct : [""],
+            ups : [""],
+            furnishing_status : [""],
+            fire_safety_measures: [""],
+            lifts : [""],
+            parking_available: [],
+            is_your_office_fire_noc_certified : [""],
+            occupancy_certificate : [""],
+            office_previously_used_for : [""],
+            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }] 
+          
+        });
         break;
       }
       case 12: {
@@ -686,20 +883,57 @@ exports.getform_details_commercial = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
-          property_facing_rows: property_facing_rows.map(r => r.property_facing), 
+        data.push({
+          property_name: "1",
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
+          area_dimensions : [{
+            length : "",
+            width : ""
+          }],
+          shop_facade : [{
+            facade_width : "",
+            facade_height : ""
+          }],
+          property_facing: property_facing_rows.map(r => r.property_facing),
+          floor_details : [{
+            total_floors_in_property: "",
+            your_property_floor_no: ""
+          }],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status), 
-        
-          washroom_details: washroom_details.map(r => r.washroom_details),
-          is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          optional : [{
+            no_of_cabins: [""],
+            no_of_meeting_rooms: [""],
+            min_no_of_seats : [""],
+            max_no_of_seats: [""],
+            conference_room : [""],
+            no_of_staircases : [""],
+            no_of_open_sides : [""],
+            which_authority_the_property_is_approved_by : [""],
+            reception_area : [""],
+            pantry : [""],
+            pantry_size : "",
+            washroom_details: washroom_details.map(r => r.washroom_details),
+            suitable_business_type: [""],
+            central_ac : [""],
+            oxygen_duct : [""],
+            ups : [""],
+            furnishing_status : [""],
+            fire_safety_measures: [""],
+            lifts : [""],
+            parking_available: [],
+            is_your_office_fire_noc_certified : [""],
+            occupancy_certificate : [""],
+            office_previously_used_for : [""],
+            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        });
         break;
       }
       case 13: {
@@ -721,22 +955,57 @@ exports.getform_details_commercial = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          super_built_up_area : "",
+        data.push({
+          property_name: "1",
+          property_area : "",
+          carpet_area : "",
+          built_up_area : "",
+          super_built_up_area : "1",
           area_dimensions: [ {
-            length: "",
-            width: "" }
+            length: "1",
+            width: "1" }
           ],
-          property_facing_rows: property_facing_rows.map(r => r.property_facing), 
+          shop_facade : [{
+            facade_width : "",
+            facade_height : ""
+          }],
+          property_facing: property_facing_rows.map(r => r.property_facing),
+          floor_details : [{
+            total_floors_in_property: "",
+            your_property_floor_no: ""
+          }],
           property_ownership: property_ownership_rows.map(r => r.property_ownership),
-
-          which_authority_the_property_is_approved_by : ["Yes" , "No"],
-          on_of_open_sides: ["1", "2" , "3" , "4"],
-          is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          availability_status : [""],
+          optional : [{
+            no_of_cabins: [""],
+            no_of_meeting_rooms: [""],
+            min_no_of_seats : [""],
+            max_no_of_seats: [""],
+            conference_room : [""],
+            no_of_staircases : [""],
+            which_authority_the_property_is_approved_by : ["Yes" , "No"],
+            on_of_open_sides: ["1", "2" , "3" , "4"],
+            reception_area : [""],
+            pantry : [""],
+            pantry_size : "",
+            washroom_details: [""],
+            suitable_business_type: [""],
+            central_ac : [""],
+            oxygen_duct : [""],
+            ups : [""],
+            furnishing_status : [""],
+            fire_safety_measures: [""],
+            lifts : [""],
+            parking_available: [],
+            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            is_your_office_fire_noc_certified : [""],
+            occupancy_certificate : [""],
+            office_previously_used_for : [""],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        });
         break;
       }
       case 14: {
@@ -749,14 +1018,19 @@ exports.getform_details_commercial = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push({
+          property_name: "1",
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
+          }],
+          shop_facade : [{
+            facade_width : "",
+            facade_height : ""
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
@@ -764,10 +1038,37 @@ exports.getform_details_commercial = async (req, res) => {
             your_property_floor_no: "" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          availability_status: availability_status_rows.map(r => r.availability_status), 
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          availability_status: availability_status_rows.map(r => r.availability_status),
+          optional : [{
+            no_of_cabins: [""],
+            no_of_meeting_rooms: [""],
+            min_no_of_seats : [""],
+            max_no_of_seats: [""],
+            conference_room : [""],
+            no_of_staircases : [""],
+            no_of_open_sides : [""],
+            which_authority_the_property_is_approved_by : [""],
+            reception_area : [""],
+            pantry : [""],
+            pantry_size : "",
+            washroom_details: [""],
+            suitable_business_type: [""],
+            central_ac : [""],
+            oxygen_duct : [""],
+            ups : [""],
+            furnishing_status : [""],
+            fire_safety_measures: [""],
+            lifts : [""],
+            parking_available: [],
+            is_it_Pre_leased_Pre_Rented : [""],
+            is_your_office_fire_noc_certified : [""],
+            occupancy_certificate : [""],
+            office_previously_used_for : [""],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        });
         break;
       }
       case 15: {
@@ -780,25 +1081,56 @@ exports.getform_details_commercial = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push({
+          property_name: "1",
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
+          }],
+          shop_facade : [{
+            facade_width : "",
+            facade_height : ""
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          availability_status: availability_status_rows.map(r => r.availability_status), 
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          availability_status: availability_status_rows.map(r => r.availability_status),
+          optional : [{
+            no_of_cabins: [""],
+            no_of_meeting_rooms: [""],
+            min_no_of_seats : [""],
+            max_no_of_seats: [""],
+            conference_room : [""],
+            no_of_staircases : [""],
+            no_of_open_sides : [""],
+            which_authority_the_property_is_approved_by : [""],
+            reception_area : [""],
+            pantry : [""],
+            pantry_size : "",
+            washroom_details: [""],
+            suitable_business_type: [""],
+            central_ac : [""],
+            oxygen_duct : [""],
+            ups : [""],
+            furnishing_status : [""],
+            fire_safety_measures: [""],
+            lifts : [""],
+            parking_available: [],
+            is_it_Pre_leased_Pre_Rented : [""],
+            is_your_office_fire_noc_certified : [""],
+            occupancy_certificate : [""],
+            office_previously_used_for : [""],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+        });
         break;
       }
       case 16: {
@@ -811,22 +1143,57 @@ exports.getform_details_commercial = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          property_area : "",
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push({
+          property_name: "1",
+          property_area : "1",
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
+          }],
+          shop_facade : [{
+            facade_width : "",
+            facade_height : ""
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
-          property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          is_it_pre_leased_pre_rented : ["Yes" , "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          floor_details: [ {
+            total_floors_in_property: "",
+            your_property_floor_no: "" }
+          ],
+          property_ownership: property_ownership_rows.map(r => r.property_ownership),
+          availability_status : [""],
+          optional : [{
+            no_of_cabins: [""],
+            no_of_meeting_rooms: [""],
+            min_no_of_seats : [""],
+            max_no_of_seats: [""],
+            conference_room : [""],
+            no_of_staircases : [""],
+            no_of_open_sides : [""],
+            which_authority_the_property_is_approved_by : [""],
+            reception_area : [""],
+            pantry : [""],
+            pantry_size : "",
+            washroom_details: [""],
+            suitable_business_type: [""],
+            central_ac : [""],
+            oxygen_duct : [""],
+            ups : [""],
+            furnishing_status : [""],
+            fire_safety_measures: [""],
+            lifts : [""],
+            parking_available: [],
+            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            is_your_office_fire_noc_certified : [""],
+            occupancy_certificate : [""],
+            office_previously_used_for : [""],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        });
         break;
       }
       default:
@@ -857,7 +1224,7 @@ exports.getform_details_agriculture = async (req, res) => {
   const { land_categorie_id } = req.body;
 
   try {
-    let data = {};
+    let data = [];
 
     switch (land_categorie_id) {
       case 17: {
@@ -870,32 +1237,39 @@ exports.getform_details_agriculture = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          floor_plane: floor_plane_rows.map(r => r.bhk_type),
-          Carpet_area: "",
-          built_up_area: "",
-          super_built_up_area: "",
+        data.push({
+          property_name: "1",
+          property_area : "",
+          select_floor_plane: floor_plane_rows.map(r => r.bhk_type),
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
-            total_floors_in_property: "",
-            your_property_floor_no: "" }
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          availability_status: availability_status_rows.map(r => r.availability_status), 
-          no_of_bedrooms: ["1", "2", "3", "4"],
-          no_of_bathrooms: ["1", "2", "3", "4"],
-          no_of_balconies: ["1", "2", "3", "4"],
-          other_rooms: other_rooms_rows.map(r => r.other_rooms),
-          furnishing_status: furnishing_status_rows.map(r => r.furnishing_status),
-          parking_available: ["Yes", "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          availability_status: availability_status_rows.map(r => r.availability_status),
+          optional : [{
+            no_of_bedrooms: ["1", "2", "3", "4"],
+            no_of_bathrooms: ["1", "2", "3", "4"],
+            no_of_balconies: ["1", "2", "3", "4"],
+            no_of_open_sides : [""],
+            does_your_property_authority_approved : [""],
+            is_boundary_wall_around_property : [""],
+            other_rooms: other_rooms_rows.map(r => r.other_rooms),
+            furnishing_status: furnishing_status_rows.map(r => r.furnishing_status),
+            parking_available: ["Yes", "No"],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        });
         break;
       }
       case 18: {
@@ -908,21 +1282,39 @@ exports.getform_details_agriculture = async (req, res) => {
         const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
         const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
 
-        data = {
-          property_name: "",
-          property_area: "",
+        data.push({
+          property_name: "1",
+          property_area: "1",
+          select_floor_plane : [""],
+          carpet_area : "",
+          built_up_area : "",
+          super_built_up_area : "",
           area_dimensions : [{
-            length: "",
-            width: "",
+            length: "1",
+            width: "1",
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
-          property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          does_your_property_authority_approved : ["Yes" , "No"],
-          no_of_open_sides: ["1", "2", "3", "4"],
-          is_boundary_wall_around_property: ["Yes" , "No"],
-          amenities: amenities_rows.map(r => r.amenities),
-          property_highlights: property_highlights_rows.map(r => r.property_highlights)
-        };
+          floor_details : [{
+            total_floors_in_property : "",
+            your_property_floor_no : ""
+          }],
+          property_ownership: property_ownership_rows.map(r => r.property_ownership),
+          availability_status : [""],
+          optional : [{
+            no_of_bedrooms : [""],
+            no_of_bathrooms : [""],
+            no_of_balconies : [""],
+            other_rooms : [""],
+            furnishing_status : [""],
+            parking_available : [""],
+            does_your_property_authority_approved : ["Yes" , "No"],
+            no_of_open_sides: ["1", "2", "3", "4"],
+            is_boundary_wall_around_property: ["Yes" , "No"],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        });
         break;
       }
       default:

@@ -403,11 +403,21 @@ exports.account_band = async (req, res) => {
     }
 
     if (Number(status) === 2) {
-      const [data] = await db.query(`SELECT r.report_id, r.user_id ,  r.receiver_id, r.user_post_id, COUNT(*) AS total_reports, u.username, u.name,u.U_ID, u.profile_image, u.phone_num FROM report AS r JOIN users AS u ON r.receiver_id = u.U_ID WHERE r.status = 2 GROUP BY r.receiver_id, r.user_post_id HAVING total_reports >= 10`);
+      const [data] = await db.query(`SELECT r.report_id, r.user_id , r.receiver_id, r.user_post_id, COUNT(*) AS total_reports, u.username, u.name,u.U_ID, u.profile_image, u.phone_num FROM report AS r JOIN users AS u ON r.receiver_id = u.U_ID WHERE r.status = 2 GROUP BY r.receiver_id, r.user_post_id HAVING total_reports >= 10`);
 
       return res.status(200).json({
         result: "1",
         message: "Blocked posts list",
+        data: data,
+      });
+    }
+
+    if(Number(status) === 3){
+      const [data] = await db.query(`select r.report_id , r.user_id , r.receiver_id , r.comment_id , COUNT(*) as total_reports , u.username , u.name , u.U_ID , u.profile_image , u.phone_num from report as r join users as u on r.receiver_id = u.U_ID where r.status = 3 group by r.receiver_id , r.comment_id having total_reports >=10`);
+
+      return res.status(200).json({
+        result: "1",
+        message: "Blocked Comment list",
         data: data,
       });
     }
@@ -428,16 +438,16 @@ exports.account_band = async (req, res) => {
   }
 };
 
-
 exports.activate_account = async (req, res) => {
-
-  const { user_id, user_post_id } = req.body;
+  const { user_id, user_post_id, comment_id } = req.body;
 
   try {
     let userResult = { affectedRows: 0 };
     let postResult = { affectedRows: 0 };
+    let commentResult = { affectedRows: 0 };
     let removeUserReports = { affectedRows: 0 };
     let removePostReports = { affectedRows: 0 };
+    let removeCommentReports = { affectedRows: 0 };
 
     if (user_id) {
       [userResult] = await db.query(
@@ -446,38 +456,56 @@ exports.activate_account = async (req, res) => {
       );
 
       [removeUserReports] = await db.query(
-        `DELETE FROM report WHERE receiver_id = ? AND user_post_id IS NULL`,
+        `DELETE FROM report WHERE receiver_id = ? AND user_post_id IS NULL AND comment_id IS NULL`,
         [user_id]
       );
     }
 
-    [postResult] = await db.query(
-        `UPDATE user_posts SET deleted_at = NULL WHERE U_ID = ?`,
-        [user_id]
+    if (user_id && user_post_id) {
+      [postResult] = await db.query(
+        `UPDATE user_posts SET deleted_at = NULL WHERE U_ID = ? AND user_post_id = ?`,
+        [user_id, user_post_id]
       );
 
       [removePostReports] = await db.query(
         `DELETE FROM report WHERE receiver_id = ? AND user_post_id = ?`,
         [user_id, user_post_id]
       );
+    }
+
+    if (user_id && comment_id) {
+      [commentResult] = await db.query(
+        `UPDATE post_comments SET deleted_at = NULL WHERE user_id = ? AND comment_id = ?`,
+        [user_id, comment_id]
+      );
+
+      [removeCommentReports] = await db.query(
+        `DELETE FROM report WHERE receiver_id = ? AND comment_id = ?`,
+        [user_id, comment_id]
+      );
+    }
 
     if (
       userResult.affectedRows > 0 ||
       postResult.affectedRows > 0 ||
+      commentResult.affectedRows > 0 ||
       removeUserReports.affectedRows > 0 ||
-      removePostReports.affectedRows > 0
+      removePostReports.affectedRows > 0 ||
+      removeCommentReports.affectedRows > 0
     ) {
       return res.status(200).json({
         result: "1",
         message: user_post_id
           ? "Post activated successfully"
+          : comment_id
+          ? "Comment activated successfully"
           : "Account activated successfully",
         data: [],
       });
     } else {
       return res.status(404).json({
         result: "0",
-        error: "No matching user or post found",
+        error: "No matching user, post, or comment found",
         data: [],
       });
     }
@@ -505,10 +533,19 @@ exports.delete_account = async (req, res) => {
       [user_id]
     );
 
-    if (userResult.affectedRows>0  || postResult.affectedRows > 0) {
+    const [commentResult] = await db.query(
+      `DELETE FROM post_comments WHERE user_id = ?`,
+      [user_id]
+    );
+
+    if (
+      userResult.affectedRows > 0 ||
+      postResult.affectedRows > 0 ||
+      commentResult.affectedRows > 0
+    ) {
       return res.status(200).json({
         result: "1",
-        message: "Account and related posts deleted permanently",
+        message: "Account and related posts/comments deleted permanently",
         data: [],
       });
     } else {

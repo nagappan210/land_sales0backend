@@ -53,4 +53,14 @@ router.get('/enquire_table',adminController.enquire_table);
 router.get('/decline_enquire',adminController.decline_enquire);
 router.post('/edit_decline_enquire',adminController.edit_decline_enquire);
 router.post('/delete_decline_enquire',adminController.delete_decline_enquire);
+
+router.get('/getbhk_type' , landController.getbhk_type);
+router.post('/addbhk_type', landController.addbhk_type);
+router.post('/property_facing',landController.property_facing);
+router.post('/property_ownership',landController.property_ownership);
+router.post('/availability_status',landController.availability_status);
+router.post('/other_rooms',landController.other_rooms);
+router.post('/furnishing_status',landController.furnishing_status);
+router.post('/amenities',landController.amenities);
+router.post('/property_highlights',landController.property_highlights);
 module.exports = router;

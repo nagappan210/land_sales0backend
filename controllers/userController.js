@@ -407,6 +407,7 @@ exports.getProfileStats = async (req, res) => {
 
     const profile = results[0];
 
+    // Check if blocked
     let isBlocked = 0;
     if (othersIdNum !== 0) {
       const [blockRows] = await db.query(
@@ -418,6 +419,7 @@ exports.getProfileStats = async (req, res) => {
       isBlocked = blockRows[0].blocked > 0 ? 1 : 0;
     }
 
+    // Check follow status
     let is_followed = 0;
     let im_followed = 0;
     if (othersIdNum !== 0) {
@@ -438,7 +440,19 @@ exports.getProfileStats = async (req, res) => {
       is_followed = followBackRows[0].cnt > 0 ? 1 : 0;
     }
 
-    const others_page = othersIdNum !== 0 ? 1 : 0;    
+    // Check if user_id has reported others_id
+    let is_report = 0;
+    if (othersIdNum !== 0) {
+      const [reportRows] = await db.query(
+        `SELECT COUNT(*) AS cnt
+         FROM report
+         WHERE user_id = ? AND receiver_id = ? AND status = 1`,
+        [user_id, othersIdNum]
+      );
+      is_report = reportRows[0].cnt > 0 ? 1 : 0;
+    }
+
+    const others_page = othersIdNum !== 0 ? 1 : 0;
 
     const normalizeProfile = (profile) => ({
       user_id: profile.user_id,
@@ -452,9 +466,10 @@ exports.getProfileStats = async (req, res) => {
       followers: profile.followers || 0,
       following: profile.following || 0,
       is_blocked: isBlocked,
+      is_report,
       others_page,
       is_followed,
-      im_followed
+      im_followed,
     });
 
     return res.json({
@@ -474,7 +489,9 @@ exports.getProfileStats = async (req, res) => {
 
 exports.getpost_property = async (req, res) => {
   const { user_id, others_id, page = 1 } = req.body;
-  console.log(user_id, others_id);
+
+  console.log(others_id);
+  
   
   const limit = 10;
 
@@ -487,10 +504,14 @@ exports.getpost_property = async (req, res) => {
   }
 
   const offset = (parseInt(page, 10) - 1) * limit;
-  const targetId = others_id ? others_id : user_id;
+  const othersIdNum = Number(others_id) || 0;
+  const targetId = othersIdNum !== 0 ? othersIdNum : user_id;
+
 
   const [blocked] = await db.query(
-    `SELECT * FROM blocks WHERE (user_id = ? AND blocker_id = ?) OR (user_id = ? AND blocker_id = ?)`,
+    `SELECT * FROM blocks 
+     WHERE (user_id = ? AND blocker_id = ?) 
+        OR (user_id = ? AND blocker_id = ?)`,
     [user_id, others_id, others_id, user_id]
   );
 
@@ -518,19 +539,27 @@ exports.getpost_property = async (req, res) => {
 
     let query = `
       SELECT 
-        up.U_ID, up.user_post_id, up.video, up.thumbnail, up.property_name, up.post_type, up.image_ids,
-        up.land_type_id, up.land_categorie_id, up.country AS up_country, up.state AS up_state, 
-        up.city AS up_city, up.locality AS up_locality, up.latitude AS up_latitude, 
-        up.longitude AS up_longitude, up.bhk_type, up.property_area, up.area_length, 
-        up.area_width, up.total_floors, up.floors_allowed, up.parking_available, 
-        up.is_boundary_wall, up.furnishing, up.price, up.created_at,
-        u.name, u.username, u.profile_image, u.country, u.state, u.cities, 
-        u.phone_num_cc, u.phone_num, u.whatsapp_num_cc, u.whatsapp_num, u.email, 
-        u.latitude AS user_latitude, u.longitude AS user_longitude,
-        COALESCE(pl.total_likes, 0) AS total_likes,
-        COALESCE(pc.total_comments, 0) AS total_comments,
+        up.U_ID, up.user_post_id, up.video, up.thumbnail, up.post_type, up.image_ids,
+        up.property_name, up.bhk_type, up.carpet_area, up.property_area, up.built_up_area,
+        up.super_built_up_area, up.facade_width, up.facade_height, up.area_length, up.area_width,
+        up.property_facing, up.total_floor, up.property_floor_no, up.property_ownership,
+        up.availability_status, up.no_of_bedrooms, up.no_of_bathrooms, up.no_of_balconies,
+        up.no_of_open_sides, up.no_of_cabins, up.no_of_meeting_rooms, up.min_of_seats,
+        up.max_of_seats, up.conference_room, up.no_of_staircases, up.washroom_details,
+        up.reception_area, up.pantry, up.pantry_size, up.central_ac, up.oxygen_duct,
+        up.ups, up.other_rooms, up.furnishing_status, up.fire_safety_measures, up.lifts,
+        up.pre_contract_status, up.local_authority, up.noc_certified, up.occupancy_certificate,
+        up.office_previously_used_for, up.parking_available, up.boundary_wall, up.amenities,
+        up.suitable_business_type, up.price, up.property_highlights,
+        up.country AS up_country, up.state AS up_state, up.city AS up_city, 
+        up.locality AS up_locality, up.latitude AS up_latitude, up.longitude AS up_longitude,
+        up.created_at,
+        u.name, u.username, u.country, u.state, u.cities, u.phone_num_cc, u.phone_num,
+        u.whatsapp_num_cc, u.whatsapp_num, u.email, u.profile_image,
+        pl.total_likes, pc.total_comments,
         CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
-        CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved
+        CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved,
+        CASE WHEN is_report.user_post_id IS NOT NULL THEN 1 ELSE 0 END AS is_report
     `;
 
     if (others_id) {
@@ -540,19 +569,18 @@ exports.getpost_property = async (req, res) => {
     }
 
     query += `
-      FROM user_posts up
+      FROM user_posts up 
       JOIN users u ON u.U_ID = up.U_ID
+      LEFT JOIN (SELECT user_post_id, COUNT(*) AS total_likes FROM post_likes GROUP BY user_post_id) pl 
+        ON pl.user_post_id = up.user_post_id
+      LEFT JOIN (SELECT user_post_id, COUNT(*) AS total_comments FROM post_comments WHERE deleted_at IS NULL GROUP BY user_post_id) pc 
+        ON pc.user_post_id = up.user_post_id
       LEFT JOIN (
-          SELECT user_post_id, COUNT(*) AS total_likes
-          FROM post_likes
-          GROUP BY user_post_id
-      ) pl ON pl.user_post_id = up.user_post_id
-      LEFT JOIN (
-          SELECT user_post_id, COUNT(*) AS total_comments
-          FROM post_comments
-          WHERE deleted_at IS NULL
-          GROUP BY user_post_id
-      ) pc ON pc.user_post_id = up.user_post_id
+      SELECT user_post_id
+      FROM report
+      WHERE user_id = ? AND receiver_id = ? AND status = 2
+      ) AS is_report ON is_report.user_post_id = up.user_post_id
+
       LEFT JOIN post_likes ul ON ul.user_post_id = up.user_post_id AND ul.user_id = ?
       LEFT JOIN saved_properties sp ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
     `;
@@ -569,94 +597,137 @@ exports.getpost_property = async (req, res) => {
         AND up.video IS NOT NULL 
         AND up.deleted_at IS NULL
       ORDER BY up.created_at DESC
-      LIMIT ? OFFSET ?
+      LIMIT ${limit} OFFSET ${offset}
     `;
 
     let params = [];
     if (others_id) {
-      params = [user_id, user_id, user_id, targetId, limit, offset];
+      params = [user_id, others_id, user_id, targetId, user_id, targetId];
     } else {
-      params = [user_id, user_id, targetId, limit, offset];
+      params = [user_id, user_id, user_id, targetId];
     }
 
     const [reels] = await db.query(query, params);
     const others_page = (others_id && others_id !== 0 && others_id !== "") ? 1 : 0;
 
-    const posts = await Promise.all(reels.map(async (p) => {
-      let videoValue = p.video ?? "";
-      let imageUrls = [];
-      
-      if (p.image_ids && p.image_ids !== "Null" && p.image_ids !== "") {
-        try {
-          const [images] = await db.query(
-            `SELECT image_path FROM post_images 
-             WHERE user_post_id = ? AND image_id IN (?) 
-             ORDER BY FIELD(image_id, ?)`,
-            [p.user_post_id, p.image_ids.split(','), p.image_ids.split(',')]
-          );
-          
-          imageUrls = images.map(img => 
-            img.image_path ? `${process.env.SERVER_ADDRESS}${img.image_path}` : ""
-          );
-          
-          if (imageUrls.length > 0) {
-            videoValue = "";
-          }
-        } catch (error) {
-          console.error("Error fetching images:", error);
-        }
-      }
+    const posts = await Promise.all(
+      reels.map(async (p) => {
+        let videoValue = p.video ?? "";
+        let imageUrls = [];
 
-      return {
-        user_id: p.U_ID ?? 0,
-        user_post_id: p.user_post_id ?? 0,
-        name: p.name ?? "",
-        username: p.username ?? "",
-        country: p.country ?? "",
-        state: p.state ?? "",
-        cities: p.cities ?? "",
-        phone_num_cc: p.phone_num_cc ?? "",
-        phone_num: p.phone_num ?? "",
-        whatsapp_num_cc: p.whatsapp_num_cc ?? "",
-        whatsapp_num: p.whatsapp_num ?? "",
-        email: p.email ?? "",
-        profile_image: p.profile_image ?? "",
-        thumbnail: p.thumbnail ? `${process.env.SERVER_ADDRESS}${p.thumbnail}` : 
-                  (imageUrls.length > 0 ? imageUrls[0] : ""),
-        video: p.video , 
-        total_likes: p.total_likes ?? 0,
-        total_comments: p.total_comments ?? 0,
-        is_liked: p.is_liked ?? 0,
-        is_saved: p.is_saved ?? 0,
-        enquiry: p.enquiry ?? 0,
-        others_page,
-        post_property: {
-          video: imageUrls.length > 0 ? "" : (p.video ? p.video : ""),
-          image_urls: imageUrls,
-          post_type: p.post_type ?? "",
-          property_name: p.property_name ?? "",
-          land_type_id: p.land_type_id ?? "",
-          land_categorie_id: p.land_categorie_id ?? "",
-          created_at: p.created_at ?? "",
-          country: p.up_country ?? "",
-          state: p.up_state ?? "",
-          city: p.up_city ?? "",
-          locality: p.up_locality ?? "",
-          latitude: p.up_latitude ?? "",
-          longitude: p.up_longitude ?? "",
-          bhk_type: p.bhk_type ?? "",
-          property_area: p.property_area ?? "",
-          area_length: p.area_length ?? "",
-          area_width: p.area_width ?? "",
-          total_floors: p.total_floors ?? "",
-          floors_allowed: p.floors_allowed ?? "",
-          parking_available: p.parking_available ?? "",
-          is_boundary_wall: p.is_boundary_wall ?? "",
-          furnishing: p.furnishing ?? "",
-          price: p.price ?? ""
+        if (p.image_ids && p.image_ids !== "Null" && p.image_ids !== "") {
+          try {
+            const [images] = await db.query(
+              `SELECT image_path FROM post_images 
+               WHERE user_post_id = ? AND image_id IN (?) 
+               ORDER BY FIELD(image_id, ?)`,
+              [p.user_post_id, p.image_ids.split(","), p.image_ids.split(",")]
+            );
+
+            imageUrls = images.map((img) =>
+              img.image_path ? `${process.env.SERVER_ADDRESS}${img.image_path}` : ""
+            );
+
+            if (imageUrls.length > 0) {
+              videoValue = "";
+            }
+          } catch (error) {
+            console.error("Error fetching images:", error);
+          }
         }
-      };
-    }));
+
+        return {
+          user_id: p.U_ID ?? 0,
+          user_post_id: p.user_post_id ?? 0,
+          name: p.name ?? "",
+          username: p.username ?? "",
+          country: p.country ?? "",
+          state: p.state ?? "",
+          cities: p.cities ?? "",
+          phone_num_cc: p.phone_num_cc ?? "",
+          phone_num: p.phone_num ?? "",
+          whatsapp_num_cc: p.whatsapp_num_cc ?? "",
+          whatsapp_num: p.whatsapp_num ?? "",
+          email: p.email ?? "",
+          profile_image: p.profile_image ?? "",
+          thumbnail: p.thumbnail
+            ? `${process.env.SERVER_ADDRESS}${p.thumbnail}`
+            : imageUrls.length > 0
+            ? imageUrls[0]
+            : "",
+          video: videoValue,
+          total_likes: p.total_likes ?? 0,
+          total_comments: p.total_comments ?? 0,
+          is_liked: p.is_liked ?? 0,
+          is_saved: p.is_saved ?? 0,
+          enquiry: p.enquiry ?? 0,
+          others_page,
+          post_property: {
+            video: imageUrls.length > 0 ? "" : p.video ?? "",
+            image_urls: imageUrls,
+            post_type: p.post_type ?? "",
+            property_name: p.property_name ?? "",
+            bhk_type: p.bhk_type ?? "",
+            carpet_area: p.carpet_area ?? "",
+            property_area: p.property_area ?? "",
+            built_up_area: p.built_up_area ?? "",
+            super_built_up_area: p.super_built_up_area ?? "",
+            facade_width: p.facade_width ?? "",
+            facade_height: p.facade_height ?? "",
+            area_length: p.area_length ?? "",
+            area_width: p.area_width ?? "",
+            property_facing: p.property_facing ?? "",
+            total_floor: p.total_floor ?? "",
+            property_floor_no: p.property_floor_no ?? "",
+            property_ownership: p.property_ownership ?? "",
+            availability_status: p.availability_status ?? "",
+            no_of_bedrooms: p.no_of_bedrooms ?? "",
+            no_of_bathrooms: p.no_of_bathrooms ?? "",
+            no_of_balconies: p.no_of_balconies ?? "",
+            no_of_open_sides: p.no_of_open_sides ?? "",
+            no_of_cabins: p.no_of_cabins ?? "",
+            no_of_meeting_rooms: p.no_of_meeting_rooms ?? "",
+            min_of_seats: p.min_of_seats ?? "",
+            max_of_seats: p.max_of_seats ?? "",
+            conference_room: p.conference_room ?? "",
+            no_of_staircases: p.no_of_staircases ?? "",
+            washroom_details: p.washroom_details ?? "",
+            reception_area: p.reception_area ?? "",
+            pantry: p.pantry ?? "",
+            pantry_size: p.pantry_size ?? "",
+            central_ac: p.central_ac ?? "",
+            oxygen_duct: p.oxygen_duct ?? "",
+            ups: p.ups ?? "",
+            other_rooms: p.other_rooms ?? "",
+            furnishing_status: p.furnishing_status ?? "",
+            fire_safety_measures: p.fire_safety_measures ?? "",
+            lifts: p.lifts ?? "",
+            pre_contract_status: p.pre_contract_status ?? "",
+            local_authority: p.local_authority ?? "",
+            noc_certified: p.noc_certified ?? "",
+            occupancy_certificate: p.occupancy_certificate ?? "",
+            office_previously_used_for: p.office_previously_used_for ?? "",
+            parking_available: p.parking_available ?? "",
+            boundary_wall: p.boundary_wall ?? "",
+            amenities: p.amenities ?? "",
+            suitable_business_type: p.suitable_business_type ?? "",
+            property_highlights: p.property_highlights ?? "",
+            price: p.price ?? "",
+            country: p.up_country ?? "",
+            state: p.up_state ?? "",
+            city: p.up_city ?? "",
+            locality: p.up_locality ?? "",
+            latitude: p.up_latitude ?? "",
+            longitude: p.up_longitude ?? "",
+            created_at: p.created_at ?? "",
+            address: [p.up_locality, p.up_city, p.up_state, p.up_country]
+                    .filter(v => v && v.trim() !== "")
+                    .join(", "),
+            is_report: p.is_report ?? 0
+          }
+        };
+      })
+    );
 
     if (!posts.length) {
       return res.status(200).json({
@@ -1887,26 +1958,17 @@ exports.getReels = async (req, res) => {
 
     const [reels] = await db.query(
       `
-      SELECT  
+       SELECT  
         up.*,
-        u.name,
-        u.username,
-        u.profile_image,
-        u.country,
-        u.state,
-        u.cities,
-        u.phone_num_cc,
-        u.phone_num,
-        u.whatsapp_num,
-        u.whatsapp_num_cc,
-        u.email,
-        u.latitude,
-        u.longitude,
+        u.name, u.username, u.profile_image, u.country, u.state, u.cities,
+        u.phone_num_cc, u.phone_num, u.whatsapp_num, u.whatsapp_num_cc, u.email,
+        u.latitude, u.longitude,
         COALESCE(pl.total_likes, 0) AS total_likes,
         COALESCE(pc.total_comments, 0) AS total_comments,
         CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
         CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved,
-        CASE WHEN e.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS enquiry
+        CASE WHEN e.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS enquiry,
+        CASE WHEN is_report.user_post_id IS NOT NULL THEN 1 ELSE 0 END AS is_report
       FROM user_posts up
       JOIN users u ON u.U_ID = up.U_ID
       LEFT JOIN (
@@ -1920,6 +1982,11 @@ exports.getReels = async (req, res) => {
           WHERE deleted_at IS NULL
           GROUP BY user_post_id
       ) pc ON pc.user_post_id = up.user_post_id
+      LEFT JOIN (
+          SELECT user_post_id
+          FROM report
+          WHERE user_id = ? AND status = 2
+      ) AS is_report ON is_report.user_post_id = up.user_post_id
       LEFT JOIN post_likes ul 
           ON ul.user_post_id = up.user_post_id AND ul.user_id = ?
       LEFT JOIN saved_properties sp 
@@ -1935,6 +2002,7 @@ exports.getReels = async (req, res) => {
       LIMIT ? OFFSET ?;
       `,
       [
+        user_id,
         user_id,
         user_id,
         user_id,
@@ -2008,71 +2076,71 @@ exports.getReels = async (req, res) => {
         is_saved: r.is_saved ?? 0,
         enquiry: r.enquiry ?? 0,
         post_property: {
-  user_post_id: r.user_post_id ?? 0,
-  user_type: r.user_type ?? "",
-  land_type_id: r.land_type_id ?? "",
-  land_categorie_id: r.land_categorie_id ?? "",
-  country: r.country ?? "",
-  state: r.state ?? "",
-  city: r.city ?? "",
-  locality: r.locality ?? "",
-  latitude: r.latitude ?? "",
-  longitude: r.longitude ?? "",
-  property_name: r.property_name ?? "",
-  bhk_type: r.bhk_type ?? "",
-  carpet_area: r.carpet_area ?? "",
-  property_area: r.property_area ?? "",
-  built_up_area: r.built_up_area ?? "",
-  super_built_up_area: r.super_built_up_area ?? "",
-  facade_width: r.facade_width ?? "",
-  facade_height: r.facade_height ?? "",
-  area_length: r.area_length ?? "",
-  area_width: r.area_width ?? "",
-  property_facing: r.property_facing ?? "",
-  total_floor: r.total_floor ?? "",
-  property_floor_no: r.property_floor_no ?? "",
-  property_ownership: r.property_ownership ?? "",
-  availability_status: r.availability_status ?? "",
-  no_of_bedrooms: r.no_of_bedrooms ?? "",
-  no_of_bathrooms: r.no_of_bathrooms ?? "",
-  no_of_balconies: r.no_of_balconies ?? "",
-  no_of_open_sides: r.no_of_open_sides ?? "",
-  no_of_cabins: r.no_of_cabins ?? "",
-  no_of_meeting_rooms: r.no_of_meeting_rooms ?? "",
-  min_of_seats: r.min_of_seats ?? "",
-  max_of_seats: r.max_of_seats ?? "",
-  conference_room: r.conference_room ?? "",
-  no_of_staircases: r.no_of_staircases ?? "",
-  washroom_details: r.washroom_details ?? "",
-  reception_area: r.reception_area ?? "",
-  pantry: r.pantry ?? "",
-  pantry_size: r.pantry_size ?? "",
-  central_ac: r.central_ac ?? "",
-  oxygen_duct: r.oxygen_duct ?? "",
-  ups: r.ups ?? "",
-  other_rooms: r.other_rooms ?? "",
-  furnishing_status: r.furnishing_status ?? "",
-  fire_safety_measures: r.fire_safety_measures ?? "",
-  lifts: r.lifts ?? "",
-  pre_contract_status: r.pre_contract_status ?? "",
-  local_authority: r.local_authority ?? "",
-  noc_certified: r.noc_certified ?? "",
-  occupancy_certificate: r.occupancy_certificate ?? "",
-  office_previously_used_for: r.office_previously_used_for ?? "",
-  Parking_available: r.Parking_available ?? "",
-  boundary_wall: r.boundary_wall ?? "",
-  amenities: r.amenities ?? "",
-  suitable_business_type: r.suitable_business_type ?? "",
-  price: r.price ?? "",
-  property_highlights: r.property_highlights ?? "",
-  video: imageUrls.length > 0 ? "" : (r.video ?? ""),
-  image_urls: imageUrls,
-  thumbnail: r.thumbnail ? `${process.env.SERVER_ADDRESS}${r.thumbnail}` : (imageUrls.length > 0 ? imageUrls[0] : ""),
-  
-  // Address field
-  address: [r.locality, r.city, r.state, r.country]
-            .filter(v => v && v.trim() !== "")
-            .join(", ")
+          user_post_id: r.user_post_id ?? 0,
+          user_type: r.user_type ?? "",
+          land_type_id: r.land_type_id ?? "",
+          land_categorie_id: r.land_categorie_id ?? "",
+          country: r.country ?? "",
+          state: r.state ?? "",
+          city: r.city ?? "",
+          locality: r.locality ?? "",
+          latitude: r.latitude ?? "",
+          longitude: r.longitude ?? "",
+          created_at : r.created_at ?? "",
+          property_name: r.property_name ?? "",
+          bhk_type: r.bhk_type ?? "",
+          carpet_area: r.carpet_area ?? "",
+          property_area: r.property_area ?? "",
+          built_up_area: r.built_up_area ?? "",
+          super_built_up_area: r.super_built_up_area ?? "",
+          facade_width: r.facade_width ?? "",
+          facade_height: r.facade_height ?? "",
+          area_length: r.area_length ?? "",
+          area_width: r.area_width ?? "",
+          property_facing: r.property_facing ?? "",
+          total_floor: r.total_floor ?? "",
+          property_floor_no: r.property_floor_no ?? "",
+          property_ownership: r.property_ownership ?? "",
+          availability_status: r.availability_status ?? "",
+          no_of_bedrooms: r.no_of_bedrooms ?? "",
+          no_of_bathrooms: r.no_of_bathrooms ?? "",
+          no_of_balconies: r.no_of_balconies ?? "",
+          no_of_open_sides: r.no_of_open_sides ?? "",
+          no_of_cabins: r.no_of_cabins ?? "",
+          no_of_meeting_rooms: r.no_of_meeting_rooms ?? "",
+          min_of_seats: r.min_of_seats ?? "",
+          max_of_seats: r.max_of_seats ?? "",
+          conference_room: r.conference_room ?? "",
+          no_of_staircases: r.no_of_staircases ?? "",
+          washroom_details: r.washroom_details ?? "",
+          reception_area: r.reception_area ?? "",
+          pantry: r.pantry ?? "",
+          pantry_size: r.pantry_size ?? "",
+          central_ac: r.central_ac ?? "",
+          oxygen_duct: r.oxygen_duct ?? "",
+          ups: r.ups ?? "",
+          other_rooms: r.other_rooms ?? "",
+          furnishing_status: r.furnishing_status ?? "",
+          fire_safety_measures: r.fire_safety_measures ?? "",
+          lifts: r.lifts ?? "",
+          pre_contract_status: r.pre_contract_status ?? "",
+          local_authority: r.local_authority ?? "",
+          noc_certified: r.noc_certified ?? "",
+          occupancy_certificate: r.occupancy_certificate ?? "",
+          office_previously_used_for: r.office_previously_used_for ?? "",
+          Parking_available: r.Parking_available ?? "",
+          boundary_wall: r.boundary_wall ?? "",
+          amenities: r.amenities ?? "",
+          suitable_business_type: r.suitable_business_type ?? "",
+          price: r.price ?? "",
+          property_highlights: r.property_highlights ?? "",
+          video: imageUrls.length > 0 ? "" : (r.video ?? ""),
+          image_urls: imageUrls,
+          thumbnail: r.thumbnail ? `${process.env.SERVER_ADDRESS}${r.thumbnail}` : (imageUrls.length > 0 ? imageUrls[0] : ""),
+          address: [r.locality, r.city, r.state, r.country]
+                    .filter(v => v && v.trim() !== "")
+                    .join(", "),
+          is_report : r.is_report
 }
 
       };
@@ -2329,6 +2397,7 @@ if (String(status) === "1") {
     is_liked: 0,
     author: c.user_id === postOwnerId ? 1 : 0,
     total_reply: 0,
+    is_report : 0,
     last_reply: [],
   }));
 
@@ -2389,6 +2458,7 @@ if (String(status) === "1") {
         is_liked :  0,
         author: c.user_id === postOwnerId ? 1 : 0,
         total_reply : 0,
+        is_report : 0,
         last_reply : [],
       }));
 
@@ -2443,6 +2513,7 @@ if (String(status) === "1") {
           is_liked: 0,
           author: 0,
           total_reply: 0,
+          is_report : 0,
           last_reply: []
         }]
       });
@@ -2512,10 +2583,10 @@ exports.getcomment = async (req, res) => {
           INNER JOIN reply_tree rt ON pc.replies_comment_id = rt.comment_id
           WHERE pc.deleted_at IS NULL
        )
-       SELECT c.comment_id, c.user_id, c.comment, c.created_at,
-              u.username, u.profile_image,
+       SELECT c.comment_id, c.user_id, c.comment, c.created_at, u.username, u.profile_image,
               (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.comment_id) AS like_count,
               (SELECT COUNT(*) FROM comment_likes WHERE comment_id = c.comment_id AND user_id = ?) AS is_liked,
+              (SELECT COUNT(*) FROM report WHERE comment_id = c.comment_id AND user_id = ? AND status = 3) AS is_report,
               (SELECT COUNT(*) FROM reply_tree r 
                WHERE r.root_id = c.comment_id AND r.comment_id != c.comment_id) AS total_reply
        FROM post_comments c
@@ -2523,26 +2594,26 @@ exports.getcomment = async (req, res) => {
        WHERE c.user_post_id = ? AND c.replies_comment_id IS NULL AND c.deleted_at IS NULL
        ORDER BY c.created_at DESC
        LIMIT ? OFFSET ?`,
-      [user_id, user_post_id, limitNum, offset]
+      [user_id, user_id, user_post_id, limitNum, offset]
     );
 
-    const normalizedComments = await Promise.all(
+     const normalizedComments = await Promise.all(
       comments.map(async (comment) => {
         const [lastReply] = await db.query(
           `SELECT r.comment_id, r.replies_comment_id AS parent_comment_id, r.user_id, r.comment, r.created_at, r.mention_id,
                   uu.username, uu.profile_image,
                   mu.username AS mention_username,
                   (SELECT COUNT(*) FROM comment_likes WHERE comment_id = r.comment_id) AS like_count,
-                  (SELECT COUNT(*) FROM comment_likes WHERE comment_id = r.comment_id AND user_id = ?) AS is_liked
-          FROM post_comments r
-          JOIN users uu ON r.user_id = uu.U_ID
-          LEFT JOIN users mu ON r.mention_id = mu.U_ID
-          WHERE r.replies_comment_id = ? AND r.deleted_at IS NULL
-          ORDER BY r.created_at ASC
-          LIMIT 1`,
-          [user_id, comment.comment_id]
+                  (SELECT COUNT(*) FROM comment_likes WHERE comment_id = r.comment_id AND user_id = ?) AS is_liked,
+                  (SELECT COUNT(*) FROM report WHERE comment_id = r.comment_id AND user_id = ? AND status = 3) AS is_report
+           FROM post_comments r
+           JOIN users uu ON r.user_id = uu.U_ID
+           LEFT JOIN users mu ON r.mention_id = mu.U_ID
+           WHERE r.replies_comment_id = ? AND r.deleted_at IS NULL
+           ORDER BY r.created_at ASC
+           LIMIT 1`,
+          [user_id, user_id, comment.comment_id]
         );
-
         return {
           comment_id: comment.comment_id ?? 0,
           user_id: comment.user_id ?? 0,
@@ -2553,7 +2624,8 @@ exports.getcomment = async (req, res) => {
           like_count: comment.like_count ?? 0,
           is_liked: comment.is_liked > 0 ? 1 : 0,
           author: comment.user_id === postOwnerId ? 1 : 0,
-          total_reply: comment.total_reply ?? 0, 
+          total_reply: comment.total_reply ?? 0,
+          is_report: comment.is_report > 0 ? 1 : 0,
           last_reply: lastReply.length > 0 ? [{
             comment_id: lastReply[0].comment_id ?? "",
             mention_id : lastReply[0].mention_id ?? 0,
@@ -2561,6 +2633,7 @@ exports.getcomment = async (req, res) => {
             parent_comment_id: lastReply[0].parent_comment_id ?? 0,
             user_id: lastReply[0].user_id ?? "",
             comment: lastReply[0].comment ?? "",
+            is_report: lastReply[0].is_report > 0 ? 1 : 0,
             created_at: lastReply[0].created_at ?? "",
             username: lastReply[0].username ?? "",
             profile_image: lastReply[0].profile_image ?? "",
@@ -2635,35 +2708,26 @@ exports.getreplay_comment = async (req, res) => {
     const limitNum = parseInt(limit, 10) || 10;
     const offset = (pageNum - 1) * limitNum;
 
-    const [replies] = await db.query(
-      `
-      WITH RECURSIVE reply_tree AS (
-        SELECT c.comment_id, c.replies_comment_id, c.user_id, c.comment, c.created_at, c.mention_id
-        FROM post_comments c
-        WHERE c.replies_comment_id = ?
-          AND c.user_post_id = ?
-          AND c.deleted_at IS NULL
+    const [replies] = await db.query(`WITH RECURSIVE reply_tree AS (
+        SELECT c.comment_id, c.replies_comment_id, c.user_id, c.comment, c.created_at, c.mention_id FROM post_comments c
+        WHERE c.replies_comment_id = ? AND c.user_post_id = ? AND c.deleted_at IS NULL
 
         UNION ALL
 
-        SELECT pc.comment_id, pc.replies_comment_id, pc.user_id, pc.comment, pc.created_at, pc.mention_id
-        FROM post_comments pc
-        INNER JOIN reply_tree rt ON pc.replies_comment_id = rt.comment_id
-        WHERE pc.deleted_at IS NULL
+        SELECT pc.comment_id, pc.replies_comment_id, pc.user_id, pc.comment, pc.created_at, pc.mention_id FROM post_comments pc
+        INNER JOIN reply_tree rt ON pc.replies_comment_id = rt.comment_id WHERE pc.deleted_at IS NULL
       )
-      SELECT rt.comment_id, rt.replies_comment_id, rt.user_id, rt.comment, rt.created_at,
-            rt.mention_id,
-            u.username, u.profile_image,
-            mu.username AS mention_username,
+      SELECT rt.comment_id, rt.replies_comment_id, rt.user_id, rt.comment, rt.created_at, rt.mention_id, u.username, u.profile_image, mu.username AS mention_username,
             (SELECT COUNT(*) FROM comment_likes WHERE comment_id = rt.comment_id) AS like_count,
-            (SELECT COUNT(*) FROM comment_likes WHERE comment_id = rt.comment_id AND user_id = ?) AS is_liked
+            (SELECT COUNT(*) FROM comment_likes WHERE comment_id = rt.comment_id AND user_id = ?) AS is_liked,
+            (SELECT COUNT(*) FROM report WHERE comment_id = rt.comment_id AND user_id = ? AND status = 3) AS is_report
       FROM reply_tree rt
       JOIN users u ON rt.user_id = u.U_ID
       LEFT JOIN users mu ON rt.mention_id = mu.U_ID
       ORDER BY rt.created_at DESC
       LIMIT ? OFFSET ?
       `,
-      [comment_id, user_post_id, user_id, limitNum, offset]
+      [comment_id, user_post_id, user_id, user_id, limitNum, offset]
     );
 
 
@@ -2711,7 +2775,8 @@ exports.getreplay_comment = async (req, res) => {
       profile_image: r.profile_image ?? "",
       author: r.user_id === postOwnerId ? 1 : 0,
       like_count: r.like_count ?? 0,
-      is_liked: r.is_liked > 0 ? 1 : 0
+      is_liked: r.is_liked > 0 ? 1 : 0,
+      is_report: r.is_report > 0 ? 1 : 0
     }));
 
     const filtered = normalized.slice(0);
