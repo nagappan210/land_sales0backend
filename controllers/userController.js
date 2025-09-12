@@ -3096,6 +3096,132 @@ exports.search = async (req, res) => {
   }
 };
 
+// exports.search = async (req, res) => {
+//   const { search_type , locality, min_price, max_price, user_id, page = 1 } = req.body;
+
+//   const limit = 10;
+//   const pageNum = Number(page);
+//   const offset = (pageNum - 1) * limit;
+
+//   if (
+//     !user_id || !search_type || !locality || !min_price || !max_price ||
+//     isNaN(Number(user_id)) || isNaN(Number(land_type_id)) ||
+//     isNaN(Number(min_price)) || isNaN(Number(max_price))
+//   ) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "All fields are required. user_id, land_type_id, min_price, and max_price must be integers.",
+//       data: []
+//     });
+//   }
+
+//   const [userExists] = await db.query(`SELECT U_ID FROM users WHERE U_ID = ?`, [user_id]);
+//   if (userExists.length === 0) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "User not found",
+//       data: []
+//     });
+//   }
+
+//   const [land_type_exist] = await db.query(`SELECT * FROM land_types WHERE land_type_id = ?`, [land_type_id]);
+//   if (land_type_exist.length === 0) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "User land type is not found",
+//       data: []
+//     });
+//   }
+
+//   try {
+//     const [existing] = await db.query(
+//       `SELECT search_id FROM search WHERE user_id = ? AND land_type_id = ?`,
+//       [user_id, land_type_id]
+//     );
+
+//     if (existing.length === 0) {
+//       await db.query(
+//         `INSERT INTO search (user_id, land_type_id, create_at) VALUES (?, ?, NOW())`,
+//         [user_id, land_type_id]
+//       );
+//     }
+
+//     const [countRows] = await db.query(
+//       `SELECT COUNT(DISTINCT p.user_post_id) AS total
+//        FROM user_posts p
+//        WHERE p.land_type_id = ?
+//          AND p.price BETWEEN ? AND ?
+//          AND p.locality LIKE ?`,
+//       [land_type_id, min_price, max_price, `%${locality}%`]
+//     );
+
+//     const total = countRows[0].total;
+//     const totalPages = Math.ceil(total / limit);
+//     const nxtpage = pageNum < totalPages ? pageNum + 1 : 0;
+//     const recCnt = total;
+
+//     const [rows] = await db.query(
+//       `SELECT  
+//           u.username, u.U_ID, u.profile_image, 
+//           p.user_post_id, p.land_type_id, p.property_name, p.locality, 
+//           p.price, p.video, p.created_at,
+//           COUNT(DISTINCT l.like_id) AS like_count,
+//           COUNT(DISTINCT c.comment_id) AS comment_count
+//        FROM users u
+//        JOIN user_posts p ON u.U_ID = p.U_ID
+//        LEFT JOIN post_likes l ON p.user_post_id = l.user_post_id
+//        LEFT JOIN post_comments c ON p.user_post_id = c.user_post_id
+//        WHERE p.land_type_id = ?
+//          AND p.price BETWEEN ? AND ?
+//          AND p.locality LIKE ?
+//        GROUP BY 
+//          u.username, u.U_ID, u.profile_image,
+//          p.user_post_id, p.land_type_id, p.property_name, 
+//          p.locality, p.price, p.video, p.created_at
+//        ORDER BY p.user_post_id DESC
+//        LIMIT ? OFFSET ?`,
+//       [land_type_id, min_price, max_price, `%${locality}%`, limit, offset]
+//     );
+
+//     if (rows.length === 0) {
+//       return res.status(200).json({
+//         result: "0",
+//         error: "No data found",
+//         data: [],
+//         totalPages,
+//         nxtpage, 
+//         recCnt
+//       });
+//     }
+
+//     const sanitizedRows = rows.map(row => {
+//       const cleanRow = {};
+//       for (const key in row) {
+//         cleanRow[key] = row[key] === null ? "" : row[key];
+//       }
+//       return cleanRow;
+//     });
+
+//     return res.status(200).json({
+//       result: "1",
+//       data: sanitizedRows,
+//       totalPages,
+//       nxtpage,
+//       recCnt
+//     });
+
+  
+
+//   } catch (err) {
+//     console.error(err);
+//     return res.status(500).json({
+//       result: "0",
+//       error: "Database query failed",
+//       data: []
+//     });
+//   }
+// };
+
 exports.getInterestedSearchers = async (req, res) => {
   const { user_id } = req.body;
 

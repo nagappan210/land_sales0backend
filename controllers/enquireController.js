@@ -294,7 +294,6 @@ exports.my_leads = async (req, res) => {
 
     return res.json({
       result: "1",
-      error: "",
       data: normalizedData,
       totalPages: Math.ceil(total / limit),
       nxtpage: page < Math.ceil(total / limit) ? Number(page) + 1 : 0,
