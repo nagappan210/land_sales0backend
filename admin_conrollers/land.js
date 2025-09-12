@@ -696,3 +696,377 @@ exports.property_highlights = async (req, res) => {
     });
   }
 };
+
+exports.reception_area = async (req, res) => {
+  let { reception_area, status, reception_area_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO reception_area (reception_area) VALUES (?)`,
+        [reception_area]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Reception area added successfully",
+      });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE reception_area SET reception_area = ? WHERE reception_area_id = ?`,
+        [reception_area, reception_area_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Reception area updated successfully",
+      });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM reception_area WHERE reception_area_id = ?`,
+        [reception_area_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Reception area deleted successfully",
+      });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT reception_area_id, reception_area FROM reception_area`
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Reception areas fetched successfully",
+        data: rows,
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in reception_area:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to process reception_area",
+    });
+  }
+};
+
+exports.oxygen_duct = async (req, res) => {
+  let { oxygen_duct, status, oxygen_duct_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO oxygen_duct (oxygen_duct) VALUES (?)`,
+        [oxygen_duct]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Oxygen duct added successfully",
+      });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE oxygen_duct SET oxygen_duct = ? WHERE oxygen_duct_id = ?`,
+        [oxygen_duct, oxygen_duct_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Oxygen duct updated successfully",
+      });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM oxygen_duct WHERE oxygen_duct_id = ?`,
+        [oxygen_duct_id]
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Oxygen duct deleted successfully",
+      });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT oxygen_duct_id, oxygen_duct FROM oxygen_duct`
+      );
+      return res.status(200).json({
+        result: "1",
+        message: "Oxygen ducts fetched successfully",
+        data: rows,
+      });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in oxygen_duct:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Failed to process oxygen_duct",
+    });
+  }
+};
+
+exports.lifts = async (req, res) => {
+  let { lifts, status, lifts_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(`INSERT INTO lifts (lifts) VALUES (?)`, [lifts]);
+      return res.status(200).json({ result: "1", message: "Lift added successfully" });
+    }
+
+    if (status === 2) {
+      await db.query(`UPDATE lifts SET lifts = ? WHERE lifts_id = ?`, [lifts, lifts_id]);
+      return res.status(200).json({ result: "1", message: "Lift updated successfully" });
+    }
+
+    if (status === 3) {
+      await db.query(`DELETE FROM lifts WHERE lifts_id = ?`, [lifts_id]);
+      return res.status(200).json({ result: "1", message: "Lift deleted successfully" });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(`SELECT lifts_id, lifts FROM lifts`);
+      return res.status(200).json({ result: "1", message: "Lifts fetched successfully", data: rows });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in lifts:", err);
+    return res.status(500).json({ result: "0", error: "Failed to process lifts" });
+  }
+};
+
+exports.ups = async (req, res) => {
+  let { ups, status, ups_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(`INSERT INTO ups (ups) VALUES (?)`, [ups]);
+      return res.status(200).json({ result: "1", message: "UPS added successfully" });
+    }
+
+    if (status === 2) {
+      await db.query(`UPDATE ups SET ups = ? WHERE ups_id = ?`, [ups, ups_id]);
+      return res.status(200).json({ result: "1", message: "UPS updated successfully" });
+    }
+
+    if (status === 3) {
+      await db.query(`DELETE FROM ups WHERE ups_id = ?`, [ups_id]);
+      return res.status(200).json({ result: "1", message: "UPS deleted successfully" });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(`SELECT ups_id, ups FROM ups`);
+      return res.status(200).json({ result: "1", message: "UPS fetched successfully", data: rows });
+    }
+
+    return res.status(400).json({
+      result: "0",
+      error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All",
+    });
+  } catch (err) {
+    console.error("Error in ups:", err);
+    return res.status(500).json({ result: "0", error: "Failed to process UPS" });
+  }
+};
+
+exports.office_previously_used_for = async (req, res) => {
+  let { office_previously_used_for, status, office_previously_used_for_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO office_previously_used_for (office_previously_used_for) VALUES (?)`,
+        [office_previously_used_for]
+      );
+      return res.status(200).json({ result: "1", message: "Office previously used for added successfully" });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE office_previously_used_for SET office_previously_used_for = ? WHERE office_previously_used_for_id = ?`,
+        [office_previously_used_for, office_previously_used_for_id]
+      );
+      return res.status(200).json({ result: "1", message: "Office previously used for updated successfully" });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM office_previously_used_for WHERE office_previously_used_for_id = ?`,
+        [office_previously_used_for_id]
+      );
+      return res.status(200).json({ result: "1", message: "Office previously used for deleted successfully" });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT office_previously_used_for_id, office_previously_used_for FROM office_previously_used_for`
+      );
+      return res.status(200).json({ result: "1", message: "Office previously used for fetched successfully", data: rows });
+    }
+
+    return res.status(400).json({ result: "0", error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All" });
+  } catch (err) {
+    console.error("Error in office_previously_used_for:", err);
+    return res.status(500).json({ result: "0", error: "Failed to process office_previously_used_for" });
+  }
+};
+
+exports.fire_safety_measures = async (req, res) => {
+  let { fire_safety_measures, status, fire_safety_measures_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO fire_safety_measures (fire_safety_measures) VALUES (?)`,
+        [fire_safety_measures]
+      );
+      return res.status(200).json({ result: "1", message: "Fire safety measure added successfully" });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE fire_safety_measures SET fire_safety_measures = ? WHERE fire_safety_measures_id = ?`,
+        [fire_safety_measures, fire_safety_measures_id]
+      );
+      return res.status(200).json({ result: "1", message: "Fire safety measure updated successfully" });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM fire_safety_measures WHERE fire_safety_measures_id = ?`,
+        [fire_safety_measures_id]
+      );
+      return res.status(200).json({ result: "1", message: "Fire safety measure deleted successfully" });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT fire_safety_measures_id, fire_safety_measures FROM fire_safety_measures`
+      );
+      return res.status(200).json({ result: "1", message: "Fire safety measures fetched successfully", data: rows });
+    }
+
+    return res.status(400).json({ result: "0", error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All" });
+  } catch (err) {
+    console.error("Error in fire_safety_measures:", err);
+    return res.status(500).json({ result: "0", error: "Failed to process fire_safety_measures" });
+  }
+};
+
+exports.washroom_details = async (req, res) => {
+  let { washroom_details, status, washroom_details_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO washroom_details (washroom_details) VALUES (?)`,
+        [washroom_details]
+      );
+      return res.status(200).json({ result: "1", message: "Washroom detail added successfully" });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE washroom_details SET washroom_details = ? WHERE washroom_details_id = ?`,
+        [washroom_details, washroom_details_id]
+      );
+      return res.status(200).json({ result: "1", message: "Washroom detail updated successfully" });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM washroom_details WHERE washroom_details_id = ?`,
+        [washroom_details_id]
+      );
+      return res.status(200).json({ result: "1", message: "Washroom detail deleted successfully" });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT washroom_details_id, washroom_details FROM washroom_details`
+      );
+      return res.status(200).json({ result: "1", message: "Washroom details fetched successfully", data: rows });
+    }
+
+    return res.status(400).json({ result: "0", error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All" });
+  } catch (err) {
+    console.error("Error in washroom_details:", err);
+    return res.status(500).json({ result: "0", error: "Failed to process washroom_details" });
+  }
+};
+
+exports.suitable_business_type = async (req, res) => {
+  let { suitable_business_type, status, suitable_business_type_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO suitable_business_type (suitable_business_type) VALUES (?)`,
+        [suitable_business_type]
+      );
+      return res.status(200).json({ result: "1", message: "Suitable business type added successfully" });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE suitable_business_type SET suitable_business_type = ? WHERE suitable_business_type_id = ?`,
+        [suitable_business_type, suitable_business_type_id]
+      );
+      return res.status(200).json({ result: "1", message: "Suitable business type updated successfully" });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM suitable_business_type WHERE suitable_business_type_id = ?`,
+        [suitable_business_type_id]
+      );
+      return res.status(200).json({ result: "1", message: "Suitable business type deleted successfully" });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT suitable_business_type_id, suitable_business_type FROM suitable_business_type`
+      );
+      return res.status(200).json({ result: "1", message: "Suitable business types fetched successfully", data: rows });
+    }
+
+    return res.status(400).json({ result: "0", error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All" });
+  } catch (err) {
+    console.error("Error in suitable_business_type:", err);
+    return res.status(500).json({ result: "0", error: "Failed to process suitable_business_type" });
+  }
+};

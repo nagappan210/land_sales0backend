@@ -377,7 +377,6 @@ exports.createPostStep6 = async (req, res) => {
       return res.status(404).json({ result: "0", error: "User not found", data: [] });
     }
 
-    // VIDEO POST
     if (post_type === "1" && video_url) {
       const thumbDir = "uploaded/posts/thumbs";
       await fs.mkdir(thumbDir, { recursive: true });
@@ -398,7 +397,7 @@ exports.createPostStep6 = async (req, res) => {
       const [videoUpdate] = await db.query(
         `UPDATE user_posts 
          SET video = ?, post_type = ?, image_ids = NULL, thumbnail = ?, updated_at = NOW(), draft = ? 
-         WHERE U_ID = ? AND user_post_id = ?`,
+         WHERE U_ID = ? AND user_post_id = ? and deleted_at is null and account_status = 0`,
         [video_url, post_type, outputThumbPath, draft, user_id, user_post_id]
       );
 
@@ -426,7 +425,7 @@ if (post_type === "2" && Array.isArray(image_urls) && image_urls.length > 0) {
   const [postData] = await db.query(
     `SELECT land_type_id, land_categorie_id, country, state, city, locality, property_name 
      FROM user_posts 
-     WHERE U_ID = ? AND user_post_id = ?`,
+     WHERE U_ID = ? AND user_post_id = ? and deleted_at is null and account_status = 0`,
     [user_id, user_post_id]
   );
   const post = postData[0] || {};
@@ -540,7 +539,7 @@ if (image_urls.length > 2) {
   const [imageUpdate] = await db.query(
     `UPDATE user_posts 
      SET video = ?, image_ids = ?, post_type = ?, thumbnail = ?, updated_at = NOW(), draft = ? 
-     WHERE U_ID = ? AND user_post_id = ?`,
+     WHERE U_ID = ? AND user_post_id = ? and deleted_at is null and account_status = 0`,
     [finalVideoPath, imageIdsStr, post_type, firstImagePath, draft, user_id, user_post_id]
   );
 
@@ -598,7 +597,7 @@ exports.createPostStep7 = async (req, res) => {
   }
 
   const [existing_user] = await db.query(
-    `SELECT * FROM users WHERE U_ID = ?`,
+    `SELECT * FROM users WHERE U_ID = ? and deleted_at is null`,
     [user_id]
   );
   if (existing_user.length === 0) {
@@ -610,7 +609,7 @@ exports.createPostStep7 = async (req, res) => {
   }
 
   const [existing_post] = await db.query(
-    `SELECT * FROM user_posts WHERE user_post_id = ?`,
+    `SELECT * FROM user_posts WHERE user_post_id = ? and deleted_at is null and account_status = 0`,
     [user_post_id]
   );
   if (existing_post.length === 0) {
@@ -700,7 +699,7 @@ exports.laststep = async (req, res) => {
     }
 
     const [exist_user_post] = await db.query(
-      `SELECT * FROM user_posts WHERE U_ID = ? AND user_post_id = ?`,
+      `SELECT * FROM user_posts WHERE U_ID = ? AND user_post_id = ? and deleted_at is null and account_status = 0`,
       [user_id, user_post_id]
     );
     if (exist_user_post.length === 0) {

@@ -29,7 +29,7 @@ exports.location = async (req, res) => {
       });
     }
 
-    const [existing_user] = await db.query(`select * from users where U_ID = ?` , [user_id]);
+    const [existing_user] = await db.query(`select * from users where U_ID = ? and deleted_at is null` , [user_id]);
     if(existing_user.length ===0){
       return res.status(200).json({
         result : "0",
@@ -166,7 +166,7 @@ exports.updateUserInterest = async (req, res) => {
     const settingsUser = validInterests.join(",");
 
     const [result] = await db.query(
-      `UPDATE users SET user_interest = ? , interest_page = 1 WHERE U_ID = ?`,
+      `UPDATE users SET user_interest = ? , interest_page = 1 WHERE U_ID = ? and deleted_at is null`,
       [settingsUser, user_id]
     );
 
@@ -208,7 +208,7 @@ exports.getUserInterest = async (req, res) => {
     }
 
     const [result] = await db.query(
-      `SELECT user_interest FROM users WHERE U_ID = ?`,
+      `SELECT user_interest FROM users WHERE U_ID = ? and deleted_at is null`,
       [user_id]
     );
 
@@ -251,7 +251,7 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
-    const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+    const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ? and deleted_at is null`, [user_id]);
     if (existing_user.length === 0) {
       return res.status(200).json({
         result: "0",
@@ -286,7 +286,7 @@ exports.updateProfile = async (req, res) => {
       });
     }
 
-    const query = `UPDATE users SET ${updateFields.join(", ")} WHERE U_ID = ?`;
+    const query = `UPDATE users SET ${updateFields.join(", ")} WHERE U_ID = ? `;
     values.push(user_id);
     const [result] = await db.query(query, values);
     if (result.affectedRows === 0) {
@@ -323,7 +323,7 @@ exports.updateUsername = async (req, res) => {
       });
     }
 
-    const [userRows] = await db.query("SELECT * FROM users WHERE U_ID = ?", [user_id]);
+    const [userRows] = await db.query("SELECT * FROM users WHERE U_ID = ? and deleted_at is null", [user_id]);
     if (userRows.length === 0) {
       return res.status(200).json({
         result: "0",
@@ -382,8 +382,28 @@ exports.getProfileStats = async (req, res) => {
     });
   }
 
+  const [userRows] = await db.query("SELECT * FROM users WHERE U_ID = ? and deleted_at is null", [user_id]);
+    if (userRows.length === 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "User not found",
+        data: []
+      });
+    }
+
+  
+
   const othersIdNum = Number(others_id) || 0;
   const targetId = othersIdNum !== 0 ? othersIdNum : user_id;
+
+  const [users] = await db.query("SELECT * FROM users WHERE U_ID = ? and deleted_at is null", [targetId]);
+    if (users.length === 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "User not found",
+        data: []
+      });
+    }
 
   const query = `
     SELECT u.U_ID AS user_id, u.username, u.name, u.bio, u.phone_num_cc, u.phone_num, u.profile_image,
@@ -391,7 +411,7 @@ exports.getProfileStats = async (req, res) => {
       (SELECT COUNT(*) FROM followers WHERE following_id = u.U_ID) AS followers,
       (SELECT COUNT(*) FROM followers WHERE user_id = u.U_ID) AS following
     FROM users u
-    WHERE u.U_ID = ? AND u.deleted_at IS NULL
+    WHERE u.U_ID = ?
   `;
 
   try {
@@ -489,8 +509,6 @@ exports.getProfileStats = async (req, res) => {
 
 exports.getpost_property = async (req, res) => {
   const { user_id, others_id, page = 1 } = req.body;
-
-  console.log(others_id);
   
   
   const limit = 10;
@@ -503,16 +521,33 @@ exports.getpost_property = async (req, res) => {
     });
   }
 
+  const [userRows] = await db.query("SELECT * FROM users WHERE U_ID = ? and deleted_at is null", [user_id]);
+    if (userRows.length === 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "User not found",
+        data: []
+      });
+    }
+
   const offset = (parseInt(page, 10) - 1) * limit;
   const othersIdNum = Number(others_id) || 0;
   const targetId = othersIdNum !== 0 ? othersIdNum : user_id;
 
+  const [other] = await db.query("SELECT * FROM users WHERE U_ID = ? and deleted_at is null", [targetId]);
+    if (other.length === 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "User not found",
+        data: []
+      });
+    }
 
   const [blocked] = await db.query(
     `SELECT * FROM blocks 
      WHERE (user_id = ? AND blocker_id = ?) 
         OR (user_id = ? AND blocker_id = ?)`,
-    [user_id, others_id, others_id, user_id]
+    [user_id, targetId, targetId, user_id]
   );
 
   if (blocked.length > 0) {
@@ -530,7 +565,8 @@ exports.getpost_property = async (req, res) => {
        WHERE U_ID = ? 
          AND status = 'published' 
          AND video IS NOT NULL 
-         AND deleted_at IS NULL`,
+         AND deleted_at IS NULL
+         AND account_status = '0'`,
       [targetId]
     );
 
@@ -562,7 +598,7 @@ exports.getpost_property = async (req, res) => {
         CASE WHEN is_report.user_post_id IS NOT NULL THEN 1 ELSE 0 END AS is_report
     `;
 
-    if (others_id) {
+    if (targetId) {
       query += `,
         CASE WHEN e.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS enquiry
       `;
@@ -585,7 +621,7 @@ exports.getpost_property = async (req, res) => {
       LEFT JOIN saved_properties sp ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
     `;
 
-    if (others_id) {
+    if (targetId) {
       query += `
         LEFT JOIN enquiries e ON e.recever_posts_id = up.user_post_id AND e.user_id = ?
       `;
@@ -596,19 +632,20 @@ exports.getpost_property = async (req, res) => {
         AND up.status = 'published' 
         AND up.video IS NOT NULL 
         AND up.deleted_at IS NULL
+        AND up.account_status = 0
       ORDER BY up.created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
     let params = [];
-    if (others_id) {
-      params = [user_id, others_id, user_id, targetId, user_id, targetId];
+    if (targetId) {
+      params = [user_id, targetId, user_id, targetId, user_id, targetId];
     } else {
       params = [user_id, user_id, user_id, targetId];
     }
 
     const [reels] = await db.query(query, params);
-    const others_page = (others_id && others_id !== 0 && others_id !== "") ? 1 : 0;
+    const others_page = (targetId && targetId !== 0 && targetId !== "") ? 1 : 0;
 
     const posts = await Promise.all(
       reels.map(async (p) => {
@@ -772,7 +809,7 @@ exports.followUser = async (req, res) => {
       });
     }
 
-    const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+    const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ? AND deleted_at is null`, [user_id]);
     if (existing_user.length === 0) {
       return res.status(200).json({
         result: "0",
@@ -781,7 +818,7 @@ exports.followUser = async (req, res) => {
       });
     }
 
-    const [existing_follower] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [following_id]);
+    const [existing_follower] = await db.query(`SELECT * FROM users WHERE U_ID = ?  AND deleted_at is null`, [following_id]);
     if (existing_follower.length === 0) {
       return res.status(200).json({
         result: "0",
@@ -925,7 +962,7 @@ exports.getFollowData = async (req, res) => {
     });
   }
 
-  const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+  const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ? AND deleted_at is null`, [user_id]);
   if (existing_user.length === 0) {
     return res.status(200).json({
       result: "0",
@@ -937,6 +974,15 @@ exports.getFollowData = async (req, res) => {
   const targetId = (others_id && others_id !== 0) ? others_id : user_id;
   const offset = (currentPage - 1) * limit;
   const profile_images = process.env.SERVER_ADDRESS + "uploaded/profile_images/";
+
+  const [other] = await db.query(`SELECT * FROM users WHERE U_ID = ? AND deleted_at is null and account_status = 0`, [targetId]);
+  if (other.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "Other_id not found in database",
+      data: []
+    });
+  }
 
   try {
     const [blocked] = await db.query(
@@ -956,19 +1002,19 @@ exports.getFollowData = async (req, res) => {
     if (statusInt === 1) {
       // Followers
       baseQuery = `
-        SELECT u.U_ID, u.name, u.username, u.profile_image
-        FROM followers f
-        JOIN users u ON f.user_id = u.U_ID
-        WHERE f.following_id = ?
-        LIMIT ? OFFSET ?`;
+      SELECT u.U_ID, u.name, u.username, u.profile_image
+      FROM followers f
+      JOIN users u ON f.user_id = u.U_ID
+      WHERE f.following_id = ? AND u.deleted_at IS NULL AND u.account_status = 0
+      LIMIT ${limit} OFFSET ${offset}`;
 
       countQuery = `
         SELECT COUNT(*) as total 
         FROM followers f
-        JOIN users u ON f.user_id = u.U_ID
+        JOIN users u ON f.user_id = u.U_ID AND u.deleted_at IS NULL AND u.account_status = 0
         WHERE f.following_id = ?`;
 
-      values = [targetId, limit, offset];
+      values = [targetId];
       countValues = [targetId];
 
     } else if (statusInt === 2) {
@@ -977,16 +1023,16 @@ exports.getFollowData = async (req, res) => {
         SELECT u.U_ID, u.name, u.username, u.profile_image
         FROM followers f
         JOIN users u ON f.following_id = u.U_ID
-        WHERE f.user_id = ?
-        LIMIT ? OFFSET ?`;
+        WHERE f.user_id = ? AND u.deleted_at IS NULL AND u.account_status = 0
+        LIMIT ${limit} OFFSET ${offset}`;
 
       countQuery = `
         SELECT COUNT(*) as total 
         FROM followers f
-        JOIN users u ON f.following_id = u.U_ID
+        JOIN users u ON f.following_id = u.U_ID AND u.deleted_at IS NULL AND u.account_status = 0
         WHERE f.user_id = ?`;
 
-      values = [targetId, limit, offset];
+      values = [targetId];
       countValues = [targetId];
 
     } else {
@@ -1080,11 +1126,29 @@ exports.searchfollower = async (req, res) => {
     });
   }
 
+  const [existing_user] = await db.query(`SELECT * FROM users WHERE U_ID = ? AND deleted_at is null`, [user_id]);
+  if (existing_user.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "User not found in database",
+      data: []
+    });
+  }
+
   try {
     let query = "";
     let params = [];
     const base_url = process.env.SERVER_ADDRESS + "uploaded/profile_image/";
     const targetId = others_id || user_id;
+
+    const [others] = await db.query(`SELECT * FROM users WHERE U_ID = ? AND deleted_at is null and account_status = 0`, [targetId]);
+  if (others.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "Others_id found in database",
+      data: []
+    });
+  }
 
     if (status === 2) {
       query = `
@@ -1228,7 +1292,7 @@ exports.save_property = async (req, res) => {
     });
   }
 
-  const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
+  const [existing_user] = await db.query(`select * from users where U_ID = ? and deleted_at is null`,[user_id]);
   if(existing_user.length === 0 ){
     return res.status(200).json({
       result : "0",
@@ -1237,7 +1301,7 @@ exports.save_property = async (req, res) => {
     });
   }
 
-  const [existing_post] = await db.query(`select * from user_posts where user_post_id = ?`,[user_post_id]);
+  const [existing_post] = await db.query(`select * from user_posts where user_post_id = ? and deleted_at is null and account_status = 0`,[user_post_id]);
   if(existing_post.length === 0 ){
     return res.status(200).json({
       result : "0",
@@ -1312,7 +1376,7 @@ exports.getSavedProperties = async (req, res) => {
   }
 
   const [existing_user] = await db.query(
-    `SELECT * FROM users WHERE U_ID = ?`,
+    `SELECT * FROM users WHERE U_ID = ? and deleted_at is null`,
     [user_id]
   );
   if (existing_user.length === 0) {
@@ -1331,7 +1395,7 @@ exports.getSavedProperties = async (req, res) => {
       SELECT COUNT(*) AS total
       FROM saved_properties sp
       JOIN user_posts p ON sp.user_post_id = p.user_post_id
-      WHERE sp.U_ID = ?
+      WHERE sp.U_ID = ? and p.deleted_at is null and p.account_status = 0
       `,
       [user_id]
     );
@@ -1341,7 +1405,7 @@ exports.getSavedProperties = async (req, res) => {
       SELECT p.*
       FROM saved_properties sp
       JOIN user_posts p ON sp.user_post_id = p.user_post_id
-      WHERE sp.U_ID = ? order by created_at DESC
+      WHERE sp.U_ID = ? and p.deleted_at is null and p.account_status = 0 order by created_at DESC
       LIMIT ? OFFSET ?
       `,
       [user_id, parseInt(limit), parseInt(offset)]
@@ -1403,7 +1467,7 @@ exports.sold_status = async (req, res) => {
       data: [],
     });
   }
-  const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
+  const [existing_user] = await db.query(`select * from users where U_ID = ? and deleted_at is null`,[user_id]);
   if(existing_user.length === 0 ){
     return res.status(200).json({
       result : "0",
@@ -1419,12 +1483,12 @@ exports.sold_status = async (req, res) => {
     if (status == 2) {
       query = `UPDATE user_posts 
                SET is_sold = 0, sold_at = NULL 
-               WHERE user_post_id = ? AND U_ID = ?`;
+               WHERE user_post_id = ? AND U_ID = ? and deleted_at is null and account_status = 0`;
       message = "Property marked as unsold.";
     } else if (status == 1) {
       query = `UPDATE user_posts 
                SET is_sold = 1, sold_at = NOW() 
-               WHERE user_post_id = ? AND U_ID = ?`;
+               WHERE user_post_id = ? AND U_ID = ? and deleted_at is null and account_status = 0`;
       message = "Property marked as sold.";
     } else {
       return res.status(200).json({
@@ -1439,7 +1503,7 @@ exports.sold_status = async (req, res) => {
     if (result.affectedRows === 0) {
       return res.status(200).json({
         result: "0",
-        error: "Property not found or status already set.",
+        error: "Property not found",
         data: [],
       });
     }
@@ -1469,7 +1533,7 @@ exports.getsold_status = async (req, res) => {
   }
 
 
-  const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
+  const [existing_user] = await db.query(`select * from users where U_ID = ? and deleted_at is null`,[user_id]);
   if(existing_user.length === 0 ){
     return res.status(200).json({
       result : "0",
@@ -1482,14 +1546,14 @@ exports.getsold_status = async (req, res) => {
   try {
 
     const [countResult] = await db.query(
-      `SELECT COUNT(*) AS total FROM user_posts WHERE U_ID = ? AND is_sold = 1`,
+      `SELECT COUNT(*) AS total FROM user_posts WHERE U_ID = ? and deleted_at is null and account_status = 0 AND is_sold = 1`,
       [user_id]
     );
     const total = countResult[0].total;
     const [rows] = await db.query(`
       SELECT *
       FROM user_posts
-      WHERE U_ID = ? AND is_sold = 1
+      WHERE U_ID = ? AND is_sold = 1 and deleted_at is null and account_status = 0
       ORDER BY created_at DESC
       LIMIT ? OFFSET ?
     `, [user_id, parseInt(limit), parseInt(offset)]);
@@ -1551,7 +1615,7 @@ exports.getDraftPosts = async (req, res) => {
       data: []
     });
   }
-  const [existing_user] = await db.query(`select * from users where U_ID = ?`,[user_id]);
+  const [existing_user] = await db.query(`select * from users where U_ID = ? and deleted_at is null`,[user_id]);
   if(existing_user.length === 0 ){
     return res.status(200).json({
       result : "0",
@@ -1566,7 +1630,7 @@ exports.getDraftPosts = async (req, res) => {
     const [[{ total }]] = await db.query(
       `SELECT COUNT(*) as total
        FROM user_posts
-       WHERE U_ID = ? 
+       WHERE U_ID = ? and deleted_at is null and account_status = 0
          AND status = 'draft'
          AND deleted_at IS NULL`,
       [user_id]
@@ -1575,7 +1639,7 @@ exports.getDraftPosts = async (req, res) => {
     const [rows] = await db.query(
       `SELECT *
       FROM user_posts
-      WHERE U_ID = ?
+      WHERE U_ID = ? and deleted_at is null and account_status = 0
         AND status = 'draft' 
         AND deleted_at IS NULL
       ORDER BY created_at DESC
@@ -1658,7 +1722,7 @@ exports.blockOrUnblockUser = async (req, res) => {
           data : []
         });
       }
-  const [exist_blocker] = await db.query(`select * from users where U_ID =?`,[blocker_id  ]);
+  const [exist_blocker] = await db.query(`select * from users where U_ID =? and deleted_at is null and account_status = 0`,[blocker_id  ]);
       if(exist_blocker.length === 0){
         return res.status(200).json({
           result : "0",
@@ -1779,7 +1843,7 @@ exports.getBlockedList = async (req, res) => {
     });
   }
 
-  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ? and deleted_at is null`, [user_id]);
   if (exist_user.length === 0) {
     return res.status(200).json({
       result: "0",
@@ -1869,21 +1933,32 @@ exports.delete_post = async (req, res) => {
 
   if (!user_id || !user_post_id) {
     return res.status(200).json({
-      success: false,
-      message: "user_id and user_post_id are required.",
+      result : "0",
+      error: "user_id and user_post_id are required.",
+      data : []
+    });
+  }
+
+  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ? and deleted_at is null`, [user_id]);
+  if (exist_user.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "User does not exist in database",
+      data: []
     });
   }
 
   try {
     const [check] = await db.query(
-      `SELECT * FROM user_posts WHERE user_post_id = ? AND U_ID = ? `,
+      `SELECT * FROM user_posts WHERE user_post_id = ? AND U_ID = ? and deleted_at is null and account_status = 0`,
       [user_post_id, user_id]
     );
 
     if (check.length === 0) {
       return res.status(200).json({
-        success: false,
-        message: "Post not found or already deleted.",
+        result : "0",
+        error: "Post not found or already deleted.",
+        data : []
       });
     }
 
@@ -1895,12 +1970,15 @@ exports.delete_post = async (req, res) => {
     );
 
     res.json({
-      success: true,
+      result : "1",
       message: "Post soft deleted successfully.",
+      data : []
     });
   } catch (err) {
     console.error("Soft Delete Error:", err);
-    res.status(500).json({ success: false, message: "Server error." });
+    res.status(500).json({ result : "0", 
+      error: "Server error.",
+    data : [] });
   }
 };
 
@@ -1996,6 +2074,7 @@ exports.getReels = async (req, res) => {
       WHERE up.status = 'published'
         AND up.video IS NOT NULL
         AND up.deleted_at IS NULL
+        AND up.account_status = 0
         AND FIND_IN_SET(up.land_categorie_id, ?)
         ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.map(() => "?").join(",")})` : ""}
       ORDER BY up.created_at DESC
@@ -2021,6 +2100,7 @@ exports.getReels = async (req, res) => {
          AND up.status = 'published'
          AND up.video IS NOT NULL
          AND up.deleted_at IS NULL
+         AND up.account_status = 0
          ${blockedUserIds.length ? `AND up.U_ID NOT IN (${blockedUserIds.join(",")})` : ""}`,
       [interestIds.join(",")]
     );
@@ -2187,7 +2267,7 @@ exports.post_like = async (req, res) => {
       data: []
     });
   }
- const [exist_user] = await db.query (`select * from users where U_ID = ?`, [user_id]);
+ const [exist_user] = await db.query (`select * from users where U_ID = ? and deleted_at is null`, [user_id]);
  if(exist_user.length === 0){
   return res.status(200).json({
       result: "0",
@@ -2314,7 +2394,7 @@ exports.add_firstcomment = async (req, res) => {
     mention_id = null;
   }
 
-  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ? and deleted_at is null`, [user_id]);
   if (exist_user.length === 0) {
     return res.status(200).json({
       result: "0",
@@ -2323,7 +2403,7 @@ exports.add_firstcomment = async (req, res) => {
     });
   }
 
-  const [exist_post] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ?`, [user_post_id]);
+  const [exist_post] = await db.query(`SELECT * FROM user_posts WHERE user_post_id = ? and deleted_at is null and account_status = 0`, [user_post_id]);
   if (exist_post.length === 0) {
     return res.status(200).json({
       result: "0",
@@ -2335,81 +2415,78 @@ exports.add_firstcomment = async (req, res) => {
   const postOwnerId = exist_post[0].U_ID;
 
   try {
-if (String(status) === "1") {
-  if (!comment) {
-    return res.status(200).json({
-      result: "0",
-      error: "comment is required for insert"
-    });
-  }
+    if (String(status) === "1") {
+      if (!comment) {
+        return res.status(200).json({
+          result: "0",
+          error: "comment is required for insert"
+        });
+      }
 
-  let replies_comment_id = req.body.replies_comment_id || null;
+      let replies_comment_id = req.body.replies_comment_id || null;
 
-  const [insertResult] = await db.query(
-    `INSERT INTO post_comments 
-      (user_id, user_post_id, comment, replies_comment_id , mention_id)
-     VALUES (?, ?, ?, ?, ?)`,
-    [user_id, user_post_id, comment, replies_comment_id , mention_id] );
+      const [insertResult] = await db.query(
+        `INSERT INTO post_comments 
+          (user_id, user_post_id, comment, replies_comment_id , mention_id)
+        VALUES (?, ?, ?, ?, ?)`,
+        [user_id, user_post_id, comment, replies_comment_id , mention_id] );
 
-  const [newCommentData] = await db.query(
-    `SELECT c.comment_id, c.comment, c.created_at, c.replies_comment_id, c.mention_id , mu.username as mention_username ,  u.U_ID AS user_id, u.username, u.profile_image FROM post_comments c JOIN users u ON c.user_id = u.U_ID LEFT JOIN users mu ON c.mention_id = mu.U_ID  WHERE c.comment_id = ?`,
-    [insertResult.insertId]
-  );
+      const [newCommentData] = await db.query(
+        `SELECT c.comment_id, c.comment, c.created_at, c.replies_comment_id, c.mention_id , mu.username as mention_username ,  u.U_ID AS user_id, u.username, u.profile_image FROM post_comments c JOIN users u ON c.user_id = u.U_ID LEFT JOIN users mu ON c.mention_id = mu.U_ID  WHERE c.comment_id = ?`,
+        [insertResult.insertId]
+      );
 
-  let parent_comment_id = 0;
+      let parent_comment_id = 0;
 
-  if (newCommentData.length > 0 && newCommentData[0].replies_comment_id) {
-    const currentCommentId = newCommentData[0].comment_id;
+      if (newCommentData.length > 0 && newCommentData[0].replies_comment_id) {
+        const currentCommentId = newCommentData[0].comment_id;
 
-    const [rootParent] = await db.query(
-      `WITH RECURSIVE parent_path AS (
-          SELECT comment_id, replies_comment_id
-          FROM post_comments
-          WHERE comment_id = ?
-          UNION ALL
-          SELECT pc.comment_id, pc.replies_comment_id
-          FROM post_comments pc
-          INNER JOIN parent_path pp ON pc.comment_id = pp.replies_comment_id
-      )
-      SELECT comment_id 
-      FROM parent_path 
-      WHERE replies_comment_id IS NULL 
-      LIMIT 1`,
-      [currentCommentId]
-    );
+        const [rootParent] = await db.query(
+          `WITH RECURSIVE parent_path AS (
+              SELECT comment_id, replies_comment_id
+              FROM post_comments
+              WHERE comment_id = ?
+              UNION ALL
+              SELECT pc.comment_id, pc.replies_comment_id
+              FROM post_comments pc
+              INNER JOIN parent_path pp ON pc.comment_id = pp.replies_comment_id
+          )
+          SELECT comment_id 
+          FROM parent_path 
+          WHERE replies_comment_id IS NULL 
+          LIMIT 1`,
+          [currentCommentId]
+        );
 
-    if (rootParent.length > 0) {
-      parent_comment_id = rootParent[0].comment_id;
+        if (rootParent.length > 0) {
+          parent_comment_id = rootParent[0].comment_id;
+        }
+      }
+
+      const data = newCommentData.map(c => ({
+        comment_id: c.comment_id ?? "",
+        mention_id : c.mention_id ?? 0,
+        mention_username : c.mention_username ?? "",
+        parent_comment_id,
+        user_id: c.user_id ?? "",
+        comment: c.comment ?? "",
+        created_at: c.created_at ?? "",
+        username: c.username ?? "",
+        profile_image: c.profile_image ?? "",
+        like_count: 0,
+        is_liked: 0,
+        author: c.user_id === postOwnerId ? 1 : 0,
+        total_reply: 0,
+        is_report : 0,
+        last_reply: [],
+      }));
+
+      return res.json({
+        result: "1",
+        message: "Inserted comment successfully",
+        data: data
+      });
     }
-  }
-
-  const data = newCommentData.map(c => ({
-    comment_id: c.comment_id ?? "",
-    mention_id : c.mention_id ?? 0,
-    mention_username : c.mention_username ?? "",
-    parent_comment_id,
-    user_id: c.user_id ?? "",
-    comment: c.comment ?? "",
-    created_at: c.created_at ?? "",
-    username: c.username ?? "",
-    profile_image: c.profile_image ?? "",
-    like_count: 0,
-    is_liked: 0,
-    author: c.user_id === postOwnerId ? 1 : 0,
-    total_reply: 0,
-    is_report : 0,
-    last_reply: [],
-  }));
-
-  return res.json({
-    result: "1",
-    message: "Inserted comment successfully",
-    data: data
-  });
-}
-
-
-
 
     if (String(status) === "2") {
       if (!comment || !comment_id) {
@@ -2420,7 +2497,7 @@ if (String(status) === "1") {
       }
 
       const [match] = await db.query(
-        `SELECT * FROM post_comments WHERE comment_id = ? AND user_id = ?`,
+        `SELECT * FROM post_comments WHERE comment_id = ? AND user_id = ? and deleted_at is null and account_status = 0`,
         [comment_id, user_id]
       );
 
@@ -2441,7 +2518,7 @@ if (String(status) === "1") {
         FROM post_comments c
         JOIN users u ON c.user_id = u.U_ID
         LEFT JOIN users mu ON c.mention_id = mu.U_ID
-        WHERE c.comment_id = ?`,
+        WHERE c.comment_id = ? and c.deleted_at is null and c.account_status = 0`,
         [comment_id]
       );
 
@@ -2547,7 +2624,7 @@ exports.getcomment = async (req, res) => {
   }
 
   const [exist_post] = await db.query(
-    `SELECT * FROM user_posts WHERE user_post_id = ?`,
+    `SELECT * FROM user_posts WHERE user_post_id = ? and deleted_at is null and account_status = 0`,
     [user_post_id]
   );
   if (exist_post.length === 0) {
@@ -2568,7 +2645,7 @@ exports.getcomment = async (req, res) => {
     const [[{ total }]] = await db.query(
       `SELECT COUNT(*) AS total
        FROM post_comments
-       WHERE user_post_id = ? AND replies_comment_id IS NULL AND deleted_at IS NULL`,
+       WHERE user_post_id = ? AND replies_comment_id IS NULL AND deleted_at IS NULL and account_status = 0`,
       [user_post_id]
     );
 
@@ -2591,7 +2668,7 @@ exports.getcomment = async (req, res) => {
                WHERE r.root_id = c.comment_id AND r.comment_id != c.comment_id) AS total_reply
        FROM post_comments c
        JOIN users u ON c.user_id = u.U_ID
-       WHERE c.user_post_id = ? AND c.replies_comment_id IS NULL AND c.deleted_at IS NULL
+       WHERE c.user_post_id = ? AND c.replies_comment_id IS NULL AND c.deleted_at IS NULL and c.account_status = 0
        ORDER BY c.created_at DESC
        LIMIT ? OFFSET ?`,
       [user_id, user_id, user_post_id, limitNum, offset]
@@ -2690,7 +2767,7 @@ exports.getreplay_comment = async (req, res) => {
   }
 
   const [exist_post] = await db.query(
-    `SELECT * FROM user_posts WHERE user_post_id = ?`,
+    `SELECT * FROM user_posts WHERE user_post_id = ? and deleted_at is null`,
     [user_post_id]
   );
   if (exist_post.length === 0) {
@@ -2710,12 +2787,12 @@ exports.getreplay_comment = async (req, res) => {
 
     const [replies] = await db.query(`WITH RECURSIVE reply_tree AS (
         SELECT c.comment_id, c.replies_comment_id, c.user_id, c.comment, c.created_at, c.mention_id FROM post_comments c
-        WHERE c.replies_comment_id = ? AND c.user_post_id = ? AND c.deleted_at IS NULL
+        WHERE c.replies_comment_id = ? AND c.user_post_id = ? AND c.deleted_at IS NULL and c.account_status = 0
 
         UNION ALL
 
         SELECT pc.comment_id, pc.replies_comment_id, pc.user_id, pc.comment, pc.created_at, pc.mention_id FROM post_comments pc
-        INNER JOIN reply_tree rt ON pc.replies_comment_id = rt.comment_id WHERE pc.deleted_at IS NULL
+        INNER JOIN reply_tree rt ON pc.replies_comment_id = rt.comment_id WHERE pc.deleted_at IS NULL and pc.account_status = 0
       )
       SELECT rt.comment_id, rt.replies_comment_id, rt.user_id, rt.comment, rt.created_at, rt.mention_id, u.username, u.profile_image, mu.username AS mention_username,
             (SELECT COUNT(*) FROM comment_likes WHERE comment_id = rt.comment_id) AS like_count,
@@ -2739,6 +2816,7 @@ exports.getreplay_comment = async (req, res) => {
         WHERE c.replies_comment_id = ?
           AND c.user_post_id = ?
           AND c.deleted_at IS NULL
+          and c.account_status = 0
 
         UNION ALL
 
@@ -2746,6 +2824,7 @@ exports.getreplay_comment = async (req, res) => {
         FROM post_comments pc
         INNER JOIN reply_tree rt ON pc.replies_comment_id = rt.comment_id
         WHERE pc.deleted_at IS NULL
+        and pc.account_status = 0
       )
       SELECT COUNT(*) AS total FROM reply_tree
       `,
@@ -2892,7 +2971,7 @@ exports.likeComment = async (req, res) => {
 };
 
 exports.search = async (req, res) => {
-  const { land_type_id, locality, min_price, max_price, user_id, page = 1 } = req.body;
+  const { land_type_id, locality, min_price, max_price, user_id, page = 1 , seller } = req.body;
 
   const limit = 10;
   const pageNum = Number(page);
@@ -3005,6 +3084,8 @@ exports.search = async (req, res) => {
       recCnt
     });
 
+  
+
   } catch (err) {
     console.error(err);
     return res.status(500).json({
@@ -3113,39 +3194,28 @@ exports.getInterestedSearchers = async (req, res) => {
 };
 
 exports.report_users = async (req, res) => {
-  const { user_id, user_post_id, receiver_id, comment_id, status } = req.body;
+  const { user_id, user_post_id, receiver_id, comment_id, status, description } = req.body;
 
   try {
+
     const [exit_user] = await db.query(
-      `SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL`,
+      `SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL AND account_status = 0`,
       [user_id]
     );
     if (exit_user.length === 0) {
-      return res.status(200).json({
-        result: "0",
-        error: "user not found in database",
-        data: []
-      });
+      return res.status(200).json({ result: "0", error: "user not found in database", data: [] });
     }
 
     const [exit_receiver] = await db.query(
-      `SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL`,
+      `SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL AND account_status = 0`,
       [receiver_id]
     );
     if (exit_receiver.length === 0) {
-      return res.status(200).json({
-        result: "0",
-        error: "receiver not found in database",
-        data: []
-      });
+      return res.status(200).json({ result: "0", error: "receiver not found in database", data: [] });
     }
 
-    if(user_id === receiver_id){
-      return res.status(200).json({
-        result : "0",
-        error : "You can not report youeself",
-        data : []
-      });
+    if (user_id === receiver_id) {
+      return res.status(200).json({ result: "0", error: "You can not report yourself", data: [] });
     }
 
     if (Number(status) === 1) {
@@ -3154,11 +3224,7 @@ exports.report_users = async (req, res) => {
         [user_id, receiver_id]
       );
       if (report_users.length > 0) {
-        return res.status(200).json({
-          result: "0",
-          error: "You have already sent report",
-          data: []
-        });
+        return res.status(200).json({ result: "0", error: "You have already sent report", data: [] });
       }
 
       const [rows] = await db.query(
@@ -3168,45 +3234,29 @@ exports.report_users = async (req, res) => {
       const reportCount = rows[0]?.total_reports || 0;
 
       if (reportCount >= 10) {
-        await db.query(
-          `UPDATE users SET deleted_at = NOW() WHERE U_ID = ?`,
-          [receiver_id]
-        );
-        await db.query(
-          `UPDATE user_posts SET deleted_at = NOW() WHERE U_ID = ?`,
-          [receiver_id]
-        );
-        return res.status(200).json({
-          result: "1",
-          message: "User deleted after too many reports",
-          data: []
-        });
+        await db.query(`UPDATE users SET  account_status = 1 WHERE U_ID = ?`, [receiver_id]);
+        await db.query(`UPDATE user_posts SET  account_status = 1 WHERE U_ID = ?`, [receiver_id]);
+        await db.query(`UPDATE post_comments SET  account_status = 1 WHERE U_ID = ?`, [receiver_id]);
+        return res.status(200).json({ result: "1", message: "User deleted after too many reports", data: [] });
       }
     }
 
     if (Number(status) === 2) {
       const [exit_posts] = await db.query(
-        `SELECT * FROM user_posts WHERE user_post_id = ? AND U_ID = ? AND deleted_at IS NULL`,
+        `SELECT * FROM user_posts WHERE user_post_id = ? AND U_ID = ? AND deleted_at IS NULL AND account_status = 0`,
         [user_post_id, receiver_id]
       );
       if (exit_posts.length === 0) {
-        return res.status(200).json({
-          result: "0",
-          error: "post not found in database",
-          data: []
-        });
+        return res.status(200).json({ result: "0", error: "post not found in database", data: [] });
       }
 
       const [report_users] = await db.query(
         `SELECT * FROM report WHERE user_id = ? AND receiver_id = ? AND user_post_id = ? AND status = 2`,
         [user_id, receiver_id, user_post_id]
       );
+
       if (report_users.length > 0) {
-        return res.status(200).json({
-          result: "0",
-          error: "You have already sent report",
-          data: []
-        });
+        return res.status(200).json({ result: "0", error: "You have already sent report", data: [] });
       }
 
       const [rows] = await db.query(
@@ -3217,28 +3267,20 @@ exports.report_users = async (req, res) => {
 
       if (reportCount >= 10) {
         await db.query(
-          `UPDATE user_posts SET deleted_at = NOW() WHERE U_ID = ? AND user_post_id = ?`,
+          `UPDATE user_posts SET deleted_at = NOW(), account_status = 1 WHERE U_ID = ? AND user_post_id = ?`,
           [receiver_id, user_post_id]
         );
-        return res.status(200).json({
-          result: "1",
-          message: "Post deleted after too many reports",
-          data: []
-        });
+        return res.status(200).json({ result: "1", message: "Post deleted after too many reports", data: [] });
       }
     }
 
     if (Number(status) === 3) {
       const [exist_comment] = await db.query(
-        `SELECT * FROM post_comments WHERE comment_id = ? AND deleted_at IS NULL`,
+        `SELECT * FROM post_comments WHERE comment_id = ? AND deleted_at IS NULL AND account_status = 0`,
         [comment_id]
       );
       if (exist_comment.length === 0) {
-        return res.status(200).json({
-          result: "0",
-          error: "comment not found in database",
-          data: []
-        });
+        return res.status(200).json({ result: "0", error: "comment not found in database", data: [] });
       }
 
       const [report_comment] = await db.query(
@@ -3246,11 +3288,7 @@ exports.report_users = async (req, res) => {
         [user_id, receiver_id, comment_id]
       );
       if (report_comment.length > 0) {
-        return res.status(200).json({
-          result: "0",
-          error: "You have already sent report",
-          data: []
-        });
+        return res.status(200).json({ result: "0", error: "You have already sent report", data: [] });
       }
 
       const [rows] = await db.query(
@@ -3261,42 +3299,25 @@ exports.report_users = async (req, res) => {
 
       if (reportCount >= 10) {
         await db.query(
-          `UPDATE post_comments SET deleted_at = NOW() WHERE comment_id = ?`,
+          `UPDATE post_comments SET deleted_at = NOW(), account_status = 1 WHERE comment_id = ?`,
           [comment_id]
         );
-        return res.status(200).json({
-          result: "1",
-          message: "Comment deleted after too many reports",
-          data: []
-        });
+        return res.status(200).json({ result: "1", message: "Comment deleted after too many reports", data: [] });
       }
     }
-
     const [insert_data] = await db.query(
-      `INSERT INTO report (user_post_id, receiver_id, user_id, comment_id, status) VALUES (?, ?, ?, ?, ?)`,
-      [user_post_id || null, receiver_id, user_id, comment_id || null, status]
+      `INSERT INTO report (user_post_id, receiver_id, user_id, comment_id, description, status) VALUES (?, ?, ?, ?, ?, ?)`,
+      [user_post_id || null, receiver_id, user_id, comment_id || null, description || null, status]
     );
 
     if (insert_data.affectedRows === 0) {
-      return res.status(200).json({
-        result: "0",
-        error: "Insert fail",
-        data: []
-      });
+      return res.status(500).json({ result: "0", error: "Insert failed", data: [] });
     }
 
-    return res.status(200).json({
-      result: "1",
-      message: "Report submitted successfully",
-      data: []
-    });
+    return res.status(200).json({ result: "1", message: "Report submitted successfully", data: [] });
 
   } catch (err) {
-    console.log(err);
-    return res.status(500).json({
-      result: "0",
-      error: "server error",
-      data: []
-    });
+    console.error(err);
+    return res.status(500).json({ result: "0", error: "server error", data: [] });
   }
 };

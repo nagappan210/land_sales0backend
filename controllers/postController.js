@@ -58,7 +58,7 @@ exports.createPostStep1 = async (req, res) => {
       });
     }
 
-    const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+    const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ? and deleted_at is null`, [user_id]);
     if (exist_user.length === 0) {
       return res.status(200).json({
         result: "0",
@@ -78,10 +78,18 @@ exports.createPostStep1 = async (req, res) => {
     
 
     if (exist_post.length > 0) {
-      await db.query(
-        `UPDATE user_posts SET user_type = ?, updated_at = NOW() WHERE user_post_id = ? AND U_ID = ?`,
+      const [row] = await db.query(
+        `UPDATE user_posts SET user_type = ?, updated_at = NOW() WHERE user_post_id = ? AND U_ID = ? and deleted_at is null and account_status = 0`,
         [user_type, user_post_id, user_id]
       );
+
+      if(row.affectedRows === 0){
+        return res.json({
+        result: "0",
+        error: "post not fount in database",
+        data: []
+      });
+      }
 
       return res.json({
         result: "1",
@@ -136,14 +144,14 @@ exports.createPostStep2 = async (req, res) => {
     const [existingPost] = await db.query(
       `SELECT land_type_id, land_categorie_id 
        FROM user_posts 
-       WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL`,
+       WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL and account_status = 0`,
       [user_id, user_post_id]
     );
 
     if (existingPost.length === 0) {
       return res.status(200).json({
         result: "0",
-        error: "Post not found or already deleted.",
+        error: "Post not found",
         data: []
       });
     }
@@ -343,7 +351,7 @@ exports.getform_details_residential = async (req, res) => {
         data.push(
           {
           property_name: "1",
-          select_floor_plane: "",
+          select_floor_plane: [""],
           property_area : "",
           Carpet_area: "1",
           built_up_area: "1",
@@ -390,7 +398,7 @@ exports.getform_details_residential = async (req, res) => {
         data.push(
           {
           property_name: "1",
-          select_floor_plane: "",
+          select_floor_plane: [""],
           property_area: "1",
           Carpet_area: "",
           built_up_area: "",
@@ -437,7 +445,7 @@ exports.getform_details_residential = async (req, res) => {
         data.push(
           {
           property_name: "1",
-          select_floor_plane: "",
+          select_floor_plane: [""],
           property_area : "",
           Carpet_area: "1",
           built_up_area: "1",
@@ -534,7 +542,7 @@ exports.getform_details_commercial = async (req, res) => {
             facade_width : "",
             facade_height : ""
           }],
-          property_facing : "",
+          property_facing : [""],
           floor_details: [ {
             total_floors_in_property: "1",
             your_property_floor_no: "1" }
@@ -606,7 +614,7 @@ exports.getform_details_commercial = async (req, res) => {
             facade_width : "",
             facade_height : ""
           }],
-          property_facing : "",
+          property_facing : [""],
           floor_details: [ {
             total_floors_in_property: "1",
             your_property_floor_no: "1" }
@@ -730,7 +738,7 @@ exports.getform_details_commercial = async (req, res) => {
         const [washroom_details] = await db.query(`select washroom_details from washroom_details`);
         const lifts = await db.query(`select lifts from lifts`);
         const office_previously_used_for = await db.query(`select office_previously_used_for from office_previously_used_for`);
-        const [suitable_business_type] = await db.query(`select suitable_bsiness_type from suitable_bsiness_type`);
+        const [suitable_business_type] = await db.query(`select suitable_business_type from suitable_business_type`);
         const [property_ownership_rows] = await db.query(`SELECT property_ownership FROM property_ownership`);
         const [availability_status_rows] = await db.query(`SELECT availability_status FROM availability_status`);
         const [other_rooms_rows] = await db.query(`SELECT other_rooms FROM other_rooms`);
@@ -773,7 +781,7 @@ exports.getform_details_commercial = async (req, res) => {
             pantry : [""],
             pantry_size : "",
             washroom_details: washroom_details.map(r => r.washroom_details),
-            suitable_business_type: suitable_business_type.map(r => r.suitable_bsiness_type),
+            suitable_business_type: suitable_business_type.map(r => r.suitable_business_type),
             central_ac : [""],
             oxygen_duct : [""],
             ups : [""],
@@ -1355,7 +1363,7 @@ exports.createPostStep3 = async (req, res) => {
 
   try {
 
-    const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+    const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ? and deleted_at is null`, [user_id]);
     if (exist_user.length === 0) {
       return res.status(200).json({
         result: "0",
@@ -1364,18 +1372,10 @@ exports.createPostStep3 = async (req, res) => {
       });
     }
 
-    if(isNaN(latitude || longitude)){
-      return res.status(200).json({
-        result : "0",
-        error : "Latitude and Longitude are in double only.",
-        data :[]
-      })
-    }
-
     const [updateResult] = await db.query(
       `UPDATE user_posts 
        SET country = ?, state = ?, city = ?, locality = ?, latitude = ?, longitude = ?, updated_at = NOW() , draft = ?
-       WHERE U_ID = ? AND user_post_id = ?`,
+       WHERE U_ID = ? AND user_post_id = ? and deleted_at is null and account_status =0`,
       [country, state, city, locality, latitude, longitude, draft,  user_id, user_post_id]
     );
 
@@ -1421,7 +1421,10 @@ exports.createPostStep4 = async (req, res) => {
   } = req.body;
 
   if (!user_id || !user_post_id) {
-    return res.status(200).json({ message: "user_id and user_post_id are required." });
+    return res.status(200).json({ 
+      result : "0",
+      error: "user_id and user_post_id are required.",
+    data : [] });
   }
 
   const draft = 4
@@ -1433,7 +1436,10 @@ exports.createPostStep4 = async (req, res) => {
     );
 
     if (!landTypeResult.length) {
-      return res.status(200).json({ message: 'Post not found for given user_id and user_post_id.' });
+      return res.status(200).json({ 
+        result : "0",
+        error: 'Post not found for given user_id and user_post_id.',
+        data : [] });
     }
 
     const land_type_id_from_db = landTypeResult[0].land_type_id;
@@ -1452,7 +1458,7 @@ exports.createPostStep4 = async (req, res) => {
             no_of_bedrooms = ?, no_of_bathrooms = ?, no_of_balconies = ?, no_of_open_sides = ?, 
             boundary_wall = ?, other_rooms = ?, furnishing_status = ?, 
             parking_available = ?, amenities = ?, property_highlights = ?, updated_at = NOW() , draft = ? 
-          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL
+          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL and account_status = 0
         `;
         updateValues = [
           property_name || null, bhk_type || null, property_area || null, carpet_area || null, built_up_area || null, super_built_up_area || null,
@@ -1479,7 +1485,7 @@ exports.createPostStep4 = async (req, res) => {
             office_previously_used_for = ?, parking_available = ?, washroom_details = ?, local_authority = ?, 
             suitable_business_type = ?, amenities = ?, property_highlights = ?,
            updated_at = NOW() , draft = ?
-          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL
+          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL and account_status = 0
         `;
         updateValues = [
           property_name || null, bhk_type || null, property_area || null, carpet_area || null, built_up_area || null, super_built_up_area || null,
@@ -1508,7 +1514,7 @@ exports.createPostStep4 = async (req, res) => {
             fire_safety_measures = ?, lifts = ?, pre_contract_status = ?, noc_certified = ?, occupancy_certificate = ?, 
             office_previously_used_for = ?, parking_available = ?, washroom_details = ?, local_authority = ?, 
             suitable_business_type = ?, amenities = ?, property_highlights = ?, updated_at = NOW() , draft = ?
-          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL
+          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL and account_status = 0
         `;
         updateValues = [
           property_name || null, bhk_type || null, property_area || null, carpet_area || null, built_up_area || null, super_built_up_area || null,
@@ -1525,20 +1531,33 @@ exports.createPostStep4 = async (req, res) => {
         break;
 
       default:
-        return res.status(200).json({ message: 'Invalid land_type_id.' });
+        return res.status(200).json({ 
+          result : "0",
+          error: 'Invalid land_type_id.',
+          data : [] });
     }
 
     const [updateResult] = await db.query(updateQuery, updateValues);
 
     if (updateResult.affectedRows === 0) {
-      return res.status(200).json({ message: 'Update failed: Post not found or already deleted.' });
+      return res.status(200).json({ 
+        result : "0",
+        error: 'Post not found or already deleted.',
+        data : []
+       });
     }
 
-    res.json({ success: true, message: `Step 4 completed for ${landTypeName} property.` });
+    res.json({ 
+      result : "1",
+      error : "",
+      message: `Step 4 completed for ${landTypeName} property.` });
 
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ 
+      result : "0",
+      error: err.message,    
+      data : [] });
   }
 };
 
@@ -1548,7 +1567,7 @@ exports.createPostStep5 = async (req, res) => {
   const draft = 5;
   try {
     const [result] = await db.query(
-      `UPDATE user_posts SET price = ?, updated_at = NOW() , draft = ? WHERE U_ID = ? and user_post_id = ?`,
+      `UPDATE user_posts SET price = ?, updated_at = NOW() , draft = ? WHERE U_ID = ? and user_post_id = ? and deleted_at is null and account_status = 0`,
       [price || 0, draft , user_id , user_post_id]
     );
 

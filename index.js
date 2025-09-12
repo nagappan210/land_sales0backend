@@ -26,7 +26,7 @@ const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./admin_routes/adminRoutes');
 const db = require('./db');
 app.use('/api/auth', authRoutes);
-app.use('/api/auth/admin', adminRoutes);
+app.use('/admin', adminRoutes);
 
 app.use('/uploaded', express.static('uploaded'));
 

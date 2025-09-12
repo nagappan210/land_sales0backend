@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const db = require('../db');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -10,8 +11,6 @@ const notificationController = require('../controllers/notificationController');
 const landTypeController = require('../controllers/postController');
 const videoController = require('../controllers/videoController');
 const enquireController = require('../controllers/enquireController');
-
-
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -46,6 +45,64 @@ const uploads = multer({
   { name: 'video', maxCount: 1 },
   { name: 'images', maxCount: 10 }
 ]);
+
+router.use(async (req,res,next) =>{
+  try{
+    const openRoutes = [
+      "/register",
+      "/login",
+      "/verify",
+      "/getInterest",
+      "/land_categories",
+      "/getform_details_residential",
+      "/getform_details_commercial",
+      "/getform_details_agriculture",
+      "/land_categories_name",
+      "/land_categories_para",
+      "/decline"
+    ]
+    if (openRoutes.includes(req.path)) {
+      return next();
+    }
+
+    const userId = req.body.user_id;
+
+    if (!userId) {
+      return res.status(200).json({
+        result: "0",
+        error: "user_id is required",
+        data: []
+      });
+    }
+    const [rows] = await db.query('SELECT account_status FROM users WHERE U_ID = ?', [userId]);
+
+    if (rows.length === 0) {
+      return res.status(200).json({ 
+        result: '0', 
+        error: 'User not found', 
+        data: [] 
+      });
+    }
+
+    if (rows[0].account_status !== 0) {
+      return res.status(200).json({ 
+        result: '2', 
+        error: 'User account is deactivated',
+         data: [] 
+      });
+    }
+
+    next();
+  }
+  catch (err) {
+    console.error("User status check error:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error",
+      data: []
+    });
+  }
+})
 
 
 router.post('/register', authController.register);
@@ -108,7 +165,7 @@ router.post('/self_enquiry',enquireController.self_enquiry);
 router.post("/decline", enquireController.declineEnquiry);
 router.post("/getdeclined", enquireController.getDeclinedEnquiries);
 
-router.put('/delete_post', userController.delete_post);
+router.post('/delete_post', userController.delete_post);
 router.post('/get_reels', userController.getReels);
 
 router.post('/post_like',userController.post_like);

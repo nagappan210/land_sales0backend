@@ -1106,7 +1106,7 @@
               <td class="p-3"><input type="text" name="others_id" class="w-full border rounded p-2" /></td>
               <td class="p-3">others_id</td>
               <td class="p-3">Yes</td>
-              <td class="p-3">int</td>
+              <td class="p-3">string</td>
               <td class="p-3">1</td>
             </tr>
             <tr class="border-t">
@@ -3008,7 +3008,73 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">38.Get Video Or Reels </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">38.Delete Post</h2>
+    <div class="mb-6">
+      <table class="w-full bg-white border rounded shadow text-sm mb-6">
+        <tbody>
+          <tr class="border-b">
+            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+            <td class="p-3 text-blue-700">http://localhost:7000/api/auth/delete_post</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Method:</td>
+            <td class="p-3">POST</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+            <td class="p-3">multipart/form-data</td>
+          </tr>
+          <tr>
+            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+            <td class="p-3">Development</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="delete_post" >
+        <table class="w-full text-sm bg-white border rounded shadow mb-6">
+          <thead class="bg-slate-900 text-white">
+            <tr>
+              <th class="p-3 text-left">Label Name</th>
+              <th class="p-3 text-left">Value</th>
+              <th class="p-3 text-left">Variable Name</th>
+              <th class="p-3 text-left">Mandatory</th>
+              <th class="p-3 text-left">Note</th>
+              <th class="p-3 text-left">Sample</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="p-3">User ID</td>
+              <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">User Post ID</td>
+              <td class="p-3"><input type="text" name="user_post_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_post_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr>
+              <td colspan="6" class="text-center p-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+                  Submit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">39.Get Video Or Reels </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3074,7 +3140,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">39.Like and Unlike </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">40.Like and Unlike </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3150,7 +3216,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">40.Like Count </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">41.Like Count </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3208,7 +3274,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">41.Comment For Post </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">42.Comment For Post </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3317,7 +3383,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">42.Comment Like </h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">43.Comment Like </h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3402,7 +3468,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">43.Get Comment</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">44.Get Comment</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3477,7 +3543,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">44.Get Repley Comment</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">45.Get Repley Comment</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3560,7 +3626,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">45.Land Categorie Name</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Land Categorie Name</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3619,7 +3685,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">46.Land Categorie Para</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Land Categorie Para</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3678,7 +3744,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">47.Enquire Form</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">48.Enquire Form</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3801,7 +3867,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">48.My Leads</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">49.My Leads</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3860,7 +3926,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">49.Self Enquire</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">50.Self Enquire</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3919,7 +3985,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">50.Decline Form</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">51.Decline Form</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -3994,7 +4060,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">51.Show Interest User Search</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">52.Show Interest User Search</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -4053,7 +4119,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">52.Search</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">53.Search</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -4152,7 +4218,7 @@
   </div>
 
   <div>
-    <h2 class="text-xl font-semibold text-red-600 underline mb-4">53.Report</h2>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">54.Report</h2>
     <div class="mb-6">
       <table class="w-full bg-white border rounded shadow text-sm mb-6">
         <tbody>
@@ -4221,6 +4287,14 @@
               <td class="p-3">No</td>
               <td class="p-3">int</td>
               <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">Description</td>
+              <td class="p-3"><input type="text" name="description" class="w-full border rounded p-2" /></td>
+              <td class="p-3">description</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">string</td>
+              <td class="p-3">Fack Account</td>
             </tr>
             <tr class="border-t">
               <td class="p-3">Status</td>
@@ -5495,6 +5569,37 @@
           window.location.href = 'response';
         }
       });
+
+      // DELETE POST
+      const delete_post = document.getElementById('delete_post');
+      delete_post.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const user_id = delete_post.querySelector('[name="user_id"]').value.trim();
+        const user_post_id = delete_post.querySelector('[name="user_post_id"]').value.trim();
+
+        const payload = { user_id, user_post_id };
+        console.log(payload);
+        
+
+        try {
+          const res = await fetch('http://localhost:7000/api/auth/delete_post', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+          });
+
+          // ensure backend sends JSON
+          const json = await res.json();
+          sessionStorage.setItem('registerResponse', JSON.stringify(json));
+          window.location.href = 'response';
+        } catch (err) {
+          const errorObj = { error: err.message };
+          sessionStorage.setItem('registerResponse', JSON.stringify(errorObj));
+          window.location.href = 'response';
+        }
+      });
+
 
       // GET REELS OR VIDEO
       const get_reels = document.getElementById('get_reels');

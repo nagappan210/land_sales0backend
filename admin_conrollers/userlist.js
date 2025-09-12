@@ -393,6 +393,8 @@ exports.account_band = async (req, res) => {
 
   try {
     if (Number(status) === 1) {
+      
+      
       const [data] = await db.query(`SELECT r.report_id ,r.user_id , r.receiver_id, COUNT(*) AS total_reports, u.username, u.name, u.profile_image,U.U_ID ,  u.phone_num FROM report AS r JOIN users AS u ON r.receiver_id = u.U_ID WHERE r.status = 1 GROUP BY r.receiver_id HAVING total_reports >= 10`);
 
       return res.status(200).json({
@@ -451,7 +453,7 @@ exports.activate_account = async (req, res) => {
 
     if (user_id) {
       [userResult] = await db.query(
-        `UPDATE users SET deleted_at = NULL WHERE U_ID = ?`,
+        `UPDATE users SET account_status = 0 WHERE U_ID = ?`,
         [user_id]
       );
 
@@ -463,7 +465,7 @@ exports.activate_account = async (req, res) => {
 
     if (user_id && user_post_id) {
       [postResult] = await db.query(
-        `UPDATE user_posts SET deleted_at = NULL WHERE U_ID = ? AND user_post_id = ?`,
+        `UPDATE user_posts SET account_status = 0 WHERE U_ID = ? AND user_post_id = ?`,
         [user_id, user_post_id]
       );
 
@@ -475,7 +477,7 @@ exports.activate_account = async (req, res) => {
 
     if (user_id && comment_id) {
       [commentResult] = await db.query(
-        `UPDATE post_comments SET deleted_at = NULL WHERE user_id = ? AND comment_id = ?`,
+        `UPDATE post_comments SET account_status = 0 WHERE user_id = ? AND comment_id = ?`,
         [user_id, comment_id]
       );
 

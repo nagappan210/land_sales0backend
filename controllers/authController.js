@@ -27,7 +27,7 @@ const sendOTPEmail = async (to, otp) => {
 
 exports.register = async (req, res) => {
   try {
-    const { user_id, name, phone_num_cc, phone_num, device_id, device_type, device_token } = req.body;
+    const { name, phone_num_cc, phone_num, device_id, device_type, device_token } = req.body;
 
     if (!phone_num_cc || !phone_num || !device_id || !device_token || !device_type) {
       return res.status(200).json({
@@ -38,32 +38,6 @@ exports.register = async (req, res) => {
     }
 
     const otp = generateOTP();
-
-    // if (user_id) {
-    //   const [existingUser] = await db.query("SELECT * FROM users WHERE phone_num = ?", [phone_num]);
-
-    //   // if (!existingUser.length) {
-    //   //   return res.status(200).json({
-    //   //     result: "0",
-    //   //     error: "User not found for update.",
-    //   //     data: []
-    //   //   });
-    //   // }
-
-    //   await db.query(
-    //     `UPDATE users 
-    //      SET phone_num = ?, phone_num_cc = ?, otp = ?, otp_created_at = NOW(),
-    //          device_id = ?, device_type = ?, device_token = ?, flag = 1
-    //      WHERE phone_num = ?`,
-    //     [phone_num, phone_num_cc, otp, device_id, device_type, device_token, phone_num]
-    //   );
-
-    //   return res.json({
-    //     result: "1",
-    //     error: "",
-    //     data: [{ user_id, phone_num_cc, phone_num, otp }]
-    //   });
-    // }
 
     const [existingUsers] = await db.query("SELECT * FROM users WHERE phone_num = ?", [phone_num]);
     if (existingUsers && existingUsers.length && existingUsers[0]?.flag === 0) {
@@ -178,16 +152,20 @@ exports.login = async (req, res) => {
       });
     }
 
+    const [band_user] = await db.query(
+      'SELECT * FROM users WHERE phone_num = ? AND phone_num_cc = ? and flag = 0 and account_status = 1',
+      [phone_num, phone_num_cc]
+    );
+
+    if (band_user.length > 0) {
+      return res.status(200).json({
+        result: "2",
+        error: "Your Account is band",
+        data: []
+      });
+    }
+
     const user = users[0];
-
-
-    // if (user.flag) {
-    //   return res.status(200).json({
-    //     result: "0",
-    //     error: "User doesn't exist. please register",
-    //     data: []
-    //   });
-    // }
 
     const otp = generateOTP();
 
@@ -461,9 +439,12 @@ exports.deactivate_or_restore_user = async (req, res) => {
     if (status === 1) {
       const now = new Date();
       await db.query(
-        `UPDATE users SET deleted_at = ? WHERE U_ID = ?`,
-        [now, user_id]
-      );
+          `UPDATE users u 
+           JOIN user_posts up ON u.U_ID = up.U_ID 
+           SET u.deleted_at = ?, up.deleted_at = ? 
+           WHERE u.U_ID = ?`,
+          [now, now, user_id]
+        );
 
       return res.json({
         result: "1",
@@ -472,10 +453,12 @@ exports.deactivate_or_restore_user = async (req, res) => {
 
     } else if (status === 2) {
       const [result] = await db.query(
-        `UPDATE users 
-         SET deleted_at = NULL 
-         WHERE U_ID = ? AND deleted_at IS NOT NULL 
-           AND deleted_at > DATE_SUB(NOW(), INTERVAL 30 DAY)`,
+        `UPDATE users u
+     JOIN user_posts up ON u.U_ID = up.U_ID 
+     SET u.deleted_at = NULL, up.deleted_at = NULL
+     WHERE u.U_ID = ? 
+       AND u.deleted_at IS NOT NULL 
+       AND u.deleted_at > DATE_SUB(NOW(), INTERVAL 30 DAY)`,
         [user_id]
       );
 
@@ -510,4 +493,3 @@ exports.deactivate_or_restore_user = async (req, res) => {
     });
   }
 };
-
