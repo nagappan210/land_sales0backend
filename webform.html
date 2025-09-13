@@ -2377,6 +2377,7 @@
               <th class="p-3 text-left">Mandatory</th>
               <th class="p-3 text-left">Note</th>
               <th class="p-3 text-left">Sample</th>
+              <th class="p-3 text-left">Value</th>
             </tr>
           </thead>
           <tbody>
@@ -2403,6 +2404,15 @@
               <td class="p-3">Yes</td>
               <td class="p-3">string</td>
               <td class="p-3">8,50,000</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">Price Negotiable</td>
+              <td class="p-3"><input type="text" name="price_negotiable" class="w-full border rounded p-2" /></td>
+              <td class="p-3">price_negotiable</td>
+              <td class="p-3">No</td>
+              <td class="p-3">string</td>
+              <td class="p-3">0 or 1</td>
+              <td class="p-3">0->No , 1->Yes</td>
             </tr>
             <tr>
               <td colspan="7" class="text-center p-4">
@@ -4168,6 +4178,7 @@
               <th class="p-3 text-left">Mandatory</th>
               <th class="p-3 text-left">Note</th>
               <th class="p-3 text-left">Sample</th>
+              <th class="p-3 text-left">Value</th>
 
             </tr>
           </thead>
@@ -4181,12 +4192,13 @@
               <td class="p-3">1</td>
             </tr>
             <tr class="border-t">
-              <td class="p-3">Land Type ID</td>
-              <td class="p-3"><input type="text" name="land_type_id" class="w-full border rounded p-2" /></td>
-              <td class="p-3">land_type_id</td>
+              <td class="p-3">Search Type</td>
+              <td class="p-3"><input type="text" name="search_type" class="w-full border rounded p-2" /></td>
+              <td class="p-3">search_type</td>
               <td class="p-3">Yes</td>
               <td class="p-3">int</td>
               <td class="p-3">1</td>
+              <td class="p-3">1->Residential , 2->Commercial , <br> 3->Agriculture , 4->Seller</td>
             </tr>
             <tr class="border-t">
               <td class="p-3">Locality</td>
@@ -4213,6 +4225,14 @@
               <td class="p-3">950000</td>
             </tr>
             <tr class="border-t">
+              <td class="p-3">Name</td>
+              <td class="p-3"><input type="text" name="name" class="w-full border rounded p-2" /></td>
+              <td class="p-3">name</td>
+              <td class="p-3">No</td>
+              <td class="p-3">string</td>
+              <td class="p-3">Naga</td>
+            </tr>
+            <tr class="border-t">
               <td class="p-3">Page</td>
               <td class="p-3"><input type="text" name="page" class="w-full border rounded p-2" /></td>
               <td class="p-3">page</td>
@@ -4221,7 +4241,7 @@
               <td class="p-3">1</td>
             </tr>
             <tr>
-              <td colspan="6" class="text-center p-4">
+              <td colspan="7" class="text-center p-4">
                 <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
                   Submit
                 </button>

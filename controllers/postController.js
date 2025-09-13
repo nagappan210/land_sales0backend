@@ -263,7 +263,7 @@ exports.getform_details_residential = async (req, res) => {
           property_area : "",
           Carpet_area: "1",
           built_up_area: "1",
-          super_built_up_area: "1",
+          super_built_up_area: "",
           area_dimensions : [{
             length: "1",
             width: "1",
@@ -271,7 +271,7 @@ exports.getform_details_residential = async (req, res) => {
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
             total_floors_in_property: "1",
-            your_property_floor_no: "1" }
+            your_property_floor_no: "" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status),
@@ -308,7 +308,7 @@ exports.getform_details_residential = async (req, res) => {
           property_area : "",
           Carpet_area: "1",
           built_up_area: "1",
-          super_built_up_area: "1",
+          super_built_up_area: "",
           area_dimensions : [{
             length: "1",
             width: "1",
@@ -413,7 +413,7 @@ exports.getform_details_residential = async (req, res) => {
             your_property_floor_no: ""
           }],
           property_ownership: property_ownership_rows.map(r => r.property_ownership),
-          availability_status : "",
+          availability_status : [""],
           optional : [{
             no_of_bedrooms : [""],
             no_of_bathrooms : [""],
@@ -1562,13 +1562,13 @@ exports.createPostStep4 = async (req, res) => {
 };
 
 exports.createPostStep5 = async (req, res) => {
-  const { user_id,user_post_id, price } = req.body;
+  const { user_id,user_post_id, price , price_negotiable } = req.body;
 
   const draft = 5;
   try {
     const [result] = await db.query(
-      `UPDATE user_posts SET price = ?, updated_at = NOW() , draft = ? WHERE U_ID = ? and user_post_id = ? and deleted_at is null and account_status = 0`,
-      [price || 0, draft , user_id , user_post_id]
+      `UPDATE user_posts SET price = ?,price_negotiable = ? , updated_at = NOW() , draft = ? WHERE U_ID = ? and user_post_id = ? and deleted_at is null and account_status = 0`,
+      [price || 0, price_negotiable || 0 ,  draft , user_id , user_post_id]
     );
 
     if (result.affectedRows === 0) {

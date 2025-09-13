@@ -230,7 +230,10 @@ exports.my_leads = async (req, res) => {
     });
   }
 
-  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+  const [exist_user] = await db.query(
+    `SELECT * FROM users WHERE U_ID = ? and deleted_at is null`,
+    [user_id]
+  );
   if (exist_user.length === 0) {
     return res.status(200).json({
       result: "0",
@@ -239,7 +242,14 @@ exports.my_leads = async (req, res) => {
     });
   }
 
-  const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE user_id = ?`, [user_id]);
+  const [exist_enquire] = await db.query(
+    `SELECT 1 
+     FROM enquiries e 
+     JOIN user_posts up ON e.recever_posts_id = up.user_post_id 
+     WHERE up.U_ID = ? 
+     LIMIT 1`,
+    [user_id]
+  );
   if (exist_enquire.length === 0) {
     return res.status(200).json({
       result: "0",
@@ -252,7 +262,8 @@ exports.my_leads = async (req, res) => {
     const offset = (page - 1) * limit;
 
     const [countResult] = await db.query(
-      `SELECT COUNT(*) AS total FROM enquiries e 
+      `SELECT COUNT(*) AS total 
+       FROM enquiries e 
        JOIN user_posts up ON e.recever_posts_id = up.user_post_id 
        WHERE up.U_ID = ?`,
       [user_id]
@@ -266,22 +277,27 @@ exports.my_leads = async (req, res) => {
         e.recever_posts_id,
         e.user_id AS enquiry_by_user_id,
         u.name AS enquiry_by_user_name,
+        u.profile_image AS enquiry_by_profile_image,
         u.phone_num AS enquiry_by_user_phone,
         u.whatsapp_num AS enquiry_by_user_whatsapp,
         u.email AS enquiry_by_user_email,
         e.land_category_para,
         e.created_at,
-        up.property_name,
-        up.city,
-        up.price
+        up.*,
+        CASE WHEN is_report.user_post_id IS NOT NULL THEN 1 ELSE 0 END AS is_reported
       FROM enquiries e
       JOIN user_posts up ON e.recever_posts_id = up.user_post_id
       JOIN users u ON e.user_id = u.U_ID
+      LEFT JOIN (
+          SELECT user_post_id
+          FROM report
+          WHERE user_id = ? AND status = 2
+      ) AS is_report ON is_report.user_post_id = up.user_post_id
       WHERE up.U_ID = ?
       ORDER BY e.created_at DESC
       LIMIT ? OFFSET ?
       `,
-      [user_id, Number(limit), Number(offset)]
+      [user_id, user_id, Number(limit), Number(offset)]
     );
 
     const normalizedData = rows.map(row => {
@@ -289,7 +305,133 @@ exports.my_leads = async (req, res) => {
       for (let key in row) {
         cleanObj[key] = row[key] == null ? "" : row[key];
       }
-      return cleanObj;
+
+      let imageUrls = [];
+      if (cleanObj.images) {
+        try {
+          imageUrls = JSON.parse(cleanObj.images).map(img =>
+            `${process.env.SERVER_ADDRESS}${img}`
+          );
+        } catch {
+          imageUrls = [];
+        }
+      }
+
+      const address = [cleanObj.locality, cleanObj.cities, cleanObj.state, cleanObj.country, cleanObj.pincode]
+        .filter(v => v && v.toString().trim() !== "")
+        .join(", ");
+
+      let landTypeText = "";
+      if (cleanObj.land_type_id === 1) landTypeText = "Residential";
+      if (cleanObj.land_type_id === 2) landTypeText = "Commercial";
+      if (cleanObj.land_type_id === 3) landTypeText = "Agriculture";
+
+      let landCategoryText = "";
+      const categories = {
+        1: "Flat/ Apartment",
+        2: "Villa/Independent House",
+        3: "Builder Floor Apartment",
+        4: "Land/ Plot",
+        5: "Studio Apartment",
+        6: "Other",
+        7: "Commercial Office Space",
+        8: "Office in IT Park",
+        9: "Commercial Shop",
+        10: "Commercial Showroom",
+        11: "Commercial Land",
+        12: "Warehouse/ Godown",
+        13: "Industrial Land",
+        14: "Industrial Building",
+        15: "Industrial Shed",
+        16: "Other",
+        17: "Farmhouse",
+        18: "Agricultural Land"
+      };
+      landCategoryText = categories[cleanObj.land_categorie_id] || "";
+
+      return {
+        enquiry_details: {
+          enquire_id: cleanObj.enquire_id,
+          enquiry_by_user_id: cleanObj.enquiry_by_user_id,
+          enquiry_by_user_name: cleanObj.enquiry_by_user_name,
+          enquiry_by_profile_image: cleanObj.enquiry_by_profile_image,
+          enquiry_by_user_phone: cleanObj.enquiry_by_user_phone,
+          enquiry_by_user_whatsapp: cleanObj.enquiry_by_user_whatsapp,
+          enquiry_by_user_email: cleanObj.enquiry_by_user_email,
+          land_category_para: cleanObj.land_category_para,
+          created_at: cleanObj.created_at,
+        },
+        post_property: {
+          user_post_id: cleanObj.user_post_id,
+          user_type: cleanObj.user_type,
+          land_type_id: cleanObj.land_type_id,
+          landTypeText,
+          land_categorie_id: cleanObj.land_categorie_id,
+          landCategoryText,
+          country: cleanObj.country,
+          state: cleanObj.state,
+          city: cleanObj.city,
+          locality: cleanObj.locality,
+          latitude: cleanObj.latitude,
+          longitude: cleanObj.longitude,
+          created_at: cleanObj.created_at,
+          property_name: cleanObj.property_name,
+          bhk_type: cleanObj.bhk_type,
+          carpet_area: cleanObj.carpet_area,
+          property_area: cleanObj.property_area,
+          built_up_area: cleanObj.built_up_area,
+          super_built_up_area: cleanObj.super_built_up_area,
+          facade_width: cleanObj.facade_width,
+          facade_height: cleanObj.facade_height,
+          area_length: cleanObj.area_length,
+          area_width: cleanObj.area_width,
+          property_facing: cleanObj.property_facing,
+          total_floor: cleanObj.total_floor,
+          property_floor_no: cleanObj.property_floor_no,
+          property_ownership: cleanObj.property_ownership,
+          availability_status: cleanObj.availability_status,
+          no_of_bedrooms: cleanObj.no_of_bedrooms,
+          no_of_bathrooms: cleanObj.no_of_bathrooms,
+          no_of_balconies: cleanObj.no_of_balconies,
+          no_of_open_sides: cleanObj.no_of_open_sides,
+          no_of_cabins: cleanObj.no_of_cabins,
+          no_of_meeting_rooms: cleanObj.no_of_meeting_rooms,
+          min_of_seats: cleanObj.min_of_seats,
+          max_of_seats: cleanObj.max_of_seats,
+          conference_room: cleanObj.conference_room,
+          no_of_staircases: cleanObj.no_of_staircases,
+          washroom_details: cleanObj.washroom_details,
+          reception_area: cleanObj.reception_area,
+          pantry: cleanObj.pantry,
+          pantry_size: cleanObj.pantry_size,
+          central_ac: cleanObj.central_ac,
+          oxygen_duct: cleanObj.oxygen_duct,
+          ups: cleanObj.ups,
+          other_rooms: cleanObj.other_rooms,
+          furnishing_status: cleanObj.furnishing_status,
+          fire_safety_measures: cleanObj.fire_safety_measures,
+          lifts: cleanObj.lifts,
+          pre_contract_status: cleanObj.pre_contract_status,
+          local_authority: cleanObj.local_authority,
+          noc_certified: cleanObj.noc_certified,
+          occupancy_certificate: cleanObj.occupancy_certificate,
+          office_previously_used_for: cleanObj.office_previously_used_for,
+          Parking_available: cleanObj.Parking_available,
+          boundary_wall: cleanObj.boundary_wall,
+          amenities: cleanObj.amenities,
+          suitable_business_type: cleanObj.suitable_business_type,
+          price: cleanObj.price,
+          price_negotiable: cleanObj.price_negotiable,
+          property_highlights: cleanObj.property_highlights,
+          video: imageUrls.length > 0 ? "" : cleanObj.video,
+          image_urls: imageUrls,
+          thumbnail: cleanObj.thumbnail
+            ? `${process.env.SERVER_ADDRESS}${cleanObj.thumbnail}`
+            : (imageUrls.length > 0 ? imageUrls[0] : ""),
+          address,
+          is_report: cleanObj.is_reported
+        }
+      };
     });
 
     return res.json({
@@ -352,31 +494,167 @@ exports.self_enquiry = async (req, res) => {
       `
       SELECT 
         e.enquire_id,
-        u.name AS user_name,
+        u.U_ID AS enquiry_by_user_id,
+        u.name AS enquiry_by_user_name,
+        u.profile_image AS enquiry_by_profile_image,
+        u.phone_num AS enquiry_by_user_phone,
+        u.whatsapp_num AS enquiry_by_user_whatsapp,
+        u.email AS enquiry_by_user_email,
         e.recever_posts_id,
-        up.property_name,
-        up.city,
-        up.price,
+        up.*,
         e.land_type_id,
         e.land_categorie_id,
         e.land_category_para,
-        e.created_at
+        e.created_at,
+        CASE WHEN is_report.user_post_id IS NOT NULL THEN 1 ELSE 0 END AS is_reported
       FROM enquiries e
       JOIN user_posts up ON e.recever_posts_id = up.user_post_id
-      JOIN users u ON e.user_id = u.U_ID
+      JOIN users u ON up.U_ID = u.U_ID
+      LEFT JOIN (
+          SELECT user_post_id
+          FROM report
+          WHERE user_id = ? AND status = 2
+      ) AS is_report ON is_report.user_post_id = up.user_post_id
       WHERE e.user_id = ?
       ORDER BY e.created_at DESC
       LIMIT ? OFFSET ?
       `,
-      [user_id, Number(limit), Number(offset)]
+      [user_id, user_id, Number(limit), Number(offset)]
     );
+
 
     const normalizedData = rows.map(row => {
       const cleanObj = {};
       for (let key in row) {
         cleanObj[key] = row[key] == null ? "" : row[key];
       }
-      return cleanObj;
+
+      let imageUrls = [];
+      if (cleanObj.images) {
+        try {
+          imageUrls = JSON.parse(cleanObj.images).map(img =>
+            `${process.env.SERVER_ADDRESS}${img}`
+          );
+        } catch {
+          imageUrls = [];
+        }
+      }
+
+      const address = [cleanObj.locality, cleanObj.cities, cleanObj.state, cleanObj.country, cleanObj.pincode]
+        .filter(v => v && v.toString().trim() !== "")
+        .join(", ");
+
+      let landTypeText = "";
+      if (cleanObj.land_type_id === 1) landTypeText = "Residential";
+      if (cleanObj.land_type_id === 2) landTypeText = "Commercial";
+      if (cleanObj.land_type_id === 3) landTypeText = "Agriculture";
+
+      let landCategoryText = "";
+      const categories = {
+        1: "Flat/ Apartment",
+        2: "Villa/Independent House",
+        3: "Builder Floor Apartment",
+        4: "Land/ Plot",
+        5: "Studio Apartment",
+        6: "Other",
+        7: "Commercial Office Space",
+        8: "Office in IT Park",
+        9: "Commercial Shop",
+        10: "Commercial Showroom",
+        11: "Commercial Land",
+        12: "Warehouse/ Godown",
+        13: "Industrial Land",
+        14: "Industrial Building",
+        15: "Industrial Shed",
+        16: "Other",
+        17: "Farmhouse",
+        18: "Agricultural Land"
+      };
+      landCategoryText = categories[cleanObj.land_categorie_id] || "";
+
+      return {
+        enquiry_details: {
+          enquire_id: cleanObj.enquire_id,
+          enquiry_by_user_id: cleanObj.enquiry_by_user_id,
+          enquiry_by_user_name: cleanObj.enquiry_by_user_name,
+          enquiry_by_profile_image: cleanObj.enquiry_by_profile_image,
+          enquiry_by_user_phone: cleanObj.enquiry_by_user_phone,
+          enquiry_by_user_whatsapp: cleanObj.enquiry_by_user_whatsapp,
+          enquiry_by_user_email: cleanObj.enquiry_by_user_email,
+          land_category_para: cleanObj.land_category_para,
+          created_at: cleanObj.created_at,
+        },
+        post_property: {
+          user_post_id: cleanObj.user_post_id,
+          user_type: cleanObj.user_type,
+          land_type_id: cleanObj.land_type_id,
+          landTypeText,
+          land_categorie_id: cleanObj.land_categorie_id,
+          landCategoryText,
+          country: cleanObj.country,
+          state: cleanObj.state,
+          city: cleanObj.city,
+          locality: cleanObj.locality,
+          latitude: cleanObj.latitude,
+          longitude: cleanObj.longitude,
+          created_at: cleanObj.created_at,
+          property_name: cleanObj.property_name,
+          bhk_type: cleanObj.bhk_type,
+          carpet_area: cleanObj.carpet_area,
+          property_area: cleanObj.property_area,
+          built_up_area: cleanObj.built_up_area,
+          super_built_up_area: cleanObj.super_built_up_area,
+          facade_width: cleanObj.facade_width,
+          facade_height: cleanObj.facade_height,
+          area_length: cleanObj.area_length,
+          area_width: cleanObj.area_width,
+          property_facing: cleanObj.property_facing,
+          total_floor: cleanObj.total_floor,
+          property_floor_no: cleanObj.property_floor_no,
+          property_ownership: cleanObj.property_ownership,
+          availability_status: cleanObj.availability_status,
+          no_of_bedrooms: cleanObj.no_of_bedrooms,
+          no_of_bathrooms: cleanObj.no_of_bathrooms,
+          no_of_balconies: cleanObj.no_of_balconies,
+          no_of_open_sides: cleanObj.no_of_open_sides,
+          no_of_cabins: cleanObj.no_of_cabins,
+          no_of_meeting_rooms: cleanObj.no_of_meeting_rooms,
+          min_of_seats: cleanObj.min_of_seats,
+          max_of_seats: cleanObj.max_of_seats,
+          conference_room: cleanObj.conference_room,
+          no_of_staircases: cleanObj.no_of_staircases,
+          washroom_details: cleanObj.washroom_details,
+          reception_area: cleanObj.reception_area,
+          pantry: cleanObj.pantry,
+          pantry_size: cleanObj.pantry_size,
+          central_ac: cleanObj.central_ac,
+          oxygen_duct: cleanObj.oxygen_duct,
+          ups: cleanObj.ups,
+          other_rooms: cleanObj.other_rooms,
+          furnishing_status: cleanObj.furnishing_status,
+          fire_safety_measures: cleanObj.fire_safety_measures,
+          lifts: cleanObj.lifts,
+          pre_contract_status: cleanObj.pre_contract_status,
+          local_authority: cleanObj.local_authority,
+          noc_certified: cleanObj.noc_certified,
+          occupancy_certificate: cleanObj.occupancy_certificate,
+          office_previously_used_for: cleanObj.office_previously_used_for,
+          Parking_available: cleanObj.Parking_available,
+          boundary_wall: cleanObj.boundary_wall,
+          amenities: cleanObj.amenities,
+          suitable_business_type: cleanObj.suitable_business_type,
+          price: cleanObj.price,
+          price_negotiable: cleanObj.price_negotiable,
+          property_highlights: cleanObj.property_highlights,
+          video: imageUrls.length > 0 ? "" : cleanObj.video,
+          image_urls: imageUrls,
+          thumbnail: cleanObj.thumbnail
+            ? `${process.env.SERVER_ADDRESS}${cleanObj.thumbnail}`
+            : (imageUrls.length > 0 ? imageUrls[0] : ""),
+          address,
+          is_report: cleanObj.is_reported
+        }
+      };
     });
 
     return res.json({
