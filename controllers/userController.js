@@ -427,7 +427,6 @@ exports.getProfileStats = async (req, res) => {
 
     const profile = results[0];
 
-    // Check if blocked
     let isBlocked = 0;
     if (othersIdNum !== 0) {
       const [blockRows] = await db.query(
@@ -439,7 +438,6 @@ exports.getProfileStats = async (req, res) => {
       isBlocked = blockRows[0].blocked > 0 ? 1 : 0;
     }
 
-    // Check follow status
     let is_followed = 0;
     let im_followed = 0;
     if (othersIdNum !== 0) {
@@ -2935,91 +2933,120 @@ exports.likeComment = async (req, res) => {
 };
 
 // exports.search = async (req, res) => {
-//   const { land_type_id, locality, min_price, max_price, user_id, page = 1 , seller } = req.body;
+//   const { search_type, locality, min_price, max_price, user_id, page = 1, name } = req.body;
 
 //   const limit = 10;
 //   const pageNum = Number(page);
 //   const offset = (pageNum - 1) * limit;
 
-//   if (
-//     !user_id || !land_type_id || !locality || !min_price || !max_price ||
-//     isNaN(Number(user_id)) || isNaN(Number(land_type_id)) ||
-//     isNaN(Number(min_price)) || isNaN(Number(max_price))
-//   ) {
+//   if (!user_id || !search_type) {
 //     return res.status(200).json({
 //       result: "0",
-//       error: "All fields are required. user_id, land_type_id, min_price, and max_price must be integers.",
-//       data: []
-//     });
-//   }
-
-//   const [userExists] = await db.query(`SELECT U_ID FROM users WHERE U_ID = ?`, [user_id]);
-//   if (userExists.length === 0) {
-//     return res.status(200).json({
-//       result: "0",
-//       error: "User not found",
-//       data: []
-//     });
-//   }
-
-//   const [land_type_exist] = await db.query(`SELECT * FROM land_types WHERE land_type_id = ?`, [land_type_id]);
-//   if (land_type_exist.length === 0) {
-//     return res.status(200).json({
-//       result: "0",
-//       error: "User land type is not found",
+//       error: "user_id and search_type are required",
 //       data: []
 //     });
 //   }
 
 //   try {
-//     const [existing] = await db.query(
-//       `SELECT search_id FROM search WHERE user_id = ? AND land_type_id = ?`,
-//       [user_id, land_type_id]
+//     const [userExists] = await db.query(
+//       `SELECT U_ID FROM users WHERE U_ID = ? AND deleted_at IS NULL`,
+//       [user_id]
 //     );
+//     if (userExists.length === 0) {
+//       return res.status(200).json({
+//         result: "0",
+//         error: "User not found",
+//         data: []
+//       });
+//     }
 
+    
+//     let rows = [];
+//     let total = 0;
+
+//     if ([1, 2, 3].includes(Number(search_type))) {
+//       const [existing] = await db.query(
+//       `SELECT search_id FROM search WHERE user_id = ? AND search_type = ?`,
+//       [user_id, search_type]
+//     );
 //     if (existing.length === 0) {
 //       await db.query(
-//         `INSERT INTO search (user_id, land_type_id, create_at) VALUES (?, ?, NOW())`,
-//         [user_id, land_type_id]
+//         `INSERT INTO search (user_id, search_type, create_at) VALUES (?, ?, NOW())`,
+//         [user_id, search_type]
+//       );
+//     }
+//       const [countRows] = await db.query(
+//         `SELECT COUNT(DISTINCT p.user_post_id) AS total
+//          FROM user_posts p
+//          WHERE p.land_type_id = ?
+//            AND p.price BETWEEN ? AND ?
+//            AND p.locality LIKE ?`,
+//         [search_type, min_price, max_price, `%${locality}%`]
+//       );
+//       total = countRows[0].total;
+
+//       [rows] = await db.query(
+//         `SELECT  
+//             u.username, u.U_ID, u.profile_image, 
+//             p.user_post_id, p.land_type_id, p.property_name, p.locality, 
+//             p.price, p.video, p.created_at,
+//             COUNT(DISTINCT l.like_id) AS like_count,
+//             COUNT(DISTINCT c.comment_id) AS comment_count
+//          FROM users u
+//          JOIN user_posts p ON u.U_ID = p.U_ID
+//          LEFT JOIN post_likes l ON p.user_post_id = l.user_post_id
+//          LEFT JOIN post_comments c ON p.user_post_id = c.user_post_id
+//          WHERE p.land_type_id = ?
+//            AND p.price BETWEEN ? AND ?
+//            AND p.locality LIKE ?
+//          GROUP BY 
+//            u.username, u.U_ID, u.profile_image,
+//            p.user_post_id, p.land_type_id, p.property_name, 
+//            p.locality, p.price, p.video, p.created_at
+//          ORDER BY p.user_post_id DESC
+//          LIMIT ? OFFSET ?`,
+//         [search_type, min_price, max_price, `%${locality}%`, limit, offset]
+//       );
+
+//     } else if (Number(search_type) === 4) {
+//       if (!name || name.trim() === "") {
+//         return res.status(200).json({
+//           result: "0",
+//           error: "name is required for profile search",
+//           data: []
+//         });
+//       }
+
+//       const [countRows] = await db.query(
+//         `SELECT COUNT(*) AS total 
+//          FROM users 
+//          WHERE (LOWER(name) LIKE ? OR LOWER(username) LIKE ?) 
+//            AND deleted_at IS NULL 
+//            AND account_status = 0`,
+//         [`%${name.toLowerCase()}%`, `%${name.toLowerCase()}%`]
+//       );
+//       total = countRows[0].total;
+
+//       [rows] = await db.query(
+//         `SELECT 
+//             u.U_ID, u.username, u.name, u.profile_image, u.email, 
+//             u.phone_num, u.whatsapp_num,
+//             COUNT(DISTINCT p.user_post_id) AS total_posts
+//          FROM users u
+//          LEFT JOIN user_posts p ON u.U_ID = p.U_ID
+//          WHERE (LOWER(u.name) LIKE ? OR LOWER(u.username) LIKE ?) 
+//            AND u.deleted_at IS NULL 
+//            AND u.account_status = 0
+//          GROUP BY u.U_ID, u.username, u.name, u.profile_image, 
+//                   u.email, u.phone_num, u.whatsapp_num
+//          ORDER BY u.U_ID DESC
+//          LIMIT ? OFFSET ?`,
+//         [`%${name.toLowerCase()}%`, `%${name.toLowerCase()}%`, limit, offset]
 //       );
 //     }
 
-//     const [countRows] = await db.query(
-//       `SELECT COUNT(DISTINCT p.user_post_id) AS total
-//        FROM user_posts p
-//        WHERE p.land_type_id = ?
-//          AND p.price BETWEEN ? AND ?
-//          AND p.locality LIKE ?`,
-//       [land_type_id, min_price, max_price, `%${locality}%`]
-//     );
-
-//     const total = countRows[0].total;
 //     const totalPages = Math.ceil(total / limit);
 //     const nxtpage = pageNum < totalPages ? pageNum + 1 : 0;
-//     const recCnt = total;
-
-//     const [rows] = await db.query(
-//       `SELECT  
-//           u.username, u.U_ID, u.profile_image, 
-//           p.user_post_id, p.land_type_id, p.property_name, p.locality, 
-//           p.price, p.video, p.created_at,
-//           COUNT(DISTINCT l.like_id) AS like_count,
-//           COUNT(DISTINCT c.comment_id) AS comment_count
-//        FROM users u
-//        JOIN user_posts p ON u.U_ID = p.U_ID
-//        LEFT JOIN post_likes l ON p.user_post_id = l.user_post_id
-//        LEFT JOIN post_comments c ON p.user_post_id = c.user_post_id
-//        WHERE p.land_type_id = ?
-//          AND p.price BETWEEN ? AND ?
-//          AND p.locality LIKE ?
-//        GROUP BY 
-//          u.username, u.U_ID, u.profile_image,
-//          p.user_post_id, p.land_type_id, p.property_name, 
-//          p.locality, p.price, p.video, p.created_at
-//        ORDER BY p.user_post_id DESC
-//        LIMIT ? OFFSET ?`,
-//       [land_type_id, min_price, max_price, `%${locality}%`, limit, offset]
-//     );
 
 //     if (rows.length === 0) {
 //       return res.status(200).json({
@@ -3027,11 +3054,12 @@ exports.likeComment = async (req, res) => {
 //         error: "No data found",
 //         data: [],
 //         totalPages,
-//         nxtpage, 
-//         recCnt
+//         nxtpage,
+//         recCnt: total
 //       });
 //     }
 
+//     // ✅ sanitize rows
 //     const sanitizedRows = rows.map(row => {
 //       const cleanRow = {};
 //       for (const key in row) {
@@ -3045,13 +3073,11 @@ exports.likeComment = async (req, res) => {
 //       data: sanitizedRows,
 //       totalPages,
 //       nxtpage,
-//       recCnt
+//       recCnt: total
 //     });
 
-  
-
 //   } catch (err) {
-//     console.error(err);
+//     console.error("Search error:", err);
 //     return res.status(500).json({
 //       result: "0",
 //       error: "Database query failed",
@@ -3060,8 +3086,8 @@ exports.likeComment = async (req, res) => {
 //   }
 // };
 
-exports.search = async (req, res) => {
-  const { search_type, locality, min_price, max_price, user_id, page = 1, name } = req.body;
+exports.searchProperty = async (req, res) => {
+  const { search_type, locality, min_price = 0, max_price = 999999999, user_id, page = 1 } = req.body;
 
   const limit = 10;
   const pageNum = Number(page);
@@ -3088,12 +3114,7 @@ exports.search = async (req, res) => {
       });
     }
 
-    
-    let rows = [];
-    let total = 0;
-
-    if ([1, 2, 3].includes(Number(search_type))) {
-      const [existing] = await db.query(
+    const [existing] = await db.query(
       `SELECT search_id FROM search WHERE user_id = ? AND search_type = ?`,
       [user_id, search_type]
     );
@@ -3103,109 +3124,183 @@ exports.search = async (req, res) => {
         [user_id, search_type]
       );
     }
-      const [countRows] = await db.query(
-        `SELECT COUNT(DISTINCT p.user_post_id) AS total
-         FROM user_posts p
-         WHERE p.land_type_id = ?
-           AND p.price BETWEEN ? AND ?
-           AND p.locality LIKE ?`,
-        [search_type, min_price, max_price, `%${locality}%`]
-      );
-      total = countRows[0].total;
 
-      [rows] = await db.query(
-        `SELECT  
-            u.username, u.U_ID, u.profile_image, 
-            p.user_post_id, p.land_type_id, p.property_name, p.locality, 
-            p.price, p.video, p.created_at,
-            COUNT(DISTINCT l.like_id) AS like_count,
-            COUNT(DISTINCT c.comment_id) AS comment_count
-         FROM users u
-         JOIN user_posts p ON u.U_ID = p.U_ID
-         LEFT JOIN post_likes l ON p.user_post_id = l.user_post_id
-         LEFT JOIN post_comments c ON p.user_post_id = c.user_post_id
-         WHERE p.land_type_id = ?
-           AND p.price BETWEEN ? AND ?
-           AND p.locality LIKE ?
-         GROUP BY 
-           u.username, u.U_ID, u.profile_image,
-           p.user_post_id, p.land_type_id, p.property_name, 
-           p.locality, p.price, p.video, p.created_at
-         ORDER BY p.user_post_id DESC
-         LIMIT ? OFFSET ?`,
-        [search_type, min_price, max_price, `%${locality}%`, limit, offset]
-      );
-
-    } else if (Number(search_type) === 4) {
-      if (!name || name.trim() === "") {
-        return res.status(200).json({
-          result: "0",
-          error: "name is required for profile search",
-          data: []
-        });
-      }
-
-      const [countRows] = await db.query(
-        `SELECT COUNT(*) AS total 
-         FROM users 
-         WHERE (LOWER(name) LIKE ? OR LOWER(username) LIKE ?) 
-           AND deleted_at IS NULL 
-           AND account_status = 0`,
-        [`%${name.toLowerCase()}%`, `%${name.toLowerCase()}%`]
-      );
-      total = countRows[0].total;
-
-      [rows] = await db.query(
-        `SELECT 
-            u.U_ID, u.username, u.name, u.profile_image, u.email, 
-            u.phone_num, u.whatsapp_num,
-            COUNT(DISTINCT p.user_post_id) AS total_posts
-         FROM users u
-         LEFT JOIN user_posts p ON u.U_ID = p.U_ID
-         WHERE (LOWER(u.name) LIKE ? OR LOWER(u.username) LIKE ?) 
-           AND u.deleted_at IS NULL 
-           AND u.account_status = 0
-         GROUP BY u.U_ID, u.username, u.name, u.profile_image, 
-                  u.email, u.phone_num, u.whatsapp_num
-         ORDER BY u.U_ID DESC
-         LIMIT ? OFFSET ?`,
-        [`%${name.toLowerCase()}%`, `%${name.toLowerCase()}%`, limit, offset]
-      );
-    }
+    const [countRows] = await db.query(
+      `SELECT COUNT(DISTINCT p.user_post_id) AS total
+       FROM user_posts p
+       WHERE p.land_type_id = ?
+         AND CAST(p.price AS UNSIGNED) BETWEEN ? AND ?
+         AND p.locality LIKE ?`,
+      [search_type, min_price, max_price, `%${locality}%`]
+    );
+    const total = countRows[0].total;
+    
+    const [rows] = await db.query(
+      `SELECT  
+          u.username, u.U_ID, u.profile_image, 
+          p.user_post_id, p.land_type_id, p.property_name, p.locality, 
+          p.price, p.video, p.created_at,
+          COUNT(DISTINCT l.like_id) AS like_count,
+          COUNT(DISTINCT c.comment_id) AS comment_count
+       FROM users u
+       JOIN user_posts p ON u.U_ID = p.U_ID
+       LEFT JOIN post_likes l ON p.user_post_id = l.user_post_id
+       LEFT JOIN post_comments c ON p.user_post_id = c.user_post_id
+       WHERE p.land_type_id = ?
+         AND CAST(p.price AS UNSIGNED) BETWEEN ? AND ?
+         AND p.locality LIKE ?
+       GROUP BY 
+         u.username, u.U_ID, u.profile_image,
+         p.user_post_id, p.land_type_id, p.property_name, 
+         p.locality, p.price, p.video, p.created_at
+       ORDER BY p.user_post_id DESC
+       LIMIT ? OFFSET ?`,
+      [search_type, min_price, max_price, `%${locality}%`, limit, offset]
+    );
 
     const totalPages = Math.ceil(total / limit);
     const nxtpage = pageNum < totalPages ? pageNum + 1 : 0;
 
-    if (rows.length === 0) {
-      return res.status(200).json({
-        result: "0",
-        error: "No data found",
-        data: [],
-        totalPages,
-        nxtpage,
-        recCnt: total
-      });
-    }
-
-    // ✅ sanitize rows
-    const sanitizedRows = rows.map(row => {
-      const cleanRow = {};
-      for (const key in row) {
-        cleanRow[key] = row[key] === null ? "" : row[key];
-      }
-      return cleanRow;
-    });
-
     return res.status(200).json({
-      result: "1",
-      data: sanitizedRows,
+      result: rows.length ? "1" : "0",
+      data: rows,
       totalPages,
       nxtpage,
       recCnt: total
     });
 
   } catch (err) {
-    console.error("Search error:", err);
+    console.error("Property search error:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Database query failed",
+      data: []
+    });
+  }
+};
+
+exports.searchProfile = async (req, res) => {
+  const { user_id , name, page = 1 } = req.body;
+
+  const limit = 10;
+  const pageNum = Number(page);
+  const offset = (pageNum - 1) * limit;
+
+  const [userExists] = await db.query(
+    `SELECT U_ID FROM users WHERE U_ID = ? AND deleted_at IS NULL`,
+    [user_id]
+  );
+  if (userExists.length === 0) {
+    return res.status(200).json({
+      result: "0",
+      error: "User not found",
+      data: []
+    });
+  }
+
+  if (!name || name.trim() === "") {
+    return res.status(200).json({
+      result: "0",
+      error: "name is required for profile search",
+      data: []
+    });
+  }
+
+  try {
+    const [countRows] = await db.query(
+      `SELECT COUNT(*) AS total 
+       FROM users 
+       WHERE (LOWER(name) LIKE ? OR LOWER(username) LIKE ?) 
+         AND deleted_at IS NULL 
+         AND account_status = 0`,
+      [`%${name.toLowerCase()}%`, `%${name.toLowerCase()}%`]
+    );
+    const total = countRows[0].total;
+
+    const [rows] = await db.query(
+      `SELECT 
+          u.U_ID, u.username, u.name, u.profile_image, u.email, 
+          u.phone_num, u.whatsapp_num,
+          COUNT(DISTINCT p.user_post_id) AS posts,
+          COUNT(DISTINCT f1.following_id) AS following,
+          COUNT(DISTINCT f2.user_id) AS followers
+       FROM users u
+       LEFT JOIN user_posts p ON u.U_ID = p.U_ID
+       LEFT JOIN followers f1 ON u.U_ID = f1.user_id
+       LEFT JOIN followers f2 ON u.U_ID = f2.following_id
+       WHERE (LOWER(u.name) LIKE ? OR LOWER(u.username) LIKE ?) 
+         AND u.deleted_at IS NULL 
+         AND u.account_status = 0
+       GROUP BY u.U_ID, u.username, u.name, u.profile_image, 
+                u.email, u.phone_num, u.whatsapp_num
+       ORDER BY u.U_ID DESC
+       LIMIT ? OFFSET ?`,
+      [`%${name.toLowerCase()}%`, `%${name.toLowerCase()}%`, limit, offset]
+    );
+
+ 
+    const data = await Promise.all(rows.map(async (r) => {
+      const [blockRows] = await db.query(
+        `SELECT COUNT(*) AS blocked
+         FROM blocks
+         WHERE user_id = ? AND blocker_id = ?`,
+        [user_id, r.U_ID]
+      );
+      const [reportRows] = await db.query(
+        `SELECT COUNT(*) AS cnt
+         FROM report
+         WHERE user_id = ? AND receiver_id = ? AND status = 1`,
+        [user_id, r.U_ID]
+      );
+      const [followRows] = await db.query(
+        `SELECT COUNT(*) AS cnt
+         FROM followers
+         WHERE user_id = ? AND following_id = ?`,
+        [user_id, r.U_ID]
+      );
+      
+
+      const [followBackRows] = await db.query(
+        `SELECT COUNT(*) AS cnt
+         FROM followers
+         WHERE user_id = ? AND following_id = ?`,
+        [r.U_ID, user_id]
+      );
+      
+      
+
+      return {
+        user_id: r.U_ID ?? 0,
+        username: r.username ?? "",
+        name: r.name ?? "",
+        phone_num: r.phone_num ?? "",
+        whatsapp_num: r.whatsapp_num ?? "",
+        email: r.email ?? "",
+        profile_image: r.profile_image ?? "",
+        posts: r.posts ?? 0,
+        following: r.following ?? 0,
+        followers: r.followers ?? 0,
+        isBlocked: blockRows[0].blocked > 0 ? 1 : 0,
+        is_report : reportRows[0].cnt > 0 ? 1 : 0,
+        others_page : 1,
+        im_followed : followRows[0].cnt > 0 ? 1 : 0,
+        is_followed : followBackRows[0].cnt > 0 ? 1 : 0,
+      };
+    }));
+
+    const totalPages = Math.ceil(total / limit);
+    const nxtpage = pageNum < totalPages ? pageNum + 1 : 0;
+
+    return res.status(200).json({
+      result: rows.length ? "1" : "0",
+      data,
+      totalPages,
+      nxtpage,
+      recCnt: total
+    });
+
+  } catch (err) {
+    console.error("Profile search error:", err);
     return res.status(500).json({
       result: "0",
       error: "Database query failed",
@@ -3324,13 +3419,51 @@ exports.getInterestedSearchers = async (req, res) => {
   }
 };
 
+exports.get_report = async (req, res) => {
+  const {page = 1} = req.body;
+  try {
+    
+    const limit = 10;
+    const offset = (page - 1) * limit;
+
+    const [countRows] = await db.query(
+      `SELECT COUNT(*) AS total FROM report_sentence`
+    );
+    const total = countRows[0].total;
+    const totalPages = Math.ceil(total / limit);
+
+    const [rows] = await db.query(
+      `SELECT report_sentence_id, report_sentence 
+       FROM report_sentence
+       LIMIT ? OFFSET ?`,
+      [limit, offset]
+    );
+
+    return res.status(200).json({
+      result: rows.length ? "1" : "0",
+      data: rows,
+      totalPages,
+      nxtpage: page < totalPages ? page + 1 : 0,
+      recCnt: total
+    });
+    
+  } catch (err) {
+    console.error("get_report error:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error",
+      data: []
+    });
+  }
+};
+
 exports.report_users = async (req, res) => {
-  const { user_id, user_post_id, receiver_id, comment_id, status, description } = req.body;
+  const { user_id, user_post_id, receiver_id, comment_id, status, report_sentence_id, report_sentence } = req.body;
+
 
   try {
-
     const [exit_user] = await db.query(
-      `SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL AND account_status = 0`,
+      `SELECT U_ID FROM users WHERE U_ID = ? AND deleted_at IS NULL AND account_status = 0`,
       [user_id]
     );
     if (exit_user.length === 0) {
@@ -3338,7 +3471,7 @@ exports.report_users = async (req, res) => {
     }
 
     const [exit_receiver] = await db.query(
-      `SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL AND account_status = 0`,
+      `SELECT U_ID FROM users WHERE U_ID = ? AND deleted_at IS NULL AND account_status = 0`,
       [receiver_id]
     );
     if (exit_receiver.length === 0) {
@@ -3346,12 +3479,12 @@ exports.report_users = async (req, res) => {
     }
 
     if (user_id === receiver_id) {
-      return res.status(200).json({ result: "0", error: "You can not report yourself", data: [] });
+      return res.status(200).json({ result: "0", error: "You cannot report yourself", data: [] });
     }
 
     if (Number(status) === 1) {
       const [report_users] = await db.query(
-        `SELECT * FROM report WHERE user_id = ? AND receiver_id = ? AND status = 1`,
+        `SELECT 1 FROM report WHERE user_id = ? AND receiver_id = ? AND status = 1`,
         [user_id, receiver_id]
       );
       if (report_users.length > 0) {
@@ -3365,27 +3498,27 @@ exports.report_users = async (req, res) => {
       const reportCount = rows[0]?.total_reports || 0;
 
       if (reportCount >= 10) {
-        await db.query(`UPDATE users SET  account_status = 1 WHERE U_ID = ?`, [receiver_id]);
-        await db.query(`UPDATE user_posts SET  account_status = 1 WHERE U_ID = ?`, [receiver_id]);
-        await db.query(`UPDATE post_comments SET  account_status = 1 WHERE U_ID = ?`, [receiver_id]);
+        await db.query(`UPDATE users SET account_status = 1 WHERE U_ID = ?`, [receiver_id]);
+        await db.query(`UPDATE user_posts SET account_status = 1 WHERE U_ID = ?`, [receiver_id]);
+        await db.query(`UPDATE post_comments SET account_status = 1 WHERE U_ID = ?`, [receiver_id]);
         return res.status(200).json({ result: "1", message: "User deleted after too many reports", data: [] });
       }
     }
 
     if (Number(status) === 2) {
       const [exit_posts] = await db.query(
-        `SELECT * FROM user_posts WHERE user_post_id = ? AND U_ID = ? AND deleted_at IS NULL AND account_status = 0`,
+        `SELECT 1 FROM user_posts WHERE user_post_id = ? AND U_ID = ? AND deleted_at IS NULL AND account_status = 0`,
         [user_post_id, receiver_id]
       );
       if (exit_posts.length === 0) {
         return res.status(200).json({ result: "0", error: "post not found in database", data: [] });
       }
+      
 
       const [report_users] = await db.query(
-        `SELECT * FROM report WHERE user_id = ? AND receiver_id = ? AND user_post_id = ? AND status = 2`,
+        `SELECT 1 FROM report WHERE user_id = ? AND receiver_id = ? AND user_post_id = ? AND status = 2`,
         [user_id, receiver_id, user_post_id]
       );
-
       if (report_users.length > 0) {
         return res.status(200).json({ result: "0", error: "You have already sent report", data: [] });
       }
@@ -3398,7 +3531,7 @@ exports.report_users = async (req, res) => {
 
       if (reportCount >= 10) {
         await db.query(
-          `UPDATE user_posts SET deleted_at = NOW(), account_status = 1 WHERE U_ID = ? AND user_post_id = ?`,
+          `UPDATE user_posts SET account_status = 1 WHERE U_ID = ? AND user_post_id = ?`,
           [receiver_id, user_post_id]
         );
         return res.status(200).json({ result: "1", message: "Post deleted after too many reports", data: [] });
@@ -3407,7 +3540,7 @@ exports.report_users = async (req, res) => {
 
     if (Number(status) === 3) {
       const [exist_comment] = await db.query(
-        `SELECT * FROM post_comments WHERE comment_id = ? AND deleted_at IS NULL AND account_status = 0`,
+        `SELECT 1 FROM post_comments WHERE comment_id = ? AND deleted_at IS NULL AND account_status = 0`,
         [comment_id]
       );
       if (exist_comment.length === 0) {
@@ -3415,7 +3548,7 @@ exports.report_users = async (req, res) => {
       }
 
       const [report_comment] = await db.query(
-        `SELECT * FROM report WHERE user_id = ? AND receiver_id = ? AND comment_id = ? AND status = 3`,
+        `SELECT 1 FROM report WHERE user_id = ? AND receiver_id = ? AND comment_id = ? AND status = 3`,
         [user_id, receiver_id, comment_id]
       );
       if (report_comment.length > 0) {
@@ -3430,25 +3563,33 @@ exports.report_users = async (req, res) => {
 
       if (reportCount >= 10) {
         await db.query(
-          `UPDATE post_comments SET deleted_at = NOW(), account_status = 1 WHERE comment_id = ?`,
+          `UPDATE post_comments SET account_status = 1 WHERE comment_id = ?`,
           [comment_id]
         );
         return res.status(200).json({ result: "1", message: "Comment deleted after too many reports", data: [] });
       }
     }
+
     const [insert_data] = await db.query(
-      `INSERT INTO report (user_post_id, receiver_id, user_id, comment_id, description, status) VALUES (?, ?, ?, ?, ?, ?)`,
-      [user_post_id || null, receiver_id, user_id, comment_id || null, description || null, status]
+      `INSERT INTO report (user_post_id, receiver_id, user_id, comment_id, report_sentence_id, report_sentence, status) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [user_post_id || null, receiver_id, user_id, comment_id, report_sentence_id, report_sentence || null, status]
     );
 
     if (insert_data.affectedRows === 0) {
       return res.status(500).json({ result: "0", error: "Insert failed", data: [] });
     }
 
-    return res.status(200).json({ result: "1", message: "Report submitted successfully", data: [] });
+    return res.status(200).json({ 
+      result: "1", 
+      message: "Report submitted successfully", 
+      report_id: insert_data.insertId,
+      status
+    });
 
   } catch (err) {
-    console.error(err);
+    console.error("report_users error:", err);
     return res.status(500).json({ result: "0", error: "server error", data: [] });
   }
 };
+

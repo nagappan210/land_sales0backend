@@ -176,7 +176,7 @@ exports.createPostStep2 = async (req, res) => {
       });
     } else {
       await db.query(
-        `UPDATE user_posts SET land_type_id = ?,  land_categorie_id = ?,  property_name = NULL, property_area = NULL, bhk_type = NULL, carpet_area = NULL, built_up_area = NULL, super_built_up_area = NULL, facade_width = NULL, facade_height = NULL, area_length = NULL, area_width = NULL, total_floor = NULL, property_floor_no = NULL, property_ownership = NULL, availability_status = NULL, no_of_bedrooms = NULL, no_of_bathrooms = NULL, no_of_balconies = NULL, no_of_open_sides = NULL, no_of_cabins = NULL, no_of_meeting_rooms = NULL, min_of_seats = NULL, max_of_seats = NULL, conference_room = NULL, no_of_staircases = NULL, washroom_details = NULL, reception_area = NULL, pantry = NULL, pantry_size = NULL, central_ac = NULL, oxygen_duct = NULL, ups = NULL, other_rooms = NULL, furnishing_status = NULL, fire_safety_measures = NULL, lifts = NULL, pre_contract_status = NULL, local_authority = NULL, noc_certified = NULL, occupancy_certificate = NULL, office_previously_used_for = NULL, Parking_available = NULL, boundary_wall = NULL, amenities = NULL, suitable_business_type = NULL, price = NULL, property_highlights = NULL, video = NULL, image_ids = NULL, thumbnail = NULL, updated_at = NOW(), draft = ?
+        `UPDATE user_posts SET land_type_id = ?,  land_categorie_id = ?,  property_name = NULL, property_area = NULL, bhk_type = NULL, carpet_area = NULL, built_up_area = NULL, super_built_up_area = NULL, facade_width = NULL, facade_height = NULL, area_length = NULL, area_width = NULL, property_facing = Null, carpet_area_unit = Null,built_up_area_unit = Null,super_built_up_area_unit = Null,area_length_unit = Null,area_width_unit = null,pantry_size_unit = Null,property_area_unit = Null, total_floor = NULL, property_floor_no = NULL, property_ownership = NULL, availability_status = NULL, no_of_bedrooms = NULL, no_of_bathrooms = NULL, no_of_balconies = NULL, no_of_open_sides = NULL, no_of_cabins = NULL, no_of_meeting_rooms = NULL, min_of_seats = NULL, max_of_seats = NULL, conference_room = NULL, no_of_staircases = NULL, washroom_details = NULL, reception_area = NULL, pantry = NULL, pantry_size = NULL, central_ac = NULL, oxygen_duct = NULL, ups = NULL, other_rooms = NULL, furnishing_status = NULL, fire_safety_measures = NULL, lifts = NULL, local_authority = NULL, noc_certified = NULL, occupancy_certificate = NULL, office_previously_used_for = NULL, Parking_available = NULL, boundary_wall = NULL, amenities = NULL, suitable_business_type = NULL, price = NULL, property_highlights = NULL, video = NULL, image_ids = NULL, thumbnail = NULL, updated_at = NOW(), draft = ?
          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL`,
         [status, land_categorie_id, draft, user_id, user_post_id]
       );
@@ -571,7 +571,7 @@ exports.getform_details_commercial = async (req, res) => {
             fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
             lifts: lifts.map(r => r.lifts),
             parking_available: ["Yes", "No"],
-            is_it_Pre_leased_pre_rented : ["Yes", "No"],
+            is_it_pre_leased_pre_rented : ["Yes", "No"],
             is_your_office_fire_noc_certified : ["Yes", "No"],
             occupancy_certificate : ["Yes", "No"],
             office__previously_used_for : office_previously_used_for.map(r=> r.office_previously_used_for),
@@ -642,7 +642,7 @@ exports.getform_details_commercial = async (req, res) => {
             fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
             lifts: lifts.map(r => r.lifts),
             parking_available: ["Yes", "No"],
-            is_it_Pre_leased_pre_rented : [""],
+            is_it_pre_leased_pre_rented : [""],
             is_your_office_fire_noc_certified : [""],
             occupancy_certificate : [""],
             office_previously_used_for : [""],
@@ -715,7 +715,7 @@ exports.getform_details_commercial = async (req, res) => {
             fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
             lifts : [""],
             parking_available: ["Yes", "No"],
-            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            is_it_pre_leased_pre_rented : ["Yes" , "No"],
             is_your_office_fire_noc_certified : [""],
             occupancy_certificate : [""],
             office_previously_used_for : [""],
@@ -789,7 +789,7 @@ exports.getform_details_commercial = async (req, res) => {
             fire_safety_measures: fire_safety_measures.map(r => r.fire_safety_measures),
             lifts : [""],
             parking_available: ["Yes", "No"],
-            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            is_it_pre_leased_pre_rented : ["Yes" , "No"],
             is_your_office_fire_noc_certified : [""],
             occupancy_certificate : [""],
             office_previously_used_for : [""],
@@ -848,7 +848,7 @@ exports.getform_details_commercial = async (req, res) => {
             conference_room : [""],
             no_of_staircases : [""],
             which_authority_the_property_is_approved_by : ["Yes" , "No"],
-            on_of_open_sides: ["1", "2" , "3" , "4"],
+            no_of_open_sides: ["1", "2" , "3" , "4"],
             reception_area : [""],
             pantry : [""],
             pantry_size : "",
@@ -864,7 +864,7 @@ exports.getform_details_commercial = async (req, res) => {
             is_your_office_fire_noc_certified : [""],
             occupancy_certificate : [""],
             office_previously_used_for : [""],
-            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            is_it_pre_leased_pre_rented : ["Yes" , "No"],
             amenities: amenities_rows.map(r => r.amenities),
             property_highlights: property_highlights_rows.map(r => r.property_highlights)
           }] 
@@ -936,7 +936,7 @@ exports.getform_details_commercial = async (req, res) => {
             is_your_office_fire_noc_certified : [""],
             occupancy_certificate : [""],
             office_previously_used_for : [""],
-            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            is_it_pre_leased_pre_rented : ["Yes" , "No"],
             amenities: amenities_rows.map(r => r.amenities),
             property_highlights: property_highlights_rows.map(r => r.property_highlights)
           }]
@@ -966,7 +966,7 @@ exports.getform_details_commercial = async (req, res) => {
         data.push({
           property_name: "1",
           property_area : "",
-          carpet_area : "",
+          carpet_area : "1",
           built_up_area : "",
           super_built_up_area : "1",
           area_dimensions: [ {
@@ -992,7 +992,7 @@ exports.getform_details_commercial = async (req, res) => {
             conference_room : [""],
             no_of_staircases : [""],
             which_authority_the_property_is_approved_by : ["Yes" , "No"],
-            on_of_open_sides: ["1", "2" , "3" , "4"],
+            no_of_open_sides: ["1", "2" , "3" , "4"],
             reception_area : [""],
             pantry : [""],
             pantry_size : "",
@@ -1005,7 +1005,7 @@ exports.getform_details_commercial = async (req, res) => {
             fire_safety_measures: [""],
             lifts : [""],
             parking_available: [],
-            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            is_it_pre_leased_pre_rented : ["Yes" , "No"],
             is_your_office_fire_noc_certified : [""],
             occupancy_certificate : [""],
             office_previously_used_for : [""],
@@ -1030,11 +1030,11 @@ exports.getform_details_commercial = async (req, res) => {
           property_name: "1",
           property_area : "",
           Carpet_area: "1",
-          built_up_area: "1",
+          built_up_area: "",
           super_built_up_area: "1",
           area_dimensions : [{
-            length: "1",
-            width: "1",
+            length: "",
+            width: "",
           }],
           shop_facade : [{
             facade_width : "",
@@ -1042,7 +1042,71 @@ exports.getform_details_commercial = async (req, res) => {
           }],
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
-            total_floors_in_property: "",
+            total_floors_in_property: "1",
+            your_property_floor_no: "" 
+          }
+          ],
+          property_ownership: property_ownership_rows.map(r => r.property_ownership), 
+          availability_status: availability_status_rows.map(r => r.availability_status),
+          optional : [{
+            no_of_cabins: [""],
+            no_of_meeting_rooms: [""],
+            min_no_of_seats : [""],
+            max_no_of_seats: [""],
+            conference_room : [""],
+            no_of_staircases : [""],
+            no_of_open_sides : [""],
+            which_authority_the_property_is_approved_by : [""],
+            reception_area : [""],
+            pantry : [""],
+            pantry_size : "",
+            washroom_details: [""],
+            suitable_business_type: [""],
+            central_ac : [""],
+            oxygen_duct : [""],
+            ups : [""],
+            furnishing_status : [""],
+            fire_safety_measures: [""],
+            lifts : [""],
+            parking_available: [],
+            is_it_pre_leased_pre_rented : [""],
+            is_your_office_fire_noc_certified : [""],
+            occupancy_certificate : [""],
+            office_previously_used_for : [""],
+            amenities: amenities_rows.map(r => r.amenities),
+            property_highlights: property_highlights_rows.map(r => r.property_highlights)
+          }]
+          
+        });
+        break;
+      }
+      case 15: {
+        const [floor_plane_rows] = await db.query(`SELECT bhk_type FROM bhk_type`);
+        const [property_facing_rows] = await db.query(`SELECT property_facing FROM property_facing`);
+        const [property_ownership_rows] = await db.query(`SELECT property_ownership FROM property_ownership`);
+        const [availability_status_rows] = await db.query(`SELECT availability_status FROM availability_status`);
+        const [other_rooms_rows] = await db.query(`SELECT other_rooms FROM other_rooms`);
+        const [furnishing_status_rows] = await db.query(`SELECT furnishing_status FROM furnishing_status`);
+        const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
+        const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
+
+        data.push({
+          property_name: "1",
+          property_area : "",
+          Carpet_area: "1",
+          built_up_area: "",
+          super_built_up_area: "1",
+          area_dimensions : [{
+            length: "",
+            width: "",
+          }],
+          shop_facade : [{
+            facade_width : "",
+            facade_height : ""
+          }],
+          property_facing: property_facing_rows.map(r => r.property_facing),
+          floor_details: [ {
+            total_floors_in_property: "1",
             your_property_floor_no: "" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
@@ -1068,70 +1132,7 @@ exports.getform_details_commercial = async (req, res) => {
             fire_safety_measures: [""],
             lifts : [""],
             parking_available: [],
-            is_it_Pre_leased_Pre_Rented : [""],
-            is_your_office_fire_noc_certified : [""],
-            occupancy_certificate : [""],
-            office_previously_used_for : [""],
-            amenities: amenities_rows.map(r => r.amenities),
-            property_highlights: property_highlights_rows.map(r => r.property_highlights)
-          }]
-          
-        });
-        break;
-      }
-      case 15: {
-        const [floor_plane_rows] = await db.query(`SELECT bhk_type FROM bhk_type`);
-        const [property_facing_rows] = await db.query(`SELECT property_facing FROM property_facing`);
-        const [property_ownership_rows] = await db.query(`SELECT property_ownership FROM property_ownership`);
-        const [availability_status_rows] = await db.query(`SELECT availability_status FROM availability_status`);
-        const [other_rooms_rows] = await db.query(`SELECT other_rooms FROM other_rooms`);
-        const [furnishing_status_rows] = await db.query(`SELECT furnishing_status FROM furnishing_status`);
-        const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
-        const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
-
-        data.push({
-          property_name: "1",
-          property_area : "",
-          Carpet_area: "1",
-          built_up_area: "1",
-          super_built_up_area: "1",
-          area_dimensions : [{
-            length: "1",
-            width: "1",
-          }],
-          shop_facade : [{
-            facade_width : "",
-            facade_height : ""
-          }],
-          property_facing: property_facing_rows.map(r => r.property_facing),
-          floor_details: [ {
-            total_floors_in_property: "1",
-            your_property_floor_no: "1" }
-          ],
-          property_ownership: property_ownership_rows.map(r => r.property_ownership), 
-          availability_status: availability_status_rows.map(r => r.availability_status),
-          optional : [{
-            no_of_cabins: [""],
-            no_of_meeting_rooms: [""],
-            min_no_of_seats : [""],
-            max_no_of_seats: [""],
-            conference_room : [""],
-            no_of_staircases : [""],
-            no_of_open_sides : [""],
-            which_authority_the_property_is_approved_by : [""],
-            reception_area : [""],
-            pantry : [""],
-            pantry_size : "",
-            washroom_details: [""],
-            suitable_business_type: [""],
-            central_ac : [""],
-            oxygen_duct : [""],
-            ups : [""],
-            furnishing_status : [""],
-            fire_safety_measures: [""],
-            lifts : [""],
-            parking_available: [],
-            is_it_Pre_leased_Pre_Rented : [""],
+            is_it_pre_leased_pre_rented : [""],
             is_your_office_fire_noc_certified : [""],
             occupancy_certificate : [""],
             office_previously_used_for : [""],
@@ -1193,7 +1194,7 @@ exports.getform_details_commercial = async (req, res) => {
             fire_safety_measures: [""],
             lifts : [""],
             parking_available: [],
-            is_it_Pre_leased_Pre_Rented : ["Yes" , "No"],
+            is_it_pre_leased_pre_rented : ["Yes" , "No"],
             is_your_office_fire_noc_certified : [""],
             occupancy_certificate : [""],
             office_previously_used_for : [""],
@@ -1406,28 +1407,33 @@ exports.createPostStep4 = async (req, res) => {
   const {
     user_id,
     user_post_id,
-    property_name, property_area, carpet_area, built_up_area, super_built_up_area,
-    area_length, area_width, property_facing, total_floor, property_floor_no,
+    property_name, property_area, property_area_unit,
+    carpet_area, carpet_area_unit, built_up_area, built_up_area_unit,
+    super_built_up_area, super_built_up_area_unit,
+    area_length, area_length_unit, area_width, area_width_unit,
+    property_facing, total_floor, property_floor_no,
     property_ownership, availability_status, furnishing_status, boundary_wall,
     parking_available, amenities, property_highlights,
+    facade_width, facade_width_unit, facade_height, facade_height_unit,
 
-    bhk_type, no_of_bedrooms, no_of_bathrooms, no_of_balconies, no_of_open_sides ,other_rooms,
+    bhk_type, no_of_bedrooms, no_of_bathrooms, no_of_balconies, no_of_open_sides, other_rooms,
 
     no_of_cabins, no_of_meeting_rooms, min_of_seats, max_of_seats,
-    conference_room, no_of_staircases, reception_area, pantry, pantry_size,
-    central_ac, oxygen_duct, ups, fire_safety_measures, lifts, pre_contract_status,
+    conference_room, no_of_staircases, reception_area, pantry, pantry_size, pantry_size_unit,
+    central_ac, oxygen_duct, ups, fire_safety_measures, lifts,
     noc_certified, occupancy_certificate, office_previously_used_for,
     washroom_details, local_authority, suitable_business_type,
   } = req.body;
 
   if (!user_id || !user_post_id) {
-    return res.status(200).json({ 
-      result : "0",
+    return res.status(200).json({
+      result: "0",
       error: "user_id and user_post_id are required.",
-    data : [] });
+      data: []
+    });
   }
 
-  const draft = 4
+  const draft = 4;
 
   try {
     const [landTypeResult] = await db.query(
@@ -1436,130 +1442,171 @@ exports.createPostStep4 = async (req, res) => {
     );
 
     if (!landTypeResult.length) {
-      return res.status(200).json({ 
-        result : "0",
-        error: 'Post not found for given user_id and user_post_id.',
-        data : [] });
+      return res.status(200).json({
+        result: "0",
+        error: "Post not found for given user_id and user_post_id.",
+        data: []
+      });
     }
 
     const land_type_id_from_db = landTypeResult[0].land_type_id;
-    let updateQuery = '';
+    let updateQuery = "";
     let updateValues = [];
-    let landTypeName = '';
+    let landTypeName = "";
 
     switch (land_type_id_from_db) {
+      // ------------------ Residential ------------------
       case 1:
         landTypeName = "Residential";
         updateQuery = `
           UPDATE user_posts SET 
-            property_name = ?, bhk_type = ?, property_area = ?, carpet_area = ?, built_up_area = ?, super_built_up_area = ?, 
-            area_length = ?, area_width = ?, property_facing = ?,
-            total_floor = ?, property_floor_no = ?, property_ownership = ?, availability_status = ?, 
+            property_name = ?, bhk_type = ?, property_area = ?, property_area_unit = ?, 
+            carpet_area = ?, carpet_area_unit = ?, built_up_area = ?, built_up_area_unit = ?, 
+            super_built_up_area = ?, super_built_up_area_unit = ?, 
+            area_length = ?, area_length_unit = ?, area_width = ?, area_width_unit = ?, 
+            property_facing = ?, total_floor = ?, property_floor_no = ?, 
+            property_ownership = ?, availability_status = ?, 
             no_of_bedrooms = ?, no_of_bathrooms = ?, no_of_balconies = ?, no_of_open_sides = ?, 
             boundary_wall = ?, other_rooms = ?, furnishing_status = ?, 
-            parking_available = ?, amenities = ?, property_highlights = ?, updated_at = NOW() , draft = ? 
-          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL and account_status = 0
+            parking_available = ?, amenities = ?, property_highlights = ?, 
+            updated_at = NOW(), draft = ?
+          WHERE U_ID = ? AND user_post_id = ? 
+            AND deleted_at IS NULL AND account_status = 0
         `;
         updateValues = [
-          property_name || null, bhk_type || null, property_area || null, carpet_area || null, built_up_area || null, super_built_up_area || null,
-          area_length || null, area_width || null, property_facing || null,
-          total_floor || null, property_floor_no || null, property_ownership || null, availability_status || null,
+          property_name || null, bhk_type || null, property_area || null, property_area_unit || null,
+          carpet_area || null, carpet_area_unit || null, built_up_area || null, built_up_area_unit || null,
+          super_built_up_area || null, super_built_up_area_unit || null,
+          area_length || null, area_length_unit || null, area_width || null, area_width_unit || null,
+          property_facing || null, total_floor || null, property_floor_no || null,
+          property_ownership || null, availability_status || null,
           no_of_bedrooms || null, no_of_bathrooms || null, no_of_balconies || null, no_of_open_sides || null,
           boundary_wall || null, other_rooms || null, furnishing_status || null,
-          parking_available || null, amenities || null, property_highlights || null, draft,
-          user_id, user_post_id
+          parking_available || null, amenities || null, property_highlights || null,
+          draft, user_id, user_post_id
         ];
         break;
 
+      // ------------------ Commercial ------------------
       case 2:
         landTypeName = "Commercial";
         updateQuery = `
           UPDATE user_posts SET 
-            property_name = ?, bhk_type = ?, property_area = ?, carpet_area = ?, built_up_area = ?, super_built_up_area = ?, 
-            area_length = ?, area_width = ?, property_facing = ?,
-            total_floor = ?, property_floor_no = ?, property_ownership = ?, availability_status = ?, 
+            property_name = ?, bhk_type = ?, property_area = ?, property_area_unit = ?, 
+            carpet_area = ?, carpet_area_unit = ?, built_up_area = ?, built_up_area_unit = ?, 
+            super_built_up_area = ?, super_built_up_area_unit = ?, 
+            area_length = ?, area_length_unit = ?, area_width = ?, area_width_unit = ?, 
+            property_facing = ?, total_floor = ?, property_floor_no = ?, 
+            property_ownership = ?, availability_status = ?, 
+            facade_width = ?, facade_width_unit = ?, facade_height = ?, facade_height_unit = ?, 
             no_of_cabins = ?, no_of_meeting_rooms = ?, min_of_seats = ?, max_of_seats = ?, 
-            conference_room = ?, no_of_staircases = ?, reception_area = ?, pantry = ?, pantry_size = ?, 
+            conference_room = ?, no_of_staircases = ?, reception_area = ?, 
+            pantry = ?, pantry_size = ?, pantry_size_unit = ?, 
             central_ac = ?, oxygen_duct = ?, ups = ?, boundary_wall = ?, other_rooms = ?, furnishing_status = ?, 
-            fire_safety_measures = ?, lifts = ?, pre_contract_status = ?, noc_certified = ?, occupancy_certificate = ?, 
-            office_previously_used_for = ?, parking_available = ?, washroom_details = ?, local_authority = ?, 
-            suitable_business_type = ?, amenities = ?, property_highlights = ?,
-           updated_at = NOW() , draft = ?
-          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL and account_status = 0
+            fire_safety_measures = ?, lifts = ?, noc_certified = ?, occupancy_certificate = ?, 
+            office_previously_used_for = ?, parking_available = ?, washroom_details = ?, 
+            local_authority = ?, suitable_business_type = ?, amenities = ?, property_highlights = ?, 
+            updated_at = NOW(), draft = ?
+          WHERE U_ID = ? AND user_post_id = ? 
+            AND deleted_at IS NULL AND account_status = 0
         `;
         updateValues = [
-          property_name || null, bhk_type || null, property_area || null, carpet_area || null, built_up_area || null, super_built_up_area || null,
-          area_length || null, area_width || null, property_facing || null,
-          total_floor || null, property_floor_no || null, property_ownership || null, availability_status || null,
+          property_name || null, bhk_type || null, property_area || null, property_area_unit || null,
+          carpet_area || null, carpet_area_unit || null, built_up_area || null, built_up_area_unit || null,
+          super_built_up_area || null, super_built_up_area_unit || null,
+          area_length || null, area_length_unit || null, area_width || null, area_width_unit || null,
+          property_facing || null, total_floor || null, property_floor_no || null,
+          property_ownership || null, availability_status || null,
+          facade_width || null, facade_width_unit || null, facade_height || null, facade_height_unit || null,
           no_of_cabins || null, no_of_meeting_rooms || null, min_of_seats || null, max_of_seats || null,
-          conference_room || null, no_of_staircases || null, reception_area || null, pantry || null, pantry_size || null,
-          central_ac || null, oxygen_duct || null, ups || null, boundary_wall || null, other_rooms || null, furnishing_status || null,
-          fire_safety_measures || null, lifts || null, pre_contract_status || null, noc_certified || null, occupancy_certificate || null,
-          office_previously_used_for || null, parking_available || null, washroom_details || null, local_authority || null,
-          suitable_business_type || null, amenities || null, property_highlights || null, draft,
-          user_id, user_post_id
+          conference_room || null, no_of_staircases || null, reception_area || null,
+          pantry || null, pantry_size || null, pantry_size_unit || null,
+          central_ac || null, oxygen_duct || null, ups || null, boundary_wall || null, other_rooms || null,
+          furnishing_status || null, fire_safety_measures || null, lifts || null,
+          noc_certified || null, occupancy_certificate || null, office_previously_used_for || null,
+          parking_available || null, washroom_details || null, local_authority || null, suitable_business_type || null,
+          amenities || null, property_highlights || null,
+          draft, user_id, user_post_id
         ];
         break;
 
+      // ------------------ Industrial ------------------
       case 3:
         landTypeName = "Industrial";
         updateQuery = `
           UPDATE user_posts SET 
-            property_name = ?, bhk_type = ?, property_area = ?, carpet_area = ?, built_up_area = ?, super_built_up_area = ?, 
-            area_length = ?, area_width = ?, property_facing = ?,
-            total_floor = ?, property_floor_no = ?, property_ownership = ?, availability_status = ?, 
+            property_name = ?, bhk_type = ?, property_area = ?, property_area_unit = ?, 
+            carpet_area = ?, carpet_area_unit = ?, built_up_area = ?, built_up_area_unit = ?, 
+            super_built_up_area = ?, super_built_up_area_unit = ?, 
+            area_length = ?, area_length_unit = ?, area_width = ?, area_width_unit = ?, 
+            property_facing = ?, total_floor = ?, property_floor_no = ?, 
+            property_ownership = ?, availability_status = ?, 
+            facade_width = ?, facade_width_unit = ?, facade_height = ?, facade_height_unit = ?, 
             no_of_cabins = ?, no_of_meeting_rooms = ?, min_of_seats = ?, max_of_seats = ?, 
-            conference_room = ?, no_of_staircases = ?, reception_area = ?, pantry = ?, pantry_size = ?, 
+            conference_room = ?, no_of_staircases = ?, reception_area = ?, 
+            pantry = ?, pantry_size = ?, pantry_size_unit = ?, 
             central_ac = ?, oxygen_duct = ?, ups = ?, boundary_wall = ?, other_rooms = ?, furnishing_status = ?, 
-            fire_safety_measures = ?, lifts = ?, pre_contract_status = ?, noc_certified = ?, occupancy_certificate = ?, 
-            office_previously_used_for = ?, parking_available = ?, washroom_details = ?, local_authority = ?, 
-            suitable_business_type = ?, amenities = ?, property_highlights = ?, updated_at = NOW() , draft = ?
-          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL and account_status = 0
+            fire_safety_measures = ?, lifts = ?, noc_certified = ?, occupancy_certificate = ?, 
+            office_previously_used_for = ?, parking_available = ?, washroom_details = ?, 
+            local_authority = ?, suitable_business_type = ?, amenities = ?, property_highlights = ?, 
+            updated_at = NOW(), draft = ?
+          WHERE U_ID = ? AND user_post_id = ? 
+            AND deleted_at IS NULL AND account_status = 0
         `;
         updateValues = [
-          property_name || null, bhk_type || null, property_area || null, carpet_area || null, built_up_area || null, super_built_up_area || null,
-          area_length || null, area_width || null, property_facing || null,
-          total_floor || null, property_floor_no || null, property_ownership || null, availability_status || null,
+          property_name || null, bhk_type || null, property_area || null, property_area_unit || null,
+          carpet_area || null, carpet_area_unit || null, built_up_area || null, built_up_area_unit || null,
+          super_built_up_area || null, super_built_up_area_unit || null,
+          area_length || null, area_length_unit || null, area_width || null, area_width_unit || null,
+          property_facing || null, total_floor || null, property_floor_no || null,
+          property_ownership || null, availability_status || null,
+          facade_width || null, facade_width_unit || null, facade_height || null, facade_height_unit || null,
           no_of_cabins || null, no_of_meeting_rooms || null, min_of_seats || null, max_of_seats || null,
-          conference_room || null, no_of_staircases || null, reception_area || null, pantry || null, pantry_size || null,
-          central_ac || null, oxygen_duct || null, ups || null, boundary_wall || null, other_rooms || null, furnishing_status || null,
-          fire_safety_measures || null, lifts || null, pre_contract_status || null, noc_certified || null, occupancy_certificate || null,
-          office_previously_used_for || null, parking_available || null, washroom_details || null, local_authority || null,
-          suitable_business_type || null, amenities || null, property_highlights || null, draft,
-          user_id, user_post_id
+          conference_room || null, no_of_staircases || null, reception_area || null,
+          pantry || null, pantry_size || null, pantry_size_unit || null,
+          central_ac || null, oxygen_duct || null, ups || null, boundary_wall || null, other_rooms || null,
+          furnishing_status || null, fire_safety_measures || null, lifts || null,
+          noc_certified || null, occupancy_certificate || null, office_previously_used_for || null,
+          parking_available || null, washroom_details || null, local_authority || null, suitable_business_type || null,
+          amenities || null, property_highlights || null,
+          draft, user_id, user_post_id
         ];
         break;
 
       default:
-        return res.status(200).json({ 
-          result : "0",
-          error: 'Invalid land_type_id.',
-          data : [] });
+        return res.status(200).json({
+          result: "0",
+          error: "Invalid land_type_id.",
+          data: []
+        });
     }
 
     const [updateResult] = await db.query(updateQuery, updateValues);
 
     if (updateResult.affectedRows === 0) {
-      return res.status(200).json({ 
-        result : "0",
-        error: 'Post not found or already deleted.',
-        data : []
-       });
+      return res.status(200).json({
+        result: "0",
+        error: "Post not found or already deleted.",
+        data: []
+      });
     }
 
-    res.json({ 
-      result : "1",
-      error : "",
-      message: `Step 4 completed for ${landTypeName} property.` });
+    res.json({
+      result: "1",
+      error: "",
+      message: `Step 4 completed for ${landTypeName} property.`
+    });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ 
-      result : "0",
-      error: err.message,    
-      data : [] });
+    console.error("createPostStep4 error:", err);
+    res.status(500).json({
+      result: "0",
+      error: err.message,
+      data: []
+    });
   }
 };
+
 
 exports.createPostStep5 = async (req, res) => {
   const { user_id,user_post_id, price , price_negotiable } = req.body;

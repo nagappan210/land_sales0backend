@@ -5,6 +5,7 @@ const path = require('path');
 
 const adminController = require('../admin_conrollers/userlist');
 const landController = require('../admin_conrollers/land');
+const justifyController = require('../admin_conrollers/justify');
 const { ro } = require('@faker-js/faker');
 
 const storage = multer.diskStorage({
@@ -31,6 +32,15 @@ const land_categories = multer.diskStorage({
 
 const land_categoies_upload = multer({ storage: land_categories });
 
+const evidenceStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploaded/evidence");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  }
+});
+const uploadEvidence = multer({ storage: evidenceStorage });
 
 router.get('/getusertable', adminController.getusertable);
 router.post('/adduser', adminController.adduser);
@@ -41,6 +51,7 @@ router.get('/userpost',adminController.getpost);
 router.post('/account_band',adminController.account_band);
 router.post('/activate_account',adminController.activate_account);
 router.post('/delete_account',adminController.delete_account);
+router.post('/report_sentence',adminController.report_sentence);
 
 router.get('/landtype',landController.landtype);
 router.post('/addland_types',landController.addlandtypes)
@@ -71,4 +82,7 @@ router.post('/office_previously_used_for',landController.office_previously_used_
 router.post('/fire_safety_measures',landController.fire_safety_measures);
 router.post('/washroom_details',landController.washroom_details);
 router.post('/suitable_business_type',landController.suitable_business_type);
+
+router.post('/account_justify' ,justifyController.account_justify);
+router.post( "/submit_justify", uploadEvidence.array("supporting_evidence", 5), justifyController.submit_justify);
 module.exports = router;

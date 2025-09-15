@@ -59,7 +59,8 @@ router.use(async (req,res,next) =>{
       "/getform_details_agriculture",
       "/land_categories_name",
       "/land_categories_para",
-      "/decline"
+      "/decline",
+      "/get_report"
     ]
     if (openRoutes.includes(req.path)) {
       return next();
@@ -176,11 +177,12 @@ router.post('/getcomment',userController.getcomment);
 router.post('/getreplay_comment',userController.getreplay_comment);
 router.post('/likeComment',userController.likeComment);
 
-router.post('/search',userController.search);
+router.post('/searchProperty',userController.searchProperty);
 router.post('/getInterestedSearchers',userController.getInterestedSearchers);
+router.post('/searchProfile',userController.searchProfile);
 
 // router.post('/declineForm',enquireController.declineForm);
 // router.post('/declineFormpara',enquireController.declineFormpara);
-
+router.post('/get_report' , userController.get_report);
 router.post('/report_users',userController.report_users);
 module.exports = router;

@@ -566,3 +566,47 @@ exports.delete_account = async (req, res) => {
     });
   }
 };
+
+exports.report_sentence = async (req, res) => {
+  let { report_sentence, status, report_sentence_id } = req.body;
+
+  try {
+    status = Number(status);
+
+    if (status === 1) {
+      await db.query(
+        `INSERT INTO report_sentence (report_sentence) VALUES (?)`,
+        [report_sentence]
+      );
+      return res.status(200).json({ result: "1", message: "report_sentence added successfully" });
+    }
+
+    if (status === 2) {
+      await db.query(
+        `UPDATE report_sentence SET report_sentence = ? WHERE report_sentence_id = ?`,
+        [report_sentence, report_sentence_id]
+      );
+      return res.status(200).json({ result: "1", message: "report_sentence updated successfully" });
+    }
+
+    if (status === 3) {
+      await db.query(
+        `DELETE FROM report_sentence WHERE report_sentence_id = ?`,
+        [report_sentence_id]
+      );
+      return res.status(200).json({ result: "1", message: "report_sentence deleted successfully" });
+    }
+
+    if (status === 4) {
+      const [rows] = await db.query(
+        `SELECT report_sentence_id, report_sentence FROM report_sentence`
+      );
+      return res.status(200).json({ result: "1", message: "report_sentence fetched successfully", data: rows });
+    }
+
+    return res.status(400).json({ result: "0", error: "Invalid status value. Use 1=Add, 2=Update, 3=Delete, 4=Get All" });
+  } catch (err) {
+    console.error("Error in report_sentence", err);
+    return res.status(500).json({ result: "0", error: "Failed to process report_sentence" });
+  }
+};
