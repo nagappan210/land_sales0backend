@@ -219,13 +219,366 @@ exports.enquire = async (req, res) => {
   }
 };
 
+// exports.my_leads = async (req, res) => {
+//   let { user_id, page = 1, limit = 10 } = req.body;
+
+//   if (!user_id || isNaN(user_id)) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "User ID is required and it must be an Integer",
+//       data: []
+//     });
+//   }
+
+//   const [exist_user] = await db.query(
+//     `SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL`,
+//     [user_id]
+//   );
+//   if (exist_user.length === 0) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "User not found.",
+//       data: []
+//     });
+//   }
+
+//   const [exist_enquire] = await db.query(
+//     `SELECT 1 
+//      FROM enquiries e 
+//      JOIN user_posts up ON e.recever_posts_id = up.user_post_id 
+//      WHERE up.U_ID = ? 
+//      LIMIT 1`,
+//     [user_id]
+//   );
+//   if (exist_enquire.length === 0) {
+//     return res.status(200).json({
+//       result: "0",
+//       error: "User Enquire is not found.",
+//       data: []
+//     });
+//   }
+
+//   try {
+//     const offset = (page - 1) * limit;
+
+//     const [countResult] = await db.query(
+//       `SELECT COUNT(*) AS total 
+//        FROM enquiries e 
+//        JOIN user_posts up ON e.recever_posts_id = up.user_post_id 
+//        WHERE up.U_ID = ?`,
+//       [user_id]
+//     );
+//     const total = countResult[0].total;
+
+//     const [rows] = await db.query(
+//       `
+//       SELECT 
+//         e.enquire_id,
+//         e.recever_posts_id,
+//         e.user_id AS enquiry_by_user_id,
+
+//         u.U_ID AS enquiry_user_id,
+//         u.name AS enquiry_by_name,
+//         u.username AS enquiry_by_username,
+//         u.profile_image AS enquiry_by_profile_image,
+//         u.country AS enquiry_by_country,
+//         u.state AS enquiry_by_state,
+//         u.cities AS enquiry_by_cities,
+//         u.pincode AS enquiry_by_pincode,
+//         u.phone_num_cc AS enquiry_by_phone_cc,
+//         u.phone_num AS enquiry_by_phone,
+//         u.whatsapp_num_cc AS enquiry_by_whatsapp_cc,
+//         u.whatsapp_num AS enquiry_by_whatsapp,
+//         u.email AS enquiry_by_email,
+//         u.latitude AS enquiry_by_latitude,
+//         u.longitude AS enquiry_by_longitude,
+
+//         pu.U_ID AS post_user_id,
+//         pu.name AS post_user_name,
+//         pu.username AS post_user_username,
+//         pu.profile_image AS post_user_profile_image,
+//         pu.country AS post_user_country,
+//         pu.state AS post_user_state,
+//         pu.cities AS post_user_cities,
+//         pu.pincode AS post_user_pincode,
+//         pu.phone_num_cc AS post_user_phone_cc,
+//         pu.phone_num AS post_user_phone,
+//         pu.whatsapp_num_cc AS post_user_whatsapp_cc,
+//         pu.whatsapp_num AS post_user_whatsapp,
+//         pu.email AS post_user_email,
+//         pu.latitude AS post_user_latitude,
+//         pu.longitude AS post_user_longitude,
+
+//         up.thumbnail,
+//         up.video,
+
+//         COALESCE(pl.total_likes, 0) AS total_likes,
+//         COALESCE(pc.total_comments, 0) AS total_comments,
+//         CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
+//         CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved,
+//         1 AS enquiry,
+//         CASE WHEN er.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS declain,
+
+
+//         e.land_category_para,
+//         e.created_at,
+
+//         up.*
+//       FROM enquiries e
+//       JOIN user_posts up 
+//           ON e.recever_posts_id = up.user_post_id
+//       JOIN users u 
+//           ON e.user_id = u.U_ID
+//       JOIN users pu 
+//           ON up.U_ID = pu.U_ID
+
+//       LEFT JOIN enquiry_responses er 
+//           ON er.enquire_id = e.enquire_id
+
+//       LEFT JOIN (
+//           SELECT user_post_id, COUNT(*) AS total_likes
+//           FROM post_likes
+//           GROUP BY user_post_id
+//       ) AS pl ON pl.user_post_id = up.user_post_id
+
+//       LEFT JOIN (
+//           SELECT user_post_id, COUNT(*) AS total_comments
+//           FROM post_comments
+//           WHERE deleted_at IS NULL
+//           GROUP BY user_post_id
+//       ) AS pc ON pc.user_post_id = up.user_post_id
+
+//       LEFT JOIN post_likes ul
+//           ON ul.user_post_id = up.user_post_id AND ul.user_id = ?
+
+//       LEFT JOIN saved_properties sp
+//           ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
+
+//       LEFT JOIN (
+//           SELECT user_post_id
+//           FROM report
+//           WHERE user_id = ? AND status = 2
+//       ) AS is_report 
+//           ON is_report.user_post_id = up.user_post_id
+
+//       WHERE up.U_ID = ?
+//       ORDER BY e.created_at DESC
+//       LIMIT ? OFFSET ?
+//       `,
+//       [user_id, user_id, user_id, user_id, Number(limit), Number(offset)]
+//     );
+
+//     const normalizedData = rows.map(row => {
+//       const cleanObj = {};
+//       for (let key in row) {
+//         cleanObj[key] = row[key] == null ? "" : row[key];
+//       }
+
+//       let imageUrls = [];
+//       if (cleanObj.images) {
+//         try {
+//           imageUrls = JSON.parse(cleanObj.images).map(img =>
+//             `${process.env.SERVER_ADDRESS}${img}`
+//           );
+//         } catch {
+//           imageUrls = [];
+//         }
+//       }
+
+//       const enquiry_user_address = [
+//         cleanObj.enquiry_by_cities,
+//         cleanObj.enquiry_by_state,
+//         cleanObj.enquiry_by_country,
+//         cleanObj.enquiry_by_pincode,
+//       ].filter(v => v && v.toString().trim() !== "").join(", ");
+
+//       const post_user_address = [
+//         cleanObj.post_user_cities,
+//         cleanObj.post_user_state,
+//         cleanObj.post_user_country,
+//         cleanObj.post_user_pincode,
+//       ].filter(v => v && v.toString().trim() !== "").join(", ");
+
+//       const post_address = [
+//         cleanObj.locality,
+//         cleanObj.city,
+//         cleanObj.state,
+//         cleanObj.country,
+//         cleanObj.pincode,
+//       ].filter(v => v && v.toString().trim() !== "").join(", ");
+
+//       let landTypeText = "";
+//       if (cleanObj.land_type_id === 1) landTypeText = "Residential";
+//       if (cleanObj.land_type_id === 2) landTypeText = "Commercial";
+//       if (cleanObj.land_type_id === 3) landTypeText = "Agriculture";
+
+//       const categories = {
+//         1: "Flat/ Apartment",
+//         2: "Villa/Independent House",
+//         3: "Builder Floor Apartment",
+//         4: "Land/ Plot",
+//         5: "Studio Apartment",
+//         6: "Other",
+//         7: "Commercial Office Space",
+//         8: "Office in IT Park",
+//         9: "Commercial Shop",
+//         10: "Commercial Showroom",
+//         11: "Commercial Land",
+//         12: "Warehouse/ Godown",
+//         13: "Industrial Land",
+//         14: "Industrial Building",
+//         15: "Industrial Shed",
+//         16: "Other",
+//         17: "Farmhouse",
+//         18: "Agricultural Land"
+//       };
+//       const landCategoryText = categories[cleanObj.land_categorie_id] || "";
+
+//       return {
+//         enquiry_details: {
+//           enquire_id: cleanObj.enquire_id,
+//           enquiry_by_user_id: cleanObj.enquiry_by_user_id,
+//           enquiry_by_username: cleanObj.enquiry_by_username,
+//           enquiry_by_name: cleanObj.enquiry_by_name,
+//           enquiry_by_profile_image: cleanObj.enquiry_by_profile_image,
+//           enquiry_by_user_phone: cleanObj.enquiry_by_phone,
+//           enquiry_by_user_whatsapp: cleanObj.enquiry_by_whatsapp,
+//           enquiry_by_user_email: cleanObj.enquiry_by_email,
+//           land_category_para: cleanObj.land_category_para,
+//           country: cleanObj.enquiry_by_country,
+//           state: cleanObj.enquiry_by_state,
+//           cities: cleanObj.enquiry_by_cities,
+//           pincode: cleanObj.enquiry_by_pincode,
+//           address: enquiry_user_address,
+//           created_at: cleanObj.created_at,
+//           is_declain: cleanObj.declain,
+//         },
+//         post_user: {
+//           user_id: cleanObj.post_user_id,
+//           user_post_id: cleanObj.user_post_id,
+//           username: cleanObj.post_user_username,
+//           name: cleanObj.post_user_name,
+//           profile_image: cleanObj.post_user_profile_image,
+//           phone_num_cc: cleanObj.post_user_phone_cc,
+//           phone: cleanObj.post_user_phone,
+//           whatsapp_num_cc: cleanObj.post_user_whatsapp_cc,
+//           whatsapp: cleanObj.post_user_whatsapp,
+//           email: cleanObj.post_user_email,
+//           country: cleanObj.post_user_country,
+//           state: cleanObj.post_user_state,
+//           cities: cleanObj.post_user_cities,
+//           pincode: cleanObj.post_user_pincode,
+//           thumbnail: cleanObj.thumbnail? `${process.env.SERVER_ADDRESS}${cleanObj.thumbnail}`: "",
+//           video: cleanObj.video,
+//           total_likes: cleanObj.total_likes,
+//           total_comments: cleanObj.total_comments,
+//           is_liked: cleanObj.is_liked,
+//           is_saved: cleanObj.is_saved,
+//           enquiry: 0,
+//           address: post_user_address,
+//           post_property: {
+//           user_post_id: cleanObj.user_post_id,
+//           user_type: cleanObj.user_type,
+//           land_type_id: cleanObj.land_type_id,
+//           landTypeText,
+//           land_categorie_id: cleanObj.land_categorie_id,
+//           landCategoryText,
+//           country: cleanObj.country,
+//           state: cleanObj.state,
+//           city: cleanObj.city,
+//           locality: cleanObj.locality,
+//           latitude: cleanObj.latitude,
+//           longitude: cleanObj.longitude,
+//           created_at: cleanObj.created_at,
+//           property_name: cleanObj.property_name,
+//           bhk_type: cleanObj.bhk_type,
+//           carpet_area: cleanObj.carpet_area,
+//           property_area: cleanObj.property_area,
+//           built_up_area: cleanObj.built_up_area,
+//           super_built_up_area: cleanObj.super_built_up_area,
+//           facade_width: cleanObj.facade_width,
+//           facade_height: cleanObj.facade_height,
+//           area_length: cleanObj.area_length,
+//           area_width: cleanObj.area_width,
+//           property_facing: cleanObj.property_facing,
+//           total_floor: cleanObj.total_floor,
+//           property_floor_no: cleanObj.property_floor_no,
+//           property_ownership: cleanObj.property_ownership,
+//           availability_status: cleanObj.availability_status,
+//           no_of_bedrooms: cleanObj.no_of_bedrooms,
+//           no_of_bathrooms: cleanObj.no_of_bathrooms,
+//           no_of_balconies: cleanObj.no_of_balconies,
+//           no_of_open_sides: cleanObj.no_of_open_sides,
+//           no_of_cabins: cleanObj.no_of_cabins,
+//           no_of_meeting_rooms: cleanObj.no_of_meeting_rooms,
+//           min_of_seats: cleanObj.min_of_seats,
+//           max_of_seats: cleanObj.max_of_seats,
+//           conference_room: cleanObj.conference_room,
+//           no_of_staircases: cleanObj.no_of_staircases,
+//           washroom_details: cleanObj.washroom_details,
+//           reception_area: cleanObj.reception_area,
+//           pantry: cleanObj.pantry,
+//           pantry_size: cleanObj.pantry_size,
+//           central_ac: cleanObj.central_ac,
+//           oxygen_duct: cleanObj.oxygen_duct,
+//           ups: cleanObj.ups,
+//           other_rooms: cleanObj.other_rooms,
+//           furnishing_status: cleanObj.furnishing_status,
+//           fire_safety_measures: cleanObj.fire_safety_measures,
+//           lifts: cleanObj.lifts,
+//           is_it_pre_leased_pre_rented	: cleanObj.	is_it_pre_leased_pre_rented,
+//           which_local_authority: cleanObj.which_local_authority,
+//           does_local_authority : cleanObj.does_local_authority,
+//           noc_certified: cleanObj.noc_certified,
+//           occupancy_certificate: cleanObj.occupancy_certificate,
+//           office_previously_used_for: cleanObj.office_previously_used_for,
+//           parking_available: cleanObj.parking_available,
+//           boundary_wall: cleanObj.boundary_wall,
+//           amenities: cleanObj.amenities,
+//           suitable_business_type: cleanObj.suitable_business_type,
+//           price: cleanObj.price,
+//           price_negotiable: cleanObj.price_negotiable,
+//           property_highlights: cleanObj.property_highlights,
+//           video: imageUrls.length > 0 ? "" : cleanObj.video,
+//           image_urls: imageUrls,
+//           thumbnail: cleanObj.thumbnail
+//             ? `${process.env.SERVER_ADDRESS}${cleanObj.thumbnail}`
+//             : (imageUrls.length > 0 ? imageUrls[0] : ""),
+//           address: post_address,
+//           is_report: 0,
+//         }
+//         }
+        
+//       };
+//     });
+
+//     return res.json({
+//       result: "1",
+//       data: normalizedData,
+//       totalPages: Math.ceil(total / limit),
+//       nxtpage: page < Math.ceil(total / limit) ? Number(page) + 1 : 0,
+//       recCnt: normalizedData.length
+//     });
+
+//   } catch (err) {
+//     console.error("Get received enquiries error:", err);
+//     return res.status(500).json({
+//       result: "0",
+//       error: "Server error.",
+//       data: []
+//     });
+//   }
+// };
+
 exports.my_leads = async (req, res) => {
   let { user_id, page = 1, limit = 10 } = req.body;
+
+  user_id = parseInt(user_id);
 
   if (!user_id || isNaN(user_id)) {
     return res.status(200).json({
       result: "0",
-      error: "User ID is required and it must be an Integer",
+      error: "User ID is required and must be an Integer",
       data: []
     });
   }
@@ -242,30 +595,10 @@ exports.my_leads = async (req, res) => {
     });
   }
 
-  const [exist_enquire] = await db.query(
-    `SELECT 1 
-     FROM enquiries e 
-     JOIN user_posts up ON e.recever_posts_id = up.user_post_id 
-     WHERE up.U_ID = ? 
-     LIMIT 1`,
-    [user_id]
-  );
-  if (exist_enquire.length === 0) {
-    return res.status(200).json({
-      result: "0",
-      error: "User Enquire is not found.",
-      data: []
-    });
-  }
-
   try {
     const offset = (page - 1) * limit;
-
     const [countResult] = await db.query(
-      `SELECT COUNT(*) AS total 
-       FROM enquiries e 
-       JOIN user_posts up ON e.recever_posts_id = up.user_post_id 
-       WHERE up.U_ID = ?`,
+      `SELECT COUNT(*) AS total FROM enquiries WHERE user_id = ?`,
       [user_id]
     );
     const total = countResult[0].total;
@@ -311,19 +644,16 @@ exports.my_leads = async (req, res) => {
 
         up.thumbnail,
         up.video,
+        up.*,
 
         COALESCE(pl.total_likes, 0) AS total_likes,
         COALESCE(pc.total_comments, 0) AS total_comments,
         CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
         CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved,
-        1 AS enquiry,
-        CASE WHEN er.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS declain,
-
+        CASE WHEN er.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS is_declain,
 
         e.land_category_para,
-        e.created_at,
-
-        up.*
+        e.created_at
       FROM enquiries e
       JOIN user_posts up 
           ON e.recever_posts_id = up.user_post_id
@@ -354,21 +684,14 @@ exports.my_leads = async (req, res) => {
       LEFT JOIN saved_properties sp
           ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
 
-      LEFT JOIN (
-          SELECT user_post_id
-          FROM report
-          WHERE user_id = ? AND status = 2
-      ) AS is_report 
-          ON is_report.user_post_id = up.user_post_id
-
       WHERE up.U_ID = ?
       ORDER BY e.created_at DESC
       LIMIT ? OFFSET ?
       `,
-      [user_id, user_id, user_id, user_id, Number(limit), Number(offset)]
+      [user_id, user_id, user_id, Number(limit), Number(offset)]
     );
 
-    const normalizedData = rows.map(row => {
+    const leadsData = rows.map(row => {
       const cleanObj = {};
       for (let key in row) {
         cleanObj[key] = row[key] == null ? "" : row[key];
@@ -435,13 +758,16 @@ exports.my_leads = async (req, res) => {
       const landCategoryText = categories[cleanObj.land_categorie_id] || "";
 
       return {
+        search_type: cleanObj.is_declain ? 3 : 1,
         enquiry_details: {
-          enquire_id: cleanObj.enquire_id,
-          enquiry_by_user_id: cleanObj.enquiry_by_user_id,
+          enquire_id: parseInt(cleanObj.enquire_id),
+          enquiry_by_user_id: parseInt(cleanObj.enquiry_by_user_id),
           enquiry_by_username: cleanObj.enquiry_by_username,
           enquiry_by_name: cleanObj.enquiry_by_name,
           enquiry_by_profile_image: cleanObj.enquiry_by_profile_image,
+          enquiry_by_user_phone_cc: cleanObj.enquiry_by_phone_cc,
           enquiry_by_user_phone: cleanObj.enquiry_by_phone,
+          enquiry_by_user_whatsapp_cc: cleanObj.enquiry_by_whatsapp_cc,
           enquiry_by_user_whatsapp: cleanObj.enquiry_by_whatsapp,
           enquiry_by_user_email: cleanObj.enquiry_by_email,
           land_category_para: cleanObj.land_category_para,
@@ -450,34 +776,32 @@ exports.my_leads = async (req, res) => {
           cities: cleanObj.enquiry_by_cities,
           pincode: cleanObj.enquiry_by_pincode,
           address: enquiry_user_address,
-          created_at: cleanObj.created_at,
-          is_declain: cleanObj.declain,
+          created_at: cleanObj.created_at
         },
         post_user: {
-          user_id: cleanObj.post_user_id,
-          user_post_id: cleanObj.user_post_id,
+          user_id: parseInt(cleanObj.post_user_id),
+          user_post_id: parseInt(cleanObj.user_post_id),
           username: cleanObj.post_user_username,
           name: cleanObj.post_user_name,
           profile_image: cleanObj.post_user_profile_image,
           phone_num_cc: cleanObj.post_user_phone_cc,
-          phone: cleanObj.post_user_phone,
+          phone_num: cleanObj.post_user_phone,
           whatsapp_num_cc: cleanObj.post_user_whatsapp_cc,
-          whatsapp: cleanObj.post_user_whatsapp,
+          whatsapp_num: cleanObj.post_user_whatsapp,
           email: cleanObj.post_user_email,
           country: cleanObj.post_user_country,
           state: cleanObj.post_user_state,
           cities: cleanObj.post_user_cities,
           pincode: cleanObj.post_user_pincode,
-          thumbnail: cleanObj.thumbnail? `${process.env.SERVER_ADDRESS}${cleanObj.thumbnail}`: "",
+          thumbnail: cleanObj.thumbnail ? `${process.env.SERVER_ADDRESS}${cleanObj.thumbnail}`: "",
           video: cleanObj.video,
-          total_likes: cleanObj.total_likes,
-          total_comments: cleanObj.total_comments,
-          is_liked: cleanObj.is_liked,
-          is_saved: cleanObj.is_saved,
+          total_likes: parseInt(cleanObj.total_likes),
+          total_comments: parseInt(cleanObj.total_comments),
+          is_liked: cleanObj.is_liked ? 1 : 0,
+          is_saved: cleanObj.is_saved ? 1 : 0,
           enquiry: 0,
           address: post_user_address,
-        },
-        post_property: {
+          post_property: {
           user_post_id: cleanObj.user_post_id,
           user_type: cleanObj.user_type,
           land_type_id: cleanObj.land_type_id,
@@ -548,19 +872,151 @@ exports.my_leads = async (req, res) => {
           address: post_address,
           is_report: 0,
         }
+        }
+      
       };
     });
 
-    return res.json({
-      result: "1",
-      data: normalizedData,
-      totalPages: Math.ceil(total / limit),
-      nxtpage: page < Math.ceil(total / limit) ? Number(page) + 1 : 0,
-      recCnt: normalizedData.length
+    const [posts] = await db.query(
+      `SELECT user_post_id,U_ID, land_type_id, latitude, longitude 
+       FROM user_posts
+       WHERE U_ID = ?`,
+      [user_id]
+    );
+let searchersData = [];
+if (posts && posts.length > 0) {
+  const seenUserIds = new Set();
+
+  for (const post of posts) {
+    const { user_post_id, U_ID: post_owner_id, land_type_id, latitude, longitude } = post;
+
+    const [searchers] = await db.query(
+      `SELECT 
+          u.*, s.search_type, s.create_at,
+          (6371 * acos(
+            cos(radians(?)) * cos(radians(u.latitude)) *
+            cos(radians(u.longitude) - radians(?)) +
+            sin(radians(?)) * sin(radians(u.latitude))
+          )) AS distance
+       FROM search s
+       JOIN users u ON s.user_id = u.U_ID
+       WHERE s.search_type = ? 
+         AND s.user_id != ?
+         AND u.U_ID NOT IN (
+            SELECT user_id FROM blocks WHERE blocker_id = ?
+            UNION
+            SELECT blocker_id FROM blocks WHERE user_id = ?
+         )
+       HAVING distance <= 30
+       ORDER BY distance ASC`,
+      [latitude, longitude, latitude, land_type_id, user_id, user_id, user_id]
+    );
+
+    const uniqueSearchers = searchers.filter(s => {
+      if (seenUserIds.has(s.U_ID)) return false;
+      seenUserIds.add(s.U_ID);
+      return true;
     });
 
+    const [postUserRows] = await db.query(
+      `SELECT u.*, up.thumbnail, up.video, 
+          COALESCE(pl.total_likes,0) AS total_likes,
+          COALESCE(pc.total_comments,0) AS total_comments
+       FROM users u
+       LEFT JOIN user_posts up ON up.user_post_id = ?
+       LEFT JOIN (
+           SELECT user_post_id, COUNT(*) AS total_likes
+           FROM post_likes
+           GROUP BY user_post_id
+       ) pl ON pl.user_post_id = up.user_post_id
+       LEFT JOIN (
+           SELECT user_post_id, COUNT(*) AS total_comments
+           FROM post_comments
+           WHERE deleted_at IS NULL
+           GROUP BY user_post_id
+       ) pc ON pc.user_post_id = up.user_post_id
+       WHERE u.U_ID = ? LIMIT 1`,
+      [user_post_id, post_owner_id]
+    );
+
+    const postUser = postUserRows.length > 0 ? postUserRows[0] : {};
+
+    uniqueSearchers.forEach(s => {
+      const searcherAddress = [s.cities, s.state, s.county, s.pincode]
+        .filter(v => v && v.toString().trim() !== "")
+        .join(", ");
+
+      searchersData.push({
+        search_type: 2,
+        enquiry_details: {
+          enquire_id: "",
+          enquiry_by_user_id: parseInt(s.U_ID),
+          enquiry_by_username: s.username || "",
+          enquiry_by_name: s.name || "",
+          enquiry_by_profile_image: s.profile_image || "",
+          enquiry_by_user_phone_cc: s.phone_num_cc || "",
+          enquiry_by_user_phone: s.phone_num || "",
+          enquiry_by_user_whatsapp_cc: s.whatsapp_num_cc || "",
+          enquiry_by_user_whatsapp: s.whatsapp_num || "",
+          enquiry_by_user_email: s.email || "",
+          land_category_para: "",
+          country: s.county || "",
+          state: s.state || "",
+          cities: s.cities || "",
+          pincode: s.pincode || "",
+          address: searcherAddress,
+          created_at: s.create_at
+        },
+        post_user: {
+          user_id: parseInt(postUser.U_ID || user_id),
+          user_post_id: parseInt(user_post_id),
+          username: postUser.username || "",
+          name: postUser.name || "",
+          profile_image: postUser.profile_image || "",
+          phone_num_cc: postUser.phone_num_cc || "",
+          phone_num: postUser.phone_num || "",
+          whatsapp_num_cc: postUser.whatsapp_num_cc || "",
+          whatsapp_num: postUser.whatsapp_num || "",
+          email: postUser.email || "",
+          country: postUser.country || "",
+          state: postUser.state || "",
+          cities: postUser.cities || "",
+          pincode: postUser.pincode || "",
+          thumbnail: postUser.thumbnail ? `${process.env.SERVER_ADDRESS}${postUser.thumbnail}` : "",
+          video: postUser.video ? `${process.env.SERVER_ADDRESS}${postUser.video}` : "",
+          total_likes: parseInt(postUser.total_likes) || 0,
+          total_comments: parseInt(postUser.total_comments) || 0,
+          is_liked: 0,
+          is_saved: 0,
+          enquiry: 0,
+          post_property: {},
+        }
+      });
+    });
+  }
+}
+
+const combinedData = [...leadsData, ...searchersData];
+
+
+    const startIndex = (page - 1) * limit;
+const endIndex = startIndex + Number(limit);
+
+const paginatedData = combinedData.slice(startIndex, endIndex);
+
+const totalRecords = combinedData.length;
+const totalPages = Math.ceil(totalRecords / limit);
+
+return res.json({
+  result: "1",
+  data: paginatedData,
+  totalPages,
+  nxtpage: page < totalPages ? Number(page) + 1 : 0,
+  recCnt: totalRecords
+});
+
   } catch (err) {
-    console.error("Get received enquiries error:", err);
+    console.error("Get Leads & Searchers error:", err);
     return res.status(500).json({
       result: "0",
       error: "Server error.",
@@ -568,7 +1024,6 @@ exports.my_leads = async (req, res) => {
     });
   }
 };
-
 
 exports.self_enquiry = async (req, res) => {
   let { user_id, page = 1, limit = 10 } = req.body;
@@ -814,8 +1269,7 @@ exports.self_enquiry = async (req, res) => {
           is_saved: cleanObj.is_saved,
           enquiry: 0,
           address: post_user_address,
-        },
-        post_property: {
+          post_property: {
           user_post_id: cleanObj.user_post_id,
           user_type: cleanObj.user_type,
           land_type_id: cleanObj.land_type_id,
@@ -887,6 +1341,8 @@ exports.self_enquiry = async (req, res) => {
           is_report: cleanObj.is_reported,
           
         }
+        }
+        
       };
     });
 
@@ -908,8 +1364,6 @@ exports.self_enquiry = async (req, res) => {
     });
   }
 };
-
-
 
 exports.declineEnquiry = async (req, res) => {
   const { enquire_id, user_posts_id, custom_para } = req.body;
