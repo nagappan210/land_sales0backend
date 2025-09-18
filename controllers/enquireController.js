@@ -949,7 +949,7 @@ if (posts && posts.length > 0) {
       searchersData.push({
         search_type: 2,
         enquiry_details: {
-          enquire_id: "",
+          enquire_id: 0,
           enquiry_by_user_id: parseInt(s.U_ID),
           enquiry_by_username: s.username || "",
           enquiry_by_name: s.name || "",
@@ -1226,6 +1226,7 @@ exports.self_enquiry = async (req, res) => {
       let landCategoryText = categories[cleanObj.land_categorie_id] || "";
 
       return {
+        search_type : cleanObj.declain ? 5 : 4,
         enquiry_details: {
           enquire_id: cleanObj.enquire_id,
           enquiry_by_user_id: cleanObj.enquiry_by_user_id,
@@ -1242,7 +1243,6 @@ exports.self_enquiry = async (req, res) => {
           pincode: cleanObj.user_pincode,
           address: enquiry_user_address,
           created_at: cleanObj.created_at,
-          is_declain: cleanObj.declain,
         },
         post_user: {
           user_id: cleanObj.post_user_id,
@@ -1348,7 +1348,6 @@ exports.self_enquiry = async (req, res) => {
 
     return res.json({
       result: "1",
-      error: "",
       data: normalizedData,
       totalPages: Math.ceil(total / limit),
       nxtpage: page < Math.ceil(total / limit) ? Number(page) + 1 : 0,

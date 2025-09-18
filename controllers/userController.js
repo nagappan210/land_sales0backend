@@ -4029,3 +4029,76 @@ exports.popular_user = async (req, res) => {
   }
 };
 
+exports.get_residential_filter = async (req, res) => {
+  const { land_categorie_id } = req.body;
+
+  try {
+    let data = [];
+
+        const [land_categoies] = await db.query(`select land_categorie_id , name from land_categories`)
+        const [availability_status] = await db.query(`SELECT _id , availability_status FROM availability_status`);
+        const [floor_plane] = await db.query(`SELECT bhk_type_id , bhk_type FROM bhk_type`);
+        const [furnishing_status] = await db.query(`SELECT furnishing_status_id , furnishing_status FROM furnishing_status`);
+        const [property_facing] = await db.query(`SELECT property_facing_id , property_facing FROM property_facing`);
+        const [property_ownership] = await db.query(`SELECT property_ownership_id , property_ownership FROM property_ownership`);
+        const [amenities_rows] = await db.query(`SELECT amenities FROM amenities`);
+        const [property_highlights_rows] = await db.query(`SELECT property_highlights FROM property_highlights`);
+        
+        const [other_rooms_rows] = await db.query(`SELECT other_rooms FROM other_rooms`);
+       
+       
+
+        data.push({
+          sort_by : { "1" : "Relevance" , "2" : "Recently Posted" , "3" : "Price: Low to High" , "4" : "Price: High to Low" },
+          property_type : property_type.map(r => r.property_type),
+          property_area : "",
+
+          select_floor_plane: floor_plane.map(r => r.bhk_type),
+          
+          Carpet_area: "1",
+          built_up_area: "1",
+          super_built_up_area: "1",
+          area_dimensions : [{
+            length: "1",
+            width: "1",
+          }],
+          property_facing: property_facing_rows.map(r => r.property_facing),
+          floor_details: [ {
+            total_floors_in_property: "1",
+            your_property_floor_no: "1" }
+          ],
+          property_ownership: property_ownership_rows.map(r => r.property_ownership), 
+          availability_status: availability_status_rows.map(r => r.availability_status),
+          optional : [{
+          no_of_bedrooms: ["1", "2", "3", "4"],
+          no_of_bathrooms: ["1", "2", "3", "4"],
+          no_of_balconies: ["1", "2", "3", "4"],
+          no_of_open_sides : [""],
+          is_boundary_wall_around_property : [""],
+          other_rooms: other_rooms_rows.map(r => r.other_rooms),
+          furnishing_status: furnishing_status_rows.map(r => r.furnishing_status),
+          parking_available: ["Yes", "No"],
+          amenities: amenities_rows.map(r => r.amenities),
+          property_highlights: property_highlights_rows.map(r => r.property_highlights)
+        }]
+          
+        });
+        
+    
+    
+
+    return res.status(200).json({
+      result: "1",
+      error: "",
+      data
+    });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({
+      result: "0",
+      error: "server error",
+      data: []
+    });
+  }
+};
