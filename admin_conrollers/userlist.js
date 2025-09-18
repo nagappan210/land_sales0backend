@@ -395,7 +395,9 @@ exports.account_band = async (req, res) => {
     if (Number(status) === 1) {
       
       
-      const [data] = await db.query(`SELECT r.report_id ,r.user_id , r.receiver_id, COUNT(*) AS total_reports, u.username, u.name, u.profile_image,U.U_ID ,  u.phone_num FROM report AS r JOIN users AS u ON r.receiver_id = u.U_ID WHERE r.status = 1 GROUP BY r.receiver_id HAVING total_reports >= 10`);
+      const [data] = await db.query(`SELECT r.report_id ,r.user_id , r.receiver_id, COUNT(*) AS total_reports, u.username, u.name, u.profile_image,U.U_ID ,  u.phone_num,
+        case when exists (select 1 from justify_users j WHERE j.user_id = u.U_ID AND j.justify_status = 1) THEN 1 ELSE 0
+      END AS justify FROM report AS r JOIN users AS u ON r.receiver_id = u.U_ID WHERE r.status = 1 GROUP BY r.receiver_id HAVING total_reports >= 10`);
 
       return res.status(200).json({
         result: "1",
@@ -405,7 +407,8 @@ exports.account_band = async (req, res) => {
     }
 
     if (Number(status) === 2) {
-      const [data] = await db.query(`SELECT r.report_id, r.user_id , r.receiver_id, r.user_post_id, COUNT(*) AS total_reports, u.username, u.name,u.U_ID, u.profile_image, u.phone_num FROM report AS r JOIN users AS u ON r.receiver_id = u.U_ID WHERE r.status = 2 GROUP BY r.receiver_id, r.user_post_id HAVING total_reports >= 10`);
+      const [data] = await db.query(`SELECT r.report_id, r.user_id , r.receiver_id, r.user_post_id, COUNT(*) AS total_reports, u.username, u.name,u.U_ID, u.profile_image, u.phone_num,
+        case when exists (select 1 from justify_users j WHERE j.user_id = u.U_ID AND j.user_post_id = r.user_post_id AND j.justify_status = 2) THEN 1 ELSE 0 END AS justify FROM report AS r JOIN users AS u ON r.receiver_id = u.U_ID WHERE r.status = 2 GROUP BY r.receiver_id, r.user_post_id HAVING total_reports >= 10`);
 
       return res.status(200).json({
         result: "1",
@@ -450,6 +453,7 @@ exports.activate_account = async (req, res) => {
     let removeUserReports = { affectedRows: 0 };
     let removePostReports = { affectedRows: 0 };
     let removeCommentReports = { affectedRows: 0 };
+    let removeJustify = { affectedRows : 0 };
 
     if (user_id) {
       [userResult] = await db.query(
@@ -457,10 +461,23 @@ exports.activate_account = async (req, res) => {
         [user_id]
       );
 
+      [postResult] = await db.query(
+        `UPDATE user_posts SET account_status = 0 WHERE U_ID = ?`,
+        [user_id]
+      );
+
+      [commentResult] = await db.query(
+        `UPDATE post_comments SET account_status = 0 WHERE user_id = ?`,
+        [user_id]
+      );
+
+
       [removeUserReports] = await db.query(
         `DELETE FROM report WHERE receiver_id = ? AND user_post_id IS NULL AND comment_id IS NULL`,
         [user_id]
       );
+
+      [removeJustify] = await db.query (`delete from justify_users where user_id = ? ` , [user_id])
     }
 
     if (user_id && user_post_id) {
@@ -493,7 +510,8 @@ exports.activate_account = async (req, res) => {
       commentResult.affectedRows > 0 ||
       removeUserReports.affectedRows > 0 ||
       removePostReports.affectedRows > 0 ||
-      removeCommentReports.affectedRows > 0
+      removeCommentReports.affectedRows > 0 || 
+      removeJustify.affectedRows > 0
     ) {
       return res.status(200).json({
         result: "1",

@@ -231,7 +231,7 @@ exports.my_leads = async (req, res) => {
   }
 
   const [exist_user] = await db.query(
-    `SELECT * FROM users WHERE U_ID = ? and deleted_at is null`,
+    `SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL`,
     [user_id]
   );
   if (exist_user.length === 0) {
@@ -276,28 +276,96 @@ exports.my_leads = async (req, res) => {
         e.enquire_id,
         e.recever_posts_id,
         e.user_id AS enquiry_by_user_id,
-        u.name AS enquiry_by_user_name,
+
+        u.U_ID AS enquiry_user_id,
+        u.name AS enquiry_by_name,
+        u.username AS enquiry_by_username,
         u.profile_image AS enquiry_by_profile_image,
-        u.phone_num AS enquiry_by_user_phone,
-        u.whatsapp_num AS enquiry_by_user_whatsapp,
-        u.email AS enquiry_by_user_email,
+        u.country AS enquiry_by_country,
+        u.state AS enquiry_by_state,
+        u.cities AS enquiry_by_cities,
+        u.pincode AS enquiry_by_pincode,
+        u.phone_num_cc AS enquiry_by_phone_cc,
+        u.phone_num AS enquiry_by_phone,
+        u.whatsapp_num_cc AS enquiry_by_whatsapp_cc,
+        u.whatsapp_num AS enquiry_by_whatsapp,
+        u.email AS enquiry_by_email,
+        u.latitude AS enquiry_by_latitude,
+        u.longitude AS enquiry_by_longitude,
+
+        pu.U_ID AS post_user_id,
+        pu.name AS post_user_name,
+        pu.username AS post_user_username,
+        pu.profile_image AS post_user_profile_image,
+        pu.country AS post_user_country,
+        pu.state AS post_user_state,
+        pu.cities AS post_user_cities,
+        pu.pincode AS post_user_pincode,
+        pu.phone_num_cc AS post_user_phone_cc,
+        pu.phone_num AS post_user_phone,
+        pu.whatsapp_num_cc AS post_user_whatsapp_cc,
+        pu.whatsapp_num AS post_user_whatsapp,
+        pu.email AS post_user_email,
+        pu.latitude AS post_user_latitude,
+        pu.longitude AS post_user_longitude,
+
+        up.thumbnail,
+        up.video,
+
+        COALESCE(pl.total_likes, 0) AS total_likes,
+        COALESCE(pc.total_comments, 0) AS total_comments,
+        CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
+        CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved,
+        1 AS enquiry,
+        CASE WHEN er.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS declain,
+
+
         e.land_category_para,
         e.created_at,
-        up.*,
-        CASE WHEN is_report.user_post_id IS NOT NULL THEN 1 ELSE 0 END AS is_reported
+
+        up.*
       FROM enquiries e
-      JOIN user_posts up ON e.recever_posts_id = up.user_post_id
-      JOIN users u ON e.user_id = u.U_ID
+      JOIN user_posts up 
+          ON e.recever_posts_id = up.user_post_id
+      JOIN users u 
+          ON e.user_id = u.U_ID
+      JOIN users pu 
+          ON up.U_ID = pu.U_ID
+
+      LEFT JOIN enquiry_responses er 
+          ON er.enquire_id = e.enquire_id
+
+      LEFT JOIN (
+          SELECT user_post_id, COUNT(*) AS total_likes
+          FROM post_likes
+          GROUP BY user_post_id
+      ) AS pl ON pl.user_post_id = up.user_post_id
+
+      LEFT JOIN (
+          SELECT user_post_id, COUNT(*) AS total_comments
+          FROM post_comments
+          WHERE deleted_at IS NULL
+          GROUP BY user_post_id
+      ) AS pc ON pc.user_post_id = up.user_post_id
+
+      LEFT JOIN post_likes ul
+          ON ul.user_post_id = up.user_post_id AND ul.user_id = ?
+
+      LEFT JOIN saved_properties sp
+          ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
+
       LEFT JOIN (
           SELECT user_post_id
           FROM report
           WHERE user_id = ? AND status = 2
-      ) AS is_report ON is_report.user_post_id = up.user_post_id
+      ) AS is_report 
+          ON is_report.user_post_id = up.user_post_id
+
       WHERE up.U_ID = ?
       ORDER BY e.created_at DESC
       LIMIT ? OFFSET ?
       `,
-      [user_id, user_id, Number(limit), Number(offset)]
+      [user_id, user_id, user_id, user_id, Number(limit), Number(offset)]
     );
 
     const normalizedData = rows.map(row => {
@@ -317,16 +385,33 @@ exports.my_leads = async (req, res) => {
         }
       }
 
-      const address = [cleanObj.locality, cleanObj.cities, cleanObj.state, cleanObj.country, cleanObj.pincode]
-        .filter(v => v && v.toString().trim() !== "")
-        .join(", ");
+      const enquiry_user_address = [
+        cleanObj.enquiry_by_cities,
+        cleanObj.enquiry_by_state,
+        cleanObj.enquiry_by_country,
+        cleanObj.enquiry_by_pincode,
+      ].filter(v => v && v.toString().trim() !== "").join(", ");
+
+      const post_user_address = [
+        cleanObj.post_user_cities,
+        cleanObj.post_user_state,
+        cleanObj.post_user_country,
+        cleanObj.post_user_pincode,
+      ].filter(v => v && v.toString().trim() !== "").join(", ");
+
+      const post_address = [
+        cleanObj.locality,
+        cleanObj.city,
+        cleanObj.state,
+        cleanObj.country,
+        cleanObj.pincode,
+      ].filter(v => v && v.toString().trim() !== "").join(", ");
 
       let landTypeText = "";
       if (cleanObj.land_type_id === 1) landTypeText = "Residential";
       if (cleanObj.land_type_id === 2) landTypeText = "Commercial";
       if (cleanObj.land_type_id === 3) landTypeText = "Agriculture";
 
-      let landCategoryText = "";
       const categories = {
         1: "Flat/ Apartment",
         2: "Villa/Independent House",
@@ -347,19 +432,50 @@ exports.my_leads = async (req, res) => {
         17: "Farmhouse",
         18: "Agricultural Land"
       };
-      landCategoryText = categories[cleanObj.land_categorie_id] || "";
+      const landCategoryText = categories[cleanObj.land_categorie_id] || "";
 
       return {
         enquiry_details: {
           enquire_id: cleanObj.enquire_id,
           enquiry_by_user_id: cleanObj.enquiry_by_user_id,
-          enquiry_by_user_name: cleanObj.enquiry_by_user_name,
+          enquiry_by_username: cleanObj.enquiry_by_username,
+          enquiry_by_name: cleanObj.enquiry_by_name,
           enquiry_by_profile_image: cleanObj.enquiry_by_profile_image,
-          enquiry_by_user_phone: cleanObj.enquiry_by_user_phone,
-          enquiry_by_user_whatsapp: cleanObj.enquiry_by_user_whatsapp,
-          enquiry_by_user_email: cleanObj.enquiry_by_user_email,
+          enquiry_by_user_phone: cleanObj.enquiry_by_phone,
+          enquiry_by_user_whatsapp: cleanObj.enquiry_by_whatsapp,
+          enquiry_by_user_email: cleanObj.enquiry_by_email,
           land_category_para: cleanObj.land_category_para,
+          country: cleanObj.enquiry_by_country,
+          state: cleanObj.enquiry_by_state,
+          cities: cleanObj.enquiry_by_cities,
+          pincode: cleanObj.enquiry_by_pincode,
+          address: enquiry_user_address,
           created_at: cleanObj.created_at,
+          is_declain: cleanObj.declain,
+        },
+        post_user: {
+          user_id: cleanObj.post_user_id,
+          user_post_id: cleanObj.user_post_id,
+          username: cleanObj.post_user_username,
+          name: cleanObj.post_user_name,
+          profile_image: cleanObj.post_user_profile_image,
+          phone_num_cc: cleanObj.post_user_phone_cc,
+          phone: cleanObj.post_user_phone,
+          whatsapp_num_cc: cleanObj.post_user_whatsapp_cc,
+          whatsapp: cleanObj.post_user_whatsapp,
+          email: cleanObj.post_user_email,
+          country: cleanObj.post_user_country,
+          state: cleanObj.post_user_state,
+          cities: cleanObj.post_user_cities,
+          pincode: cleanObj.post_user_pincode,
+          thumbnail: cleanObj.thumbnail? `${process.env.SERVER_ADDRESS}${cleanObj.thumbnail}`: "",
+          video: cleanObj.video,
+          total_likes: cleanObj.total_likes,
+          total_comments: cleanObj.total_comments,
+          is_liked: cleanObj.is_liked,
+          is_saved: cleanObj.is_saved,
+          enquiry: 0,
+          address: post_user_address,
         },
         post_property: {
           user_post_id: cleanObj.user_post_id,
@@ -411,12 +527,13 @@ exports.my_leads = async (req, res) => {
           furnishing_status: cleanObj.furnishing_status,
           fire_safety_measures: cleanObj.fire_safety_measures,
           lifts: cleanObj.lifts,
-          pre_contract_status: cleanObj.pre_contract_status,
-          local_authority: cleanObj.local_authority,
+          is_it_pre_leased_pre_rented	: cleanObj.	is_it_pre_leased_pre_rented,
+          which_local_authority: cleanObj.which_local_authority,
+          does_local_authority : cleanObj.does_local_authority,
           noc_certified: cleanObj.noc_certified,
           occupancy_certificate: cleanObj.occupancy_certificate,
           office_previously_used_for: cleanObj.office_previously_used_for,
-          Parking_available: cleanObj.Parking_available,
+          parking_available: cleanObj.parking_available,
           boundary_wall: cleanObj.boundary_wall,
           amenities: cleanObj.amenities,
           suitable_business_type: cleanObj.suitable_business_type,
@@ -428,8 +545,8 @@ exports.my_leads = async (req, res) => {
           thumbnail: cleanObj.thumbnail
             ? `${process.env.SERVER_ADDRESS}${cleanObj.thumbnail}`
             : (imageUrls.length > 0 ? imageUrls[0] : ""),
-          address,
-          is_report: cleanObj.is_reported
+          address: post_address,
+          is_report: 0,
         }
       };
     });
@@ -452,6 +569,7 @@ exports.my_leads = async (req, res) => {
   }
 };
 
+
 exports.self_enquiry = async (req, res) => {
   let { user_id, page = 1, limit = 10 } = req.body;
 
@@ -463,7 +581,10 @@ exports.self_enquiry = async (req, res) => {
     });
   }
 
-  const [exist_user] = await db.query(`SELECT * FROM users WHERE U_ID = ?`, [user_id]);
+  const [exist_user] = await db.query(
+    `SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL`,
+    [user_id]
+  );
   if (exist_user.length === 0) {
     return res.status(200).json({
       result: "0",
@@ -472,7 +593,10 @@ exports.self_enquiry = async (req, res) => {
     });
   }
 
-  const [exist_enquire] = await db.query(`SELECT * FROM enquiries WHERE user_id = ?`, [user_id]);
+  const [exist_enquire] = await db.query(
+    `SELECT 1 FROM enquiries WHERE user_id = ? LIMIT 1`,
+    [user_id]
+  );
   if (exist_enquire.length === 0) {
     return res.status(200).json({
       result: "0",
@@ -494,34 +618,91 @@ exports.self_enquiry = async (req, res) => {
       `
       SELECT 
         e.enquire_id,
+        e.recever_posts_id,
         u.U_ID AS enquiry_by_user_id,
-        u.name AS enquiry_by_user_name,
+        u.name AS enquiry_by_name,
+        u.username AS enquiry_by_username,
         u.profile_image AS enquiry_by_profile_image,
+        u.country AS user_country,
+        u.state AS user_state,
+        u.cities AS user_cities,
+        u.pincode AS user_pincode,
         u.phone_num AS enquiry_by_user_phone,
         u.whatsapp_num AS enquiry_by_user_whatsapp,
         u.email AS enquiry_by_user_email,
-        e.recever_posts_id,
-        up.*,
+
+        pu.U_ID AS post_user_id,
+        pu.name AS post_user_name,
+        pu.username AS post_user_username,
+        pu.profile_image AS post_user_profile_image,
+        pu.country AS post_user_country,
+        pu.state AS post_user_state,
+        pu.cities AS post_user_cities,
+        pu.pincode AS post_user_pincode,
+        pu.phone_num_cc AS post_user_phone_cc,
+        pu.phone_num AS post_user_phone,
+        pu.whatsapp_num_cc AS post_user_whatsapp_cc,
+        pu.whatsapp_num AS post_user_whatsapp,
+        pu.email AS post_user_email,
+        pu.latitude AS post_user_latitude,
+        pu.longitude AS post_user_longitude,
+
+        up.thumbnail,
+        up.video,
+
+        COALESCE(pl.total_likes, 0) AS total_likes,
+        COALESCE(pc.total_comments, 0) AS total_comments,
+        CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
+        CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved,
+        1 AS enquiry,
+        CASE WHEN er.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS declain,
+        CASE WHEN is_report.user_post_id IS NOT NULL THEN 1 ELSE 0 END AS is_reported,
+
         e.land_type_id,
         e.land_categorie_id,
         e.land_category_para,
         e.created_at,
-        CASE WHEN is_report.user_post_id IS NOT NULL THEN 1 ELSE 0 END AS is_reported
+        up.*
       FROM enquiries e
       JOIN user_posts up ON e.recever_posts_id = up.user_post_id
-      JOIN users u ON up.U_ID = u.U_ID
+      JOIN users u ON e.user_id = u.U_ID
+      JOIN users pu ON up.U_ID = pu.U_ID
+
+      LEFT JOIN enquiry_responses er 
+        ON er.enquire_id = e.enquire_id
+
+      LEFT JOIN (
+          SELECT user_post_id, COUNT(*) AS total_likes
+          FROM post_likes
+          GROUP BY user_post_id
+      ) AS pl ON pl.user_post_id = up.user_post_id
+
+      LEFT JOIN (
+          SELECT user_post_id, COUNT(*) AS total_comments
+          FROM post_comments
+          WHERE deleted_at IS NULL
+          GROUP BY user_post_id
+      ) AS pc ON pc.user_post_id = up.user_post_id
+
+      LEFT JOIN post_likes ul
+          ON ul.user_post_id = up.user_post_id AND ul.user_id = ?
+
+      LEFT JOIN saved_properties sp
+          ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
+
       LEFT JOIN (
           SELECT user_post_id
           FROM report
           WHERE user_id = ? AND status = 2
-      ) AS is_report ON is_report.user_post_id = up.user_post_id
+      ) AS is_report 
+          ON is_report.user_post_id = up.user_post_id
+
       WHERE e.user_id = ?
       ORDER BY e.created_at DESC
       LIMIT ? OFFSET ?
       `,
-      [user_id, user_id, Number(limit), Number(offset)]
+      [user_id, user_id, user_id, user_id, Number(limit), Number(offset)]
     );
-
 
     const normalizedData = rows.map(row => {
       const cleanObj = {};
@@ -540,16 +721,33 @@ exports.self_enquiry = async (req, res) => {
         }
       }
 
-      const address = [cleanObj.locality, cleanObj.cities, cleanObj.state, cleanObj.country, cleanObj.pincode]
-        .filter(v => v && v.toString().trim() !== "")
-        .join(", ");
+      const enquiry_user_address = [
+        cleanObj.user_cities,
+        cleanObj.user_state,
+        cleanObj.user_country,
+        cleanObj.user_pincode,
+      ].filter(v => v && v.toString().trim() !== "").join(", ");
+
+      const post_user_address = [
+        cleanObj.post_user_cities,
+        cleanObj.post_user_state,
+        cleanObj.post_user_country,
+        cleanObj.post_user_pincode,
+      ].filter(v => v && v.toString().trim() !== "").join(", ");
+
+      const post_address = [
+        cleanObj.locality,
+        cleanObj.city,
+        cleanObj.state,
+        cleanObj.country,
+        cleanObj.pincode,
+      ].filter(v => v && v.toString().trim() !== "").join(", ");
 
       let landTypeText = "";
       if (cleanObj.land_type_id === 1) landTypeText = "Residential";
       if (cleanObj.land_type_id === 2) landTypeText = "Commercial";
       if (cleanObj.land_type_id === 3) landTypeText = "Agriculture";
 
-      let landCategoryText = "";
       const categories = {
         1: "Flat/ Apartment",
         2: "Villa/Independent House",
@@ -570,19 +768,52 @@ exports.self_enquiry = async (req, res) => {
         17: "Farmhouse",
         18: "Agricultural Land"
       };
-      landCategoryText = categories[cleanObj.land_categorie_id] || "";
+      let landCategoryText = categories[cleanObj.land_categorie_id] || "";
 
       return {
         enquiry_details: {
           enquire_id: cleanObj.enquire_id,
           enquiry_by_user_id: cleanObj.enquiry_by_user_id,
-          enquiry_by_user_name: cleanObj.enquiry_by_user_name,
+          enquiry_by_username: cleanObj.enquiry_by_username,
+          enquiry_by_name: cleanObj.enquiry_by_name,
           enquiry_by_profile_image: cleanObj.enquiry_by_profile_image,
           enquiry_by_user_phone: cleanObj.enquiry_by_user_phone,
           enquiry_by_user_whatsapp: cleanObj.enquiry_by_user_whatsapp,
           enquiry_by_user_email: cleanObj.enquiry_by_user_email,
           land_category_para: cleanObj.land_category_para,
+          country: cleanObj.user_country,
+          state: cleanObj.user_state,
+          cities: cleanObj.user_cities,
+          pincode: cleanObj.user_pincode,
+          address: enquiry_user_address,
           created_at: cleanObj.created_at,
+          is_declain: cleanObj.declain,
+        },
+        post_user: {
+          user_id: cleanObj.post_user_id,
+          user_post_id: cleanObj.user_post_id,
+          username: cleanObj.post_user_username,
+          name: cleanObj.post_user_name,
+          profile_image: cleanObj.post_user_profile_image,
+          phone_num_cc: cleanObj.post_user_phone_cc,
+          phone: cleanObj.post_user_phone,
+          whatsapp_num_cc: cleanObj.post_user_whatsapp_cc,
+          whatsapp: cleanObj.post_user_whatsapp,
+          email: cleanObj.post_user_email,
+          country: cleanObj.post_user_country,
+          state: cleanObj.post_user_state,
+          cities: cleanObj.post_user_cities,
+          pincode: cleanObj.post_user_pincode,
+          thumbnail: cleanObj.thumbnail
+            ? `${process.env.SERVER_ADDRESS}${cleanObj.thumbnail}`
+            : "",
+          video: cleanObj.video,
+          total_likes: cleanObj.total_likes,
+          total_comments: cleanObj.total_comments,
+          is_liked: cleanObj.is_liked,
+          is_saved: cleanObj.is_saved,
+          enquiry: 0,
+          address: post_user_address,
         },
         post_property: {
           user_post_id: cleanObj.user_post_id,
@@ -634,12 +865,13 @@ exports.self_enquiry = async (req, res) => {
           furnishing_status: cleanObj.furnishing_status,
           fire_safety_measures: cleanObj.fire_safety_measures,
           lifts: cleanObj.lifts,
-          pre_contract_status: cleanObj.pre_contract_status,
-          local_authority: cleanObj.local_authority,
+          is_it_pre_leased_pre_rented: cleanObj.is_it_pre_leased_pre_rented,
+          which_local_authority: cleanObj.which_local_authority,
+          does_local_authority: cleanObj.does_local_authority,
           noc_certified: cleanObj.noc_certified,
           occupancy_certificate: cleanObj.occupancy_certificate,
           office_previously_used_for: cleanObj.office_previously_used_for,
-          Parking_available: cleanObj.Parking_available,
+          parking_available: cleanObj.parking_available,
           boundary_wall: cleanObj.boundary_wall,
           amenities: cleanObj.amenities,
           suitable_business_type: cleanObj.suitable_business_type,
@@ -651,8 +883,9 @@ exports.self_enquiry = async (req, res) => {
           thumbnail: cleanObj.thumbnail
             ? `${process.env.SERVER_ADDRESS}${cleanObj.thumbnail}`
             : (imageUrls.length > 0 ? imageUrls[0] : ""),
-          address,
-          is_report: cleanObj.is_reported
+          address: post_address,
+          is_report: cleanObj.is_reported,
+          
         }
       };
     });
@@ -667,7 +900,7 @@ exports.self_enquiry = async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Fetch my enquiries error:", err);
+    console.error("Fetch self enquiries error:", err);
     return res.status(500).json({
       result: "0",
       error: "Server error.",
@@ -676,114 +909,7 @@ exports.self_enquiry = async (req, res) => {
   }
 };
 
-// exports.declineForm = async (req, res) => {
-//   try {
-//     let { page = 1 } = req.body;
-//     let limit = 10;
 
-//     if(isNaN(page)){
-//       return res.status(200).json({
-//         result : "0",
-//         error : "error page is only in Integer",
-//         data : []
-//       })
-//     }
-
-//     page = parseInt(page) || 1;
-//     limit = parseInt(limit) || 10;
-
-//     const offset = (page - 1) * limit;
-//     const [[{ total }]] = await db.query(`
-//       SELECT COUNT(*) as total FROM declining_enquire
-//     `);
-
-//     const totalPages = Math.ceil(total / limit);
-//     if (total === 0) {
-//       return res.json({
-//         result: "0",
-//         error: "No records found",
-//         data: [],
-//         current_page: page,
-//         per_page: limit,
-//         total_records: total,
-//         total_pages: totalPages
-//       });
-//     }
-//     if (page > totalPages) {
-//       return res.json({
-//         result: "0",
-//         error: "Page not found",
-//         data: [],
-//         current_page: page,
-//         per_page: limit,
-//         total_records: total,
-//         total_pages: totalPages
-//       });
-//     }
-//     const [rows] = await db.query(`
-//       SELECT declining_enquire_id, name
-//       FROM declining_enquire
-//       LIMIT ? OFFSET ?
-//     `, [limit, offset]);
-
-//     return res.json({
-//       result: "1",
-//       data: rows,
-//       current_page: page,
-//       per_page: limit,
-//       total_records: total,
-//       total_pages: totalPages
-//     });
-
-//   } catch (err) {
-//     console.error("Decline Form error:", err);
-//     return res.status(500).json({
-//       result: "0",
-//       error: err.message,
-//       data: []
-//     });
-//   }
-// };
-
-// exports.declineFormpara = async (req, res) => {
-//   try {
-//     const { name } = req.body;
-
-//     if (!name) {
-//       return res.status(200).json({
-//         result: "0",
-//         error: "Name is required",
-//         data: []
-//       });
-//     }
-
-//     const [rows] = await db.query(
-//       `SELECT para FROM declining_enquire WHERE name = ?`,
-//       [name]
-//     );
-
-//     if (!rows.length) {
-//       return res.json({
-//         result: "0",
-//         error: "No matching record found",
-//         data: []
-//       });
-//     }
-
-//     return res.json({
-//       result: "1",
-//       data: rows
-//     });
-
-//   } catch (err) {
-//     console.error("Decline Form Para error:", err);
-//     return res.status(500).json({
-//       result: "0",
-//       error: "Server error: " + err.message,
-//       data: []
-//     });
-//   }
-// };
 
 exports.declineEnquiry = async (req, res) => {
   const { enquire_id, user_posts_id, custom_para } = req.body;

@@ -2345,7 +2345,10 @@
               <td class="p-3"><input type="text" name="lifts" class="w-full border rounded p-2" /></td>
               <td class="p-3">lifts</td><td class="p-3">No</td><td class="p-3">Available</td></tr>
 
-            
+             <tr><td class="p-3">Is It Pre Lased Pre Rented</td>
+              <td class="p-3"><input type="text" name="is_it_pre_leased_pre_rented" class="w-full border rounded p-2" /></td>
+              <td class="p-3">is_it_pre_leased_pre_rented</td><td class="p-3">No</td><td class="p-3">Yes or No</td></tr>
+
             <tr><td class="p-3">NOC Certified</td>
               <td class="p-3"><input type="text" name="noc_certified" class="w-full border rounded p-2" /></td>
               <td class="p-3">noc_certified</td><td class="p-3">No</td><td class="p-3">Yes</td></tr>
@@ -2362,13 +2365,21 @@
               <td class="p-3"><input type="text" name="washroom_details" class="w-full border rounded p-2" /></td>
               <td class="p-3">washroom_details</td><td class="p-3">No</td><td class="p-3">2 Attached</td></tr>
 
-            <tr><td class="p-3">Local Authority</td>
-              <td class="p-3"><input type="text" name="local_authority" class="w-full border rounded p-2" /></td>
-              <td class="p-3">local_authority</td><td class="p-3">No</td><td class="p-3">BBMP</td></tr>
+            <tr><td class="p-3">Which Local Authority</td>
+              <td class="p-3"><input type="text" name="which_local_authority" class="w-full border rounded p-2" /></td>
+              <td class="p-3">which_local_authority</td><td class="p-3">No</td><td class="p-3">BBMP</td></tr>
+
+            <tr><td class="p-3">Does Local Authority</td>
+              <td class="p-3"><input type="text" name="does_local_authority" class="w-full border rounded p-2" /></td>
+              <td class="p-3">does_local_authority</td><td class="p-3">No</td><td class="p-3">BBMP</td></tr>
 
             <tr><td class="p-3">Suitable Business Type</td>
               <td class="p-3"><input type="text" name="suitable_business_type" class="w-full border rounded p-2" /></td>
               <td class="p-3">suitable_business_type</td><td class="p-3">No</td><td class="p-3">IT, BPO</td></tr>
+            
+            <tr><td class="p-3">Draft</td>
+              <td class="p-3"><input type="text" name="draft" class="w-full border rounded p-2" /></td>
+              <td class="p-3">draft</td><td class="p-3">No</td><td class="p-3">4 or 5</td></tr>
 
             <tr>
               <td colspan="5" class="text-center p-4">
@@ -4601,6 +4612,189 @@
     </div>
   </div>
 
+  <div>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">58.Justify User Post Form</h2>
+    <div class="mb-6">
+      <table class="w-full bg-white border rounded shadow text-sm mb-6">
+        <tbody>
+          <tr class="border-b">
+            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+            <td class="p-3 text-blue-700">http://localhost:7000/admin/post_justify</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Method:</td>
+            <td class="p-3">POST</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+            <td class="p-3">multipart/form-data</td>
+          </tr>
+          <tr>
+            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+            <td class="p-3">Development</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="post_justify" enctype="multipart/form-data">
+        <table class="w-full text-sm bg-white border rounded shadow mb-6">
+          <thead class="bg-slate-900 text-white">
+            <tr>
+              <th class="p-3 text-left">Label Name</th>
+              <th class="p-3 text-left">Value</th>
+              <th class="p-3 text-left">Variable Name</th>
+              <th class="p-3 text-left">Mandatory</th>
+              <th class="p-3 text-left">Note</th>
+              <th class="p-3 text-left">Sample</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="p-3">User ID</td>
+              <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">User Post ID</td>
+              <td class="p-3"><input type="text" name="user_post_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_post_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr>
+              <td colspan="7" class="text-center p-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+                  Submit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">59.Views Posts</h2>
+    <div class="mb-6">
+      <table class="w-full bg-white border rounded shadow text-sm mb-6">
+        <tbody>
+          <tr class="border-b">
+            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+            <td class="p-3 text-blue-700">http://localhost:7000/admin/getviews_reels</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Method:</td>
+            <td class="p-3">POST</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+            <td class="p-3">multipart/form-data</td>
+          </tr>
+          <tr>
+            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+            <td class="p-3">Development</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="getviews_reels" enctype="multipart/form-data">
+        <table class="w-full text-sm bg-white border rounded shadow mb-6">
+          <thead class="bg-slate-900 text-white">
+            <tr>
+              <th class="p-3 text-left">Label Name</th>
+              <th class="p-3 text-left">Value</th>
+              <th class="p-3 text-left">Variable Name</th>
+              <th class="p-3 text-left">Mandatory</th>
+              <th class="p-3 text-left">Note</th>
+              <th class="p-3 text-left">Sample</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-t">
+              <td class="p-3">User ID</td>
+              <td class="p-3"><input type="text" name="user_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr class="border-t">
+              <td class="p-3">User Post ID</td>
+              <td class="p-3"><input type="text" name="user_post_id" class="w-full border rounded p-2" /></td>
+              <td class="p-3">user_post_id</td>
+              <td class="p-3">Yes</td>
+              <td class="p-3">int</td>
+              <td class="p-3">1</td>
+            </tr>
+            <tr>
+              <td colspan="7" class="text-center p-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+                  Submit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-semibold text-red-600 underline mb-4">60.Popular User</h2>
+    <div class="mb-6">
+      <table class="w-full bg-white border rounded shadow text-sm mb-6">
+        <tbody>
+          <tr class="border-b">
+            <td class="font-semibold p-3 w-40 bg-gray-50">API URL:</td>
+            <td class="p-3 text-blue-700">http://localhost:7000/api/auth/popular_user</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Method:</td>
+            <td class="p-3">GET</td>
+          </tr>
+          <tr class="border-b">
+            <td class="font-semibold p-3 bg-gray-50">Content-Type:</td>
+            <td class="p-3">multipart/form-data</td>
+          </tr>
+          <tr>
+            <td class="font-semibold p-3 bg-gray-50">API Mode:</td>
+            <td class="p-3">Development</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <form id="popular_user" enctype="multipart/form-data">
+        <table class="w-full text-sm bg-white border rounded shadow mb-6">
+          <thead class="bg-slate-900 text-white">
+            <tr>
+              <th class="p-3 text-left">Label Name</th>
+              <th class="p-3 text-left">Value</th>
+              <th class="p-3 text-left">Variable Name</th>
+              <th class="p-3 text-left">Mandatory</th>
+              <th class="p-3 text-left">Note</th>
+              <th class="p-3 text-left">Sample</th>
+            </tr>
+          </thead>
+          <tbody>
+           
+           
+            <tr>
+              <td colspan="7" class="text-center p-4">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded">
+                  Submit
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </form>
+    </div>
+  </div>
 
 
 
@@ -6555,6 +6749,66 @@
               }
       });
 
+     // REPORT USER
+      const getviews_reels = document.getElementById('getviews_reels');
+      getviews_reels.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(getviews_reels);
+        const data = {};
+
+        formData.forEach((value, key) => {
+          if (value) data[key] = value;
+        });
+
+        try {
+          const res = await fetch('http://localhost:7000/api/auth/getviews_reels', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
+
+        const json = await res.json();
+
+          sessionStorage.setItem('registerResponse', JSON.stringify(json));
+          window.location.href = 'response';
+
+        }  catch (err) {
+                console.error("Request failed:", err.message);
+                sessionStorage.setItem('registerResponse', JSON.stringify({ error: err.message }));
+                window.location.href = 'response';
+              }
+      });
+
+      // POPULAR USER
+       const popularUserForm = document.getElementById("popular_user");
+      popularUserForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        try {
+          const res = await fetch("http://localhost:7000/api/auth/popular_user", {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+
+          
+          const json = await res.json();
+          sessionStorage.setItem('registerResponse', JSON.stringify(json));
+          window.location.href = 'response';
+        } catch (err) {
+          console.error("Request failed:", err.message);
+          sessionStorage.setItem(
+            "popularUserResponse",
+            JSON.stringify({ error: err.message })
+          );
+          window.location.href = "response";
+        }
+      });
+
       // JUSTIFY FORM
       const account_justify = document.getElementById('account_justify');
       account_justify.addEventListener('submit', async function (e) {
@@ -6588,7 +6842,40 @@
               }
       });
 
+      // POST JUSTIFY
+      const post_justify = document.getElementById('post_justify');
+      post_justify.addEventListener('submit', async function (e) {
+        e.preventDefault();
 
+        const formData = new FormData(post_justify);
+        const data = {};
+
+        formData.forEach((value, key) => {
+          if (value) data[key] = value;
+        });
+
+        try {
+          const res = await fetch('http://localhost:7000/admin/post_justify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+          });
+
+          const json = await res.json();
+
+          sessionStorage.setItem('post_justify', JSON.stringify(json));
+          window.location.href = 'post_justify';
+
+        } catch (err) {
+          console.error("Request failed:", err.message);
+          sessionStorage.setItem('post_justify', JSON.stringify({ error: err.message }));
+          window.location.href = 'post_justify';
+        }
+      });
+
+ 
   </script>
 </body>
 

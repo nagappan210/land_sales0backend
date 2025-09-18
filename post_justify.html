@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post Justification</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const justifyData = JSON.parse(sessionStorage.getItem("post_justify"));
+
+      if (!justifyData || justifyData.result !== "1") {
+        document.getElementById("content").innerHTML = "<p class='text-center text-gray-500'>No justification required.</p>";
+        return;
+      }
+
+      const user = justifyData.data.user_details;
+      const reports = justifyData.data.reports;
+    
+      document.getElementById("fullname_input").value = user.name || "";
+      document.getElementById("email_input").value = user.email || "";
+
+      const titleEl = document.getElementById("post_title");
+      const addressEl = document.getElementById("post_address");
+      const thumbnailDiv = document.getElementById("thumbnail");
+
+      titleEl.innerText = user.property_name || "Post Title";
+      addressEl.innerText = user.address || "Post address";
+
+      const img = document.createElement("img");
+      img.src = `http://localhost:7000/${user.thumbnail || 'default.png'}`;
+      img.alt = user.property_name || "Thumbnail";
+      img.className = "w-full h-full object-cover cursor-pointer";
+      thumbnailDiv.appendChild(img);
+
+      const videoModal = document.getElementById("videoModal");
+      const videoPlayer = document.getElementById("videoPlayer");
+      const closeVideo = document.getElementById("closeVideo");
+
+      
+    thumbnailDiv.addEventListener("click", () => {
+      if (user.video) {
+        videoPlayer.src = user.video;
+
+        const profileImg = document.getElementById("imageUrl");
+        profileImg.src = user.profile_image;
+
+        console.log( user.profile_image , "edsf");
+      
+        document.getElementById("profileName").innerText = user.name || "";
+        document.getElementById("profileAddress").innerText = user.address || "";
+
+        videoModal.classList.remove("hidden");
+        videoModal.classList.add("flex");
+        document.body.classList.add("overflow-hidden");
+
+        videoPlayer.play();
+      } else {
+        alert("No video available for this post.");
+      }
+    });
+
+      closeVideo.addEventListener("click", () => {
+        videoModal.classList.add("hidden");
+        videoModal.classList.remove("flex");
+        document.body.classList.remove("overflow-hidden");
+        videoPlayer.pause();
+        videoPlayer.currentTime = 0;
+        videoPlayer.src = "";
+      });
+      
+      // Reports list
+      const reportsList = document.getElementById("reports-list");
+      reports.forEach(r => {
+        const li = document.createElement("li");
+        li.className = "flex items-center gap-2 text-sm text-red-700 px-3 py-2 mb-2";
+        li.innerHTML = `<span class="font-medium">${r.report_sentence}</span>`;
+        reportsList.appendChild(li);
+      });
+
+      // Hidden user id
+      const hiddenUserId = document.createElement("input");
+      hiddenUserId.type = "hidden";
+      hiddenUserId.name = "user_id";
+      hiddenUserId.value = user.user_id;
+      document.getElementById("appealForm").appendChild(hiddenUserId);
+
+      // Hidden User Post id
+      const hiddenPostId = document.createElement("input");
+      hiddenPostId.type = "hidden";
+      hiddenPostId.name = "user_post_id"; 
+      hiddenPostId.value = user.user_post_id; 
+      document.getElementById("appealForm").appendChild(hiddenPostId);
+
+      // File upload
+      const fileInput = document.getElementById("evidence");
+      const fileList = document.getElementById("file-list");
+      const uploadBtn = document.getElementById("uploadBtn");
+      console.log("User Post ID:", user.user_post_id);
+
+      uploadBtn.addEventListener("click", () => fileInput.click());
+
+      fileInput.addEventListener("change", () => {
+        fileList.innerHTML = "";
+        Array.from(fileInput.files).forEach((file, idx) => {
+          const li = document.createElement("li");
+          li.className = "flex items-center justify-between bg-gray-100 px-3 py-2 rounded-lg mb-2 text-sm";
+          li.innerHTML = `
+            <span>${file.name} <span class="text-gray-500 text-xs">(${(file.size / 1024 / 1024).toFixed(1)} MB)</span></span>
+            <button type="button" data-idx="${idx}" class="text-red-500 hover:text-red-700 font-bold">✕</button>
+          `;
+          fileList.appendChild(li);
+        });
+
+        fileList.querySelectorAll("button").forEach(btn => {
+          btn.addEventListener("click", () => {
+            const dt = new DataTransfer();
+            Array.from(fileInput.files).forEach((f, i) => {
+              if (i != btn.dataset.idx) dt.items.add(f);
+            });
+            fileInput.files = dt.files;
+            btn.parentElement.remove();
+          });
+        });
+      });
+
+      // Character counter
+      const textarea = document.querySelector("textarea[name='reason_appeal']");
+      const counter = document.createElement("p");
+      counter.className = "text-xs text-gray-500 mt-1";
+      textarea.parentNode.appendChild(counter);
+
+      const updateCounter = () => {
+        counter.innerText = `${textarea.value.length} / 200 characters`;
+      };
+      textarea.addEventListener("input", updateCounter);
+      updateCounter();
+
+      // Form submit
+      document.getElementById("appealForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+
+        try {
+          const res = await fetch("http://localhost:7000/admin/submit_post_justify", {
+            method: "POST",
+            body: formData
+          });
+          const json = await res.json();
+
+          if (json.result === "1") {
+            document.getElementById("successMessage").innerText =
+              `Your appeal has been received. We will update you at ${formData.get("email")}`;
+
+            const modal = document.getElementById("successModal");
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+
+            form.reset();
+            fileList.innerHTML = "";
+          } else {
+            alert(json.error || "Failed to submit appeal");
+          }
+        } catch (err) {
+          alert("Error: " + err.message);
+        }
+      });
+
+      document.getElementById("closeModal").addEventListener("click", () => {
+        const modal = document.getElementById("successModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+      });
+    });
+  </script>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4 sm:p-6">
+  <div class="bg-white shadow-lg rounded-xl p-4 sm:p-6 w-full max-w-lg border border-gray-200" id="content">
+
+    <h2 class="text-lg sm:text-xl font-bold text-gray-900 text-left">Your Post has been Blocked</h2>
+    <p class="text-gray-600 mt-2 text-left text-sm sm:text-base">
+      Your post has been temporarily removed due to multiple reports from other users.
+    </p>
+
+    <!-- Reports -->
+    <div class="mt-6">
+      <p class="font-medium text-gray-800 mb-2 text-sm sm:text-base">Reported for:</p>
+      <ul id="reports-list"></ul>
+    </div>
+
+    <form id="appealForm" enctype="multipart/form-data" class="mt-6 space-y-5">
+      <!-- Name -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Name*</label>
+        <input type="text" id="fullname_input" name="name" required
+          class="w-full border rounded-lg p-2 mt-1 text-sm sm:text-base focus:ring focus:ring-blue-200" />
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Email Address*</label>
+        <input type="email" id="email_input" name="email" required
+          class="w-full border rounded-lg p-2 mt-1 text-sm sm:text-base focus:ring focus:ring-blue-200" />
+      </div>
+
+      <!-- Blocked Post -->
+      <div class="mt-6">
+        <p class="font-medium text-gray-800 mb-2">Blocked Post</p>
+        <div id="blocked-post" class="flex items-center gap-4 bg-gray-50 border rounded-lg p-3 cursor-pointer">
+          <div id="thumbnail" class="flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden bg-gray-200"></div>
+          <div>
+            <p id="post_title" class="font-semibold text-gray-900 text-sm">Post Title</p>
+            <p id="post_address" class="text-gray-600 text-xs mt-1">Post address goes here</p>
+          </div>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Click the thumbnail to play the video</p>
+      </div>
+
+      <div style="margin: 0px;" id="videoModal"
+        class="fixed inset-0 !top-0 bg-black bg-opacity-10 hidden z-50 flex items-center justify-center !m-0 !p-0">
+        <button id="closeVideo"
+          class="absolute top-4 left-4 bg-white text-black hover:bg-gray-100 text-2xl sm:text-2xl font-bold rounded-sm w-7 h-6 flex items-center justify-center z-50">
+          <span class="!m-0 pb-1">&lt;</span>
+        </button>
+
+        <video id="videoPlayer" class="w-full h-full object-contain bg-black" controls></video>
+
+        
+        <div class="w-full bg-opacity-60 text-white p-3 flex items-center gap-3 absolute bottom-12 left-0">
+  <img id="imageUrl" src="https://via.placeholder.com/80?text=User"
+       alt="Profile"
+       class="w-12 h-12 rounded-full border border-white shadow-md object-cover" />
+  <div class="flex flex-col">
+    <span id="profileName" class="font-semibold text-sm sm:text-base">User Name</span>
+    <span id="profileLocation" class="text-xs sm:text-sm text-gray-300 flex items-center gap-1">
+      <span>📍</span>
+      <span id="profileAddress">Location</span>
+    </span>
+  </div>
+</div>
+      </div>
+
+      <!-- Appeal Reason -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700">Reason for the Appeal*</label>
+        <textarea name="reason_appeal" rows="4" maxlength="200" required placeholder="Start typing here..."
+          class="w-full border rounded-lg p-2 mt-1 text-sm sm:text-base focus:ring focus:ring-blue-200"></textarea>
+      </div>
+
+      <!-- File Upload -->
+      <div class="space-y-4 mt-6">
+        <div class="bg-gray-50 p-4 rounded-lg border">
+          <label class="block text-sm font-semibold text-gray-800">Supporting Evidence</label>
+          <p class="text-xs text-gray-500 mb-2">Upload PNG, JPEG, or PDF (Max 10 MB)</p>
+          <button type="button" id="uploadBtn"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">
+            📤 Click to upload
+          </button>
+          <input type="file" id="evidence" name="supporting_evidence" multiple accept=".png,.jpg,.jpeg,.pdf"
+            class="hidden" />
+          <ul id="file-list" class="mt-3"></ul>
+        </div>
+
+        <!-- Confirmation -->
+        <div class="flex items-start gap-2">
+          <input type="checkbox" id="appeal_confirm" required
+            class="mt-1 w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring focus:ring-blue-200" />
+          <label for="appeal_confirm" class="text-sm text-gray-700 leading-tight">
+            I understand that false or repeated appeals may lead to further restrictions.
+          </label>
+        </div>
+
+        <!-- Success Modal -->
+        <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
+          <div class="bg-white rounded-xl shadow-lg max-w-sm w-full p-6 text-center relative">
+            <div class="mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-12 w-12 text-blue-600" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 class="text-lg font-semibold mb-2">Appeal Submitted</h3>
+            <p class="text-gray-600 mb-4" id="successMessage">Your appeal has been received.</p>
+            <button id="closeModal" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Okay</button>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit"
+          class="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-2.5 rounded-lg font-medium shadow-md transition text-sm sm:text-base">
+          Submit Appeal
+        </button>
+      </div>
+    </form>
+  </div>
+</body>
+
+</html>

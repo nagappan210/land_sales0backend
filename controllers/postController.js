@@ -1,14 +1,5 @@
 const db = require('../db');
 
-// exports.getAllLandTypes = async (req, res) => {
-//   try {
-//     const [results] = await db.query('SELECT * FROM land_types');
-//     res.json({ result: 1, data: results, message: 'Data fetched' });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// };
-
 exports.getCategoriesByLandType = async (req, res) => {
 const {status} = req.body;
 
@@ -176,7 +167,7 @@ exports.createPostStep2 = async (req, res) => {
       });
     } else {
       await db.query(
-        `UPDATE user_posts SET land_type_id = ?,  land_categorie_id = ?,  property_name = NULL, property_area = NULL, bhk_type = NULL, carpet_area = NULL, built_up_area = NULL, super_built_up_area = NULL, facade_width = NULL, facade_height = NULL, area_length = NULL, area_width = NULL, property_facing = Null, carpet_area_unit = Null,built_up_area_unit = Null,super_built_up_area_unit = Null,area_length_unit = Null,area_width_unit = null,pantry_size_unit = Null,property_area_unit = Null, total_floor = NULL, property_floor_no = NULL, property_ownership = NULL, availability_status = NULL, no_of_bedrooms = NULL, no_of_bathrooms = NULL, no_of_balconies = NULL, no_of_open_sides = NULL, no_of_cabins = NULL, no_of_meeting_rooms = NULL, min_of_seats = NULL, max_of_seats = NULL, conference_room = NULL, no_of_staircases = NULL, washroom_details = NULL, reception_area = NULL, pantry = NULL, pantry_size = NULL, central_ac = NULL, oxygen_duct = NULL, ups = NULL, other_rooms = NULL, furnishing_status = NULL, fire_safety_measures = NULL, lifts = NULL, local_authority = NULL, noc_certified = NULL, occupancy_certificate = NULL, office_previously_used_for = NULL, Parking_available = NULL, boundary_wall = NULL, amenities = NULL, suitable_business_type = NULL, price = NULL, property_highlights = NULL, video = NULL, image_ids = NULL, thumbnail = NULL, updated_at = NOW(), draft = ?
+        `UPDATE user_posts SET land_type_id = ?,  land_categorie_id = ?,  property_name = NULL, property_area = NULL, bhk_type = NULL, carpet_area = NULL, built_up_area = NULL, super_built_up_area = NULL, facade_width = NULL, facade_height = NULL, area_length = NULL, area_width = NULL, property_facing = Null, carpet_area_unit = Null,built_up_area_unit = Null,super_built_up_area_unit = Null,area_length_unit = Null,area_width_unit = null,pantry_size_unit = Null,facade_width_unit = Null, facade_height_unit = Null,property_area_unit = Null, total_floor = NULL, property_floor_no = NULL, property_ownership = NULL, availability_status = NULL, no_of_bedrooms = NULL, no_of_bathrooms = NULL, no_of_balconies = NULL, no_of_open_sides = NULL, no_of_cabins = NULL, no_of_meeting_rooms = NULL, min_of_seats = NULL, max_of_seats = NULL, conference_room = NULL, no_of_staircases = NULL, washroom_details = NULL, reception_area = NULL, pantry = NULL, pantry_size = NULL, central_ac = NULL, oxygen_duct = NULL, ups = NULL, other_rooms = NULL, furnishing_status = NULL, fire_safety_measures = NULL, lifts = NULL,does_local_authority = Null, which_local_authority = NULL, noc_certified = NULL, occupancy_certificate = NULL, office_previously_used_for = NULL, is_it_pre_leased_pre_rented = Null,Parking_available = NULL, boundary_wall = NULL, amenities = NULL, suitable_business_type = NULL, price = NULL, property_highlights = NULL, video = NULL, image_ids = NULL, thumbnail = NULL, updated_at = NOW(), draft = ?
          WHERE U_ID = ? AND user_post_id = ? AND deleted_at IS NULL`,
         [status, land_categorie_id, draft, user_id, user_post_id]
       );
@@ -545,7 +536,7 @@ exports.getform_details_commercial = async (req, res) => {
           property_facing : [""],
           floor_details: [ {
             total_floors_in_property: "1",
-            your_property_floor_no: "1" }
+            your_property_floor_no: "" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status),
@@ -604,7 +595,7 @@ exports.getform_details_commercial = async (req, res) => {
           property_name: "1",
           property_area : "",
           Carpet_area: "1",
-          built_up_area: "1",
+          built_up_area: "",
           super_built_up_area: "1",
           area_dimensions : [{
             length : "",
@@ -617,7 +608,7 @@ exports.getform_details_commercial = async (req, res) => {
           property_facing : [""],
           floor_details: [ {
             total_floors_in_property: "1",
-            your_property_floor_no: "1" }
+            your_property_floor_no: "" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status),
@@ -690,7 +681,7 @@ exports.getform_details_commercial = async (req, res) => {
           property_facing: property_facing_rows.map(r => r.property_facing), 
           floor_details: [ {
             total_floors_in_property: "1",
-            your_property_floor_no: "1" }
+            your_property_floor_no: "" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status), 
@@ -763,7 +754,7 @@ exports.getform_details_commercial = async (req, res) => {
           property_facing: property_facing_rows.map(r => r.property_facing), 
           floor_details: [ {
             total_floors_in_property: "1",
-            your_property_floor_no: "1" }
+            your_property_floor_no: "" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status), 
@@ -1260,7 +1251,7 @@ exports.getform_details_agriculture = async (req, res) => {
           property_facing: property_facing_rows.map(r => r.property_facing),
           floor_details: [ {
             total_floors_in_property: "1",
-            your_property_floor_no: "1" }
+            your_property_floor_no: "" }
           ],
           property_ownership: property_ownership_rows.map(r => r.property_ownership), 
           availability_status: availability_status_rows.map(r => r.availability_status),
@@ -1421,8 +1412,8 @@ exports.createPostStep4 = async (req, res) => {
     no_of_cabins, no_of_meeting_rooms, min_of_seats, max_of_seats,
     conference_room, no_of_staircases, reception_area, pantry, pantry_size, pantry_size_unit,
     central_ac, oxygen_duct, ups, fire_safety_measures, lifts,
-    noc_certified, occupancy_certificate, office_previously_used_for,
-    washroom_details, local_authority, suitable_business_type,
+    noc_certified, occupancy_certificate, office_previously_used_for,is_it_pre_leased_pre_rented,
+    washroom_details, does_local_authority, which_local_authority, suitable_business_type, draft,
   } = req.body;
 
   if (!user_id || !user_post_id) {
@@ -1432,8 +1423,6 @@ exports.createPostStep4 = async (req, res) => {
       data: []
     });
   }
-
-  const draft = 4;
 
   try {
     const [landTypeResult] = await db.query(
@@ -1455,7 +1444,6 @@ exports.createPostStep4 = async (req, res) => {
     let landTypeName = "";
 
     switch (land_type_id_from_db) {
-      // ------------------ Residential ------------------
       case 1:
         landTypeName = "Residential";
         updateQuery = `
@@ -1467,7 +1455,7 @@ exports.createPostStep4 = async (req, res) => {
             property_facing = ?, total_floor = ?, property_floor_no = ?, 
             property_ownership = ?, availability_status = ?, 
             no_of_bedrooms = ?, no_of_bathrooms = ?, no_of_balconies = ?, no_of_open_sides = ?, 
-            boundary_wall = ?, other_rooms = ?, furnishing_status = ?, 
+            boundary_wall = ?, other_rooms = ?, furnishing_status = ?, is_it_pre_leased_pre_rented = ? ,
             parking_available = ?, amenities = ?, property_highlights = ?, 
             updated_at = NOW(), draft = ?
           WHERE U_ID = ? AND user_post_id = ? 
@@ -1481,13 +1469,12 @@ exports.createPostStep4 = async (req, res) => {
           property_facing || null, total_floor || null, property_floor_no || null,
           property_ownership || null, availability_status || null,
           no_of_bedrooms || null, no_of_bathrooms || null, no_of_balconies || null, no_of_open_sides || null,
-          boundary_wall || null, other_rooms || null, furnishing_status || null,
+          boundary_wall || null, other_rooms || null, furnishing_status || null, is_it_pre_leased_pre_rented || null,
           parking_available || null, amenities || null, property_highlights || null,
           draft, user_id, user_post_id
         ];
         break;
 
-      // ------------------ Commercial ------------------
       case 2:
         landTypeName = "Commercial";
         updateQuery = `
@@ -1505,7 +1492,7 @@ exports.createPostStep4 = async (req, res) => {
             central_ac = ?, oxygen_duct = ?, ups = ?, boundary_wall = ?, other_rooms = ?, furnishing_status = ?, 
             fire_safety_measures = ?, lifts = ?, noc_certified = ?, occupancy_certificate = ?, 
             office_previously_used_for = ?, parking_available = ?, washroom_details = ?, 
-            local_authority = ?, suitable_business_type = ?, amenities = ?, property_highlights = ?, 
+            which_local_authority = ?, suitable_business_type = ?, amenities = ?, property_highlights = ?, is_it_pre_leased_pre_rented = ?,
             updated_at = NOW(), draft = ?
           WHERE U_ID = ? AND user_post_id = ? 
             AND deleted_at IS NULL AND account_status = 0
@@ -1524,13 +1511,12 @@ exports.createPostStep4 = async (req, res) => {
           central_ac || null, oxygen_duct || null, ups || null, boundary_wall || null, other_rooms || null,
           furnishing_status || null, fire_safety_measures || null, lifts || null,
           noc_certified || null, occupancy_certificate || null, office_previously_used_for || null,
-          parking_available || null, washroom_details || null, local_authority || null, suitable_business_type || null,
-          amenities || null, property_highlights || null,
+          parking_available || null, washroom_details || null, which_local_authority || null, suitable_business_type || null,
+          amenities || null, property_highlights || null, is_it_pre_leased_pre_rented || null,
           draft, user_id, user_post_id
         ];
         break;
 
-      // ------------------ Industrial ------------------
       case 3:
         landTypeName = "Industrial";
         updateQuery = `
@@ -1548,7 +1534,7 @@ exports.createPostStep4 = async (req, res) => {
             central_ac = ?, oxygen_duct = ?, ups = ?, boundary_wall = ?, other_rooms = ?, furnishing_status = ?, 
             fire_safety_measures = ?, lifts = ?, noc_certified = ?, occupancy_certificate = ?, 
             office_previously_used_for = ?, parking_available = ?, washroom_details = ?, 
-            local_authority = ?, suitable_business_type = ?, amenities = ?, property_highlights = ?, 
+            does_local_authority = ?, suitable_business_type = ?, amenities = ?, property_highlights = ?, is_it_pre_leased_pre_rented = ?, 
             updated_at = NOW(), draft = ?
           WHERE U_ID = ? AND user_post_id = ? 
             AND deleted_at IS NULL AND account_status = 0
@@ -1567,8 +1553,8 @@ exports.createPostStep4 = async (req, res) => {
           central_ac || null, oxygen_duct || null, ups || null, boundary_wall || null, other_rooms || null,
           furnishing_status || null, fire_safety_measures || null, lifts || null,
           noc_certified || null, occupancy_certificate || null, office_previously_used_for || null,
-          parking_available || null, washroom_details || null, local_authority || null, suitable_business_type || null,
-          amenities || null, property_highlights || null,
+          parking_available || null, washroom_details || null, does_local_authority || null, suitable_business_type || null,
+          amenities || null, property_highlights || null, is_it_pre_leased_pre_rented || null,
           draft, user_id, user_post_id
         ];
         break;
@@ -1606,7 +1592,6 @@ exports.createPostStep4 = async (req, res) => {
     });
   }
 };
-
 
 exports.createPostStep5 = async (req, res) => {
   const { user_id,user_post_id, price , price_negotiable } = req.body;

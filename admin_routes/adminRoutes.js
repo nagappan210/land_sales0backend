@@ -84,5 +84,9 @@ router.post('/washroom_details',landController.washroom_details);
 router.post('/suitable_business_type',landController.suitable_business_type);
 
 router.post('/account_justify' ,justifyController.account_justify);
+router.post('/post_justify',justifyController.post_justify);
 router.post( "/submit_justify", uploadEvidence.array("supporting_evidence", 5), justifyController.submit_justify);
+router.post( "/submit_post_justify", uploadEvidence.array("supporting_evidence", 5), justifyController.submit_post_justify);
+router.post('/getjustify_user',justifyController.getjustify_user);
+router.post('/getjustify_user_post',justifyController.getjustify_user_post);
 module.exports = router;

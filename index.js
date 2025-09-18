@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require("path")
 const dotenv = require('dotenv');
+const db = require('./db');
+
 dotenv.config();
 
 const app = express();
@@ -24,7 +26,7 @@ app.use(async (req, res, next) => {
 
 const authRoutes = require('./routes/authRoutes');
 const adminRoutes = require('./admin_routes/adminRoutes');
-const db = require('./db');
+
 app.use('/api/auth', authRoutes);
 app.use('/admin', adminRoutes);
 
@@ -35,6 +37,9 @@ app.use("/webform", (req, res) => {
 })
 app.use("/profile_justify", (req, res) => {
   res.sendFile(path.join(__dirname, "profile_justify.html"))
+})
+app.use("/post_justify", (req, res) => {
+  res.sendFile(path.join(__dirname, "post_justify.html"))
 })
 app.use("/response", (req, res) => {
   res.sendFile(path.join(__dirname, "response.html"))

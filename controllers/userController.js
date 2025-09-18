@@ -541,7 +541,7 @@ exports.getpost_property = async (req, res) => {
        FROM user_posts 
        WHERE U_ID = ? 
          AND status = 'published' 
-         AND video IS NOT NULL 
+          
          AND deleted_at IS NULL
          AND account_status = 0`,
       [targetId]
@@ -561,7 +561,7 @@ exports.getpost_property = async (req, res) => {
         up.max_of_seats, up.conference_room, up.no_of_staircases, up.washroom_details,
         up.reception_area, up.pantry, up.pantry_size, up.central_ac, up.oxygen_duct,
         up.ups, up.other_rooms, up.furnishing_status, up.fire_safety_measures, up.lifts,
-        up.pre_contract_status, up.local_authority, up.noc_certified, up.occupancy_certificate,
+        up.is_it_pre_leased_pre_rented, up.does_local_authority,up.which_local_authority, up.noc_certified, up.occupancy_certificate, up.*,
         up.office_previously_used_for, up.parking_available, up.boundary_wall, up.amenities,
         up.suitable_business_type, up.price,up.price_negotiable, up.property_highlights,
         up.country AS up_country, up.state AS up_state, up.city AS up_city, 
@@ -588,7 +588,7 @@ exports.getpost_property = async (req, res) => {
       LEFT JOIN enquiries e ON e.recever_posts_id = up.user_post_id AND e.user_id = ?
       WHERE up.U_ID = ? 
         AND up.status = 'published' 
-        AND up.video IS NOT NULL 
+        
         AND up.deleted_at IS NULL
         AND up.account_status = 0
       ORDER BY up.created_at DESC
@@ -663,13 +663,21 @@ exports.getpost_property = async (req, res) => {
           property_name: p.property_name ?? "",
           bhk_type: p.bhk_type ?? "",
           carpet_area: p.carpet_area ?? "",
+          carpet_area_unit : p.carpet_area_unit ?? "",
           property_area: p.property_area ?? "",
+          property_area_unit : p.property_area_unit ?? "",
           built_up_area: p.built_up_area ?? "",
+          built_up_area_unit : p.built_up_area_unit ?? "",
           super_built_up_area: p.super_built_up_area ?? "",
+          super_built_up_area_unit : p.super_built_up_area_unit ?? "",
           facade_width: p.facade_width ?? "",
+          facade_width_unit : p.facade_width_unit ?? "",
           facade_height: p.facade_height ?? "",
+          facade_height_unit : p.facade_height_unit ?? "",
           area_length: p.area_length ?? "",
+          area_length_unit : p.area_length_unit ?? "",
           area_width: p.area_width ?? "",
+          area_width_unit : p.area_width_unit ?? "",
           property_facing: p.property_facing ?? "",
           total_floor: p.total_floor ?? "",
           property_floor_no: p.property_floor_no ?? "",
@@ -696,8 +704,9 @@ exports.getpost_property = async (req, res) => {
           furnishing_status: p.furnishing_status ?? "",
           fire_safety_measures: p.fire_safety_measures ?? "",
           lifts: p.lifts ?? "",
-          pre_contract_status: p.pre_contract_status ?? "",
-          local_authority: p.local_authority ?? "",
+          is_it_pre_leased_pre_rented : p.is_it_pre_leased_pre_rented ?? "",
+          which_local_authority: p.which_local_authority ?? "",
+          does_local_authority: p.does_local_authority ?? "",
           noc_certified: p.noc_certified ?? "",
           occupancy_certificate: p.occupancy_certificate ?? "",
           office_previously_used_for: p.office_previously_used_for ?? "",
@@ -734,6 +743,221 @@ exports.getpost_property = async (req, res) => {
     return res.status(500).json({ result: "0", error: "Internal server error", data: [] });
   }
 };
+
+// exports.getpost_property = async (req, res) => {
+//   const { user_id, others_id, page = 1 } = req.body;
+//   const limit = 10;
+
+//   if (!user_id) {
+//     return res
+//       .status(200)
+//       .json({ result: "0", error: "user_id is required", data: [] });
+//   }
+
+//   const [userRows] = await db.query(
+//     "SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL",
+//     [user_id]
+//   );
+//   if (userRows.length === 0) {
+//     return res
+//       .status(200)
+//       .json({ result: "0", error: "User not found", data: [] });
+//   }
+
+//   const offset = (parseInt(page, 10) - 1) * limit;
+//   const targetId = Number(others_id) || user_id;
+
+//   const [other] = await db.query(
+//     "SELECT * FROM users WHERE U_ID = ? AND deleted_at IS NULL",
+//     [targetId]
+//   );
+//   if (other.length === 0) {
+//     return res
+//       .status(200)
+//       .json({ result: "0", error: "User not found", data: [] });
+//   }
+
+//   const [blocked] = await db.query(
+//     `SELECT * FROM blocks 
+//      WHERE (user_id = ? AND blocker_id = ?) OR (user_id = ? AND blocker_id = ?)`,
+//     [user_id, targetId, targetId, user_id]
+//   );
+//   if (blocked.length > 0) {
+//     return res
+//       .status(200)
+//       .json({ result: "0", error: "Blocked the users", data: [] });
+//   }
+
+//   try {
+//     const [[{ total }]] = await db.query(
+//       `SELECT COUNT(*) AS total 
+//        FROM user_posts 
+//        WHERE U_ID = ? 
+//          AND status = 'published' 
+//          AND video IS NOT NULL 
+//          AND deleted_at IS NULL
+//          AND account_status = 0`,
+//       [targetId]
+//     );
+
+//     const totalPages = Math.ceil(total / limit);
+//     const nxtpage =
+//       parseInt(page, 10) < totalPages ? parseInt(page, 10) + 1 : 0;
+
+//     const query = `
+//       SELECT 
+//         up.*,
+//         u.name, u.username, u.country, u.state, u.cities, 
+//         u.phone_num_cc, u.phone_num, u.whatsapp_num_cc, u.whatsapp_num, u.email, u.profile_image,
+//         pl.total_likes, pc.total_comments,
+//         CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
+//         CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved,
+//         CASE WHEN is_report.user_post_id IS NOT NULL THEN 1 ELSE 0 END AS is_report,
+//         CASE WHEN e.enquire_id IS NOT NULL THEN 1 ELSE 0 END AS enquiry
+//       FROM user_posts up
+//       JOIN users u ON u.U_ID = up.U_ID
+//       LEFT JOIN (SELECT user_post_id, COUNT(*) AS total_likes FROM post_likes GROUP BY user_post_id) pl 
+//         ON pl.user_post_id = up.user_post_id
+//       LEFT JOIN (SELECT user_post_id, COUNT(*) AS total_comments FROM post_comments WHERE deleted_at IS NULL GROUP BY user_post_id) pc 
+//         ON pc.user_post_id = up.user_post_id
+//       LEFT JOIN (
+//         SELECT user_post_id FROM report WHERE user_id = ? AND status = 2
+//       ) AS is_report ON is_report.user_post_id = up.user_post_id
+//       LEFT JOIN post_likes ul ON ul.user_post_id = up.user_post_id AND ul.user_id = ?
+//       LEFT JOIN saved_properties sp ON sp.user_post_id = up.user_post_id AND sp.U_ID = ?
+//       LEFT JOIN enquiries e ON e.recever_posts_id = up.user_post_id AND e.user_id = ?
+//       WHERE up.U_ID = ? 
+//         AND up.status = 'published' 
+//         AND up.video IS NOT NULL 
+//         AND up.deleted_at IS NULL
+//         AND up.account_status = 0
+//       ORDER BY up.created_at DESC
+//       LIMIT ? OFFSET ?
+//     `;
+
+//     const [reels] = await db.query(query, [
+//       user_id,
+//       user_id,
+//       user_id,
+//       user_id,
+//       targetId,
+//       limit,
+//       offset,
+//     ]);
+
+//     const posts = await Promise.all(
+//       reels.map(async (p) => {
+//         let videoValue = p.video ?? "";
+//         let imageUrls = [];
+
+//         // Fetch images
+//         if (p.image_ids && p.image_ids !== "Null" && p.image_ids !== "") {
+//           try {
+//             const [images] = await db.query(
+//               `SELECT image_path FROM post_images 
+//                WHERE user_post_id = ? AND image_id IN (?) 
+//                ORDER BY FIELD(image_id, ?)`,
+//               [p.user_post_id, p.image_ids.split(","), p.image_ids.split(",")]
+//             );
+//             imageUrls = images.map((img) =>
+//               img.image_path ? `${process.env.SERVER_ADDRESS}${img.image_path}` : ""
+//             );
+//             if (imageUrls.length > 0) videoValue = "";
+//           } catch (err) {
+//             console.error("Error fetching images:", err);
+//           }
+//         }
+
+//         // Land type text
+//         let landTypeText = "";
+//         if (p.land_type_id === 1) landTypeText = "Residential";
+//         if (p.land_type_id === 2) landTypeText = "Commercial";
+//         if (p.land_type_id === 3) landTypeText = "Agriculture";
+
+//         // Land category text
+//         const categories = {
+//           1: "Flat/ Apartment", 2: "Villa/Independent House", 3: "Builder Floor Apartment", 4: "Land/ Plot",
+//           5: "Studio Apartment", 6: "Other", 7: "Commercial Office Space", 8: "Office in IT Park",
+//           9: "Commercial Shop", 10: "Commercial Showroom", 11: "Commercial Land", 12: "Warehouse/ Godown",
+//           13: "Industrial Land", 14: "Industrial Building", 15: "Industrial Shed", 16: "Other",
+//           17: "Farmhouse", 18: "Agricultural Land"
+//         };
+//         let landCategoryText = categories[p.land_categorie_id] || "";
+
+//         // Hidden fields filter
+//         const hiddenFields = [
+//           "is_sold", "sold_at", "created_at", "updated_at",
+//           "deleted_at", "status", "post_type", "draft"
+//         ];
+
+//         const cleanObj = {};
+//         for (let key in p) {
+//           if (!hiddenFields.includes(key)) {
+//             cleanObj[key] = p[key] == null ? "" : p[key];
+//           }
+//         }
+
+//         // Address builder
+//         const addressParts = [
+//           cleanObj.locality,
+//           cleanObj.city,
+//           cleanObj.state,
+//           cleanObj.country,
+//         ].filter((part) => part && part.trim() !== "");
+
+//         cleanObj.address = addressParts.join(", ");
+
+//         return {
+//           user_id: p.U_ID,
+//           user_post_id: p.user_post_id,
+//           name: p.name ?? "",
+//           username: p.username ?? "",
+//           country: p.country ?? "",
+//           state: p.state ?? "",
+//           cities: p.cities ?? "",
+//           phone_num_cc: p.phone_num_cc ?? "",
+//           phone_num: p.phone_num ?? "",
+//           whatsapp_num_cc: p.whatsapp_num_cc ?? "",
+//           whatsapp_num: p.whatsapp_num ?? "",
+//           email: p.email ?? "",
+//           profile_image: p.profile_image ?? "",
+//           thumbnail: p.thumbnail
+//             ? `${process.env.SERVER_ADDRESS}${p.thumbnail}`
+//             : imageUrls[0] || "",
+//           video: videoValue,
+//           total_likes: p.total_likes ?? 0,
+//           total_comments: p.total_comments ?? 0,
+//           is_liked: p.is_liked ?? 0,
+//           is_saved: p.is_saved ?? 0,
+//           enquiry: p.enquiry ?? 0,
+//           post_property: {
+//             video: imageUrls.length > 0 ? "" : p.video ?? "",
+//             image_urls: imageUrls,
+//             land_type_text: landTypeText,
+//             land_category_text: landCategoryText,
+//             cleanObj,
+//             is_report: p.is_report ?? 0,
+//           },
+//         };
+//       })
+//     );
+
+//     return res.status(200).json({
+//       result: posts.length ? "1" : "0",
+//       data: posts,
+//       page: parseInt(page, 10),
+//       recCnt: total,
+//       totalPages,
+//       nxtpage,
+//     });
+//   } catch (err) {
+//     console.error("getpost_property Error:", err);
+//     return res
+//       .status(500)
+//       .json({ result: "0", error: "Internal server error", data: [] });
+//   }
+// };
+
 
 exports.followUser = async (req, res) => {
   try {
@@ -1592,6 +1816,7 @@ exports.getDraftPosts = async (req, res) => {
       "deleted_at",
       "status",
       "post_type",
+      "account_status"
     ];
     
 
@@ -2131,13 +2356,21 @@ exports.getReels = async (req, res) => {
           property_name: r.property_name ?? "",
           bhk_type: r.bhk_type ?? "",
           carpet_area: r.carpet_area ?? "",
+          carpet_area_unit : r.carpet_area_unit ?? "",
           property_area: r.property_area ?? "",
+          property_area_unit : r.property_area_unit ?? "",
           built_up_area: r.built_up_area ?? "",
+          built_up_area_unit : r.built_up_area_unit ?? "",
           super_built_up_area: r.super_built_up_area ?? "",
+          super_built_up_area_unit : r.super_built_up_area_unit ?? "",
           facade_width: r.facade_width ?? "",
+          facade_width_unit : r.facade_width_unit ?? "",
           facade_height: r.facade_height ?? "",
+          facade_height_unit : r.facade_height_unit ?? "",
           area_length: r.area_length ?? "",
+          area_length_unit : r.area_length_unit ?? "",
           area_width: r.area_width ?? "",
+          area_width_unit : r.area_width_unit ?? "",
           property_facing: r.property_facing ?? "",
           total_floor: r.total_floor ?? "",
           property_floor_no: r.property_floor_no ?? "",
@@ -2157,6 +2390,7 @@ exports.getReels = async (req, res) => {
           reception_area: r.reception_area ?? "",
           pantry: r.pantry ?? "",
           pantry_size: r.pantry_size ?? "",
+          pantry_size_unit : r.pantry_size_unit ?? "",
           central_ac: r.central_ac ?? "",
           oxygen_duct: r.oxygen_duct ?? "",
           ups: r.ups ?? "",
@@ -2164,8 +2398,9 @@ exports.getReels = async (req, res) => {
           furnishing_status: r.furnishing_status ?? "",
           fire_safety_measures: r.fire_safety_measures ?? "",
           lifts: r.lifts ?? "",
-          pre_contract_status: r.pre_contract_status ?? "",
-          local_authority: r.local_authority ?? "",
+          is_it_pre_leased_pre_rented : r.is_it_pre_leased_pre_rented ?? "",
+          which_local_authority: r.which_local_authority ?? "",
+          does_local_authority : r.does_local_authority ?? "",
           noc_certified: r.noc_certified ?? "",
           occupancy_certificate: r.occupancy_certificate ?? "",
           office_previously_used_for: r.office_previously_used_for ?? "",
@@ -3101,6 +3336,21 @@ exports.searchProperty = async (req, res) => {
     });
   }
 
+  const [blocked] = await db.query(
+      `SELECT user_id, blocker_id 
+       FROM blocks 
+       WHERE user_id = ? OR blocker_id = ?`,
+      [user_id, user_id]
+    );
+
+    const blockedUserIds = [
+      ...new Set(
+        blocked.map(b =>
+          b.user_id === user_id ? b.blocker_id : b.user_id
+        )
+      )
+    ];
+
   try {
     const [userExists] = await db.query(
       `SELECT U_ID FROM users WHERE U_ID = ? AND deleted_at IS NULL`,
@@ -3130,43 +3380,114 @@ exports.searchProperty = async (req, res) => {
        FROM user_posts p
        WHERE p.land_type_id = ?
          AND CAST(p.price AS UNSIGNED) BETWEEN ? AND ?
-         AND p.locality LIKE ?`,
+         AND p.locality LIKE ? ${blockedUserIds.length ? `AND u.U_ID NOT IN (${blockedUserIds.map(() => "?").join(",")})` : ""} `,
       [search_type, min_price, max_price, `%${locality}%`]
     );
     const total = countRows[0].total;
-    
+
     const [rows] = await db.query(
       `SELECT  
-          u.username, u.U_ID, u.profile_image, 
-          p.user_post_id, p.land_type_id, p.property_name, p.locality, 
-          p.price, p.video, p.created_at,
+          u.username, u.U_ID as user_id, u.profile_image, u.phone_num_cc, u.phone_num, 
+          u.whatsapp_num_cc, u.whatsapp_num, u.email, 
+          p.user_post_id, p.land_type_id, p.land_categorie_id, p.property_name, p.locality, 
+          p.price, p.video,p.thumbnail, p.created_at,
           COUNT(DISTINCT l.like_id) AS like_count,
-          COUNT(DISTINCT c.comment_id) AS comment_count
-       FROM users u
-       JOIN user_posts p ON u.U_ID = p.U_ID
-       LEFT JOIN post_likes l ON p.user_post_id = l.user_post_id
-       LEFT JOIN post_comments c ON p.user_post_id = c.user_post_id
-       WHERE p.land_type_id = ?
-         AND CAST(p.price AS UNSIGNED) BETWEEN ? AND ?
-         AND p.locality LIKE ?
-       GROUP BY 
-         u.username, u.U_ID, u.profile_image,
-         p.user_post_id, p.land_type_id, p.property_name, 
-         p.locality, p.price, p.video, p.created_at
-       ORDER BY p.user_post_id DESC
-       LIMIT ? OFFSET ?`,
-      [search_type, min_price, max_price, `%${locality}%`, limit, offset]
+          COUNT(DISTINCT c.comment_id) AS comment_count,
+          CASE WHEN ul.user_id IS NOT NULL THEN 1 ELSE 0 END AS is_liked,
+          CASE WHEN sp.U_ID IS NOT NULL THEN 1 ELSE 0 END AS is_saved
+      FROM users u
+      JOIN user_posts p ON u.U_ID = p.U_ID
+      LEFT JOIN post_likes l ON p.user_post_id = l.user_post_id
+      LEFT JOIN post_comments c ON p.user_post_id = c.user_post_id
+      LEFT JOIN post_likes ul ON ul.user_post_id = p.user_post_id AND ul.user_id = ?
+      LEFT JOIN saved_properties sp ON sp.user_post_id = p.user_post_id AND sp.U_ID = ?
+      WHERE p.land_type_id = ?
+        AND CAST(p.price AS UNSIGNED) BETWEEN ? AND ?
+        AND p.locality LIKE ?
+        ${blockedUserIds.length ? `AND u.U_ID NOT IN (${blockedUserIds.map(() => "?").join(",")})` : ""}
+      GROUP BY 
+        u.username, u.U_ID, u.profile_image, u.phone_num_cc, u.phone_num, 
+        u.whatsapp_num_cc, u.whatsapp_num, u.email,
+        p.user_post_id, p.land_type_id, p.land_categorie_id, p.property_name, 
+        p.locality, p.price, p.video, p.created_at, is_liked, is_saved
+      ORDER BY p.user_post_id DESC
+      LIMIT ? OFFSET ?`,
+      [
+        user_id,
+        user_id,
+        search_type, min_price, max_price, `%${locality}%`,
+        ...blockedUserIds,
+        limit, offset
+      ]
     );
+
 
     const totalPages = Math.ceil(total / limit);
     const nxtpage = pageNum < totalPages ? pageNum + 1 : 0;
 
+    const data = rows.map((d) => {
+      let landTypeText = "";
+      if (d.land_type_id === 1) landTypeText = "Residential";
+      if (d.land_type_id === 2) landTypeText = "Commercial";
+      if (d.land_type_id === 3) landTypeText = "Agriculture";
+
+      let landCategoryText = "";
+      switch (d.land_categorie_id) {
+        case 1: landCategoryText = "Flat/ Apartment"; break;
+        case 2: landCategoryText = "Villa/Independent House"; break;
+        case 3: landCategoryText = "Builder Floor Apartment"; break;
+        case 4: landCategoryText = "Land/ Plot"; break;
+        case 5: landCategoryText = "Studio Apartment"; break;
+        case 6: landCategoryText = "Other"; break;
+        case 7: landCategoryText = "Commercial Office Space"; break;
+        case 8: landCategoryText = "Office in IT Park"; break;
+        case 9: landCategoryText = "Commercial Shop"; break;
+        case 10: landCategoryText = "Commercial Showroom"; break;
+        case 11: landCategoryText = "Commercial Land"; break;
+        case 12: landCategoryText = "Warehouse/ Godown"; break;
+        case 13: landCategoryText = "Industrial Land"; break;
+        case 14: landCategoryText = "Industrial Building"; break;
+        case 15: landCategoryText = "Industrial Shed"; break;
+        case 16: landCategoryText = "Other"; break;
+        case 17: landCategoryText = "Farmhouse"; break;
+        case 18: landCategoryText = "Agricultural Land"; break;
+        default: landCategoryText = "";
+      }
+
+      return {
+        user_id: d.user_id,
+        username: d.username,
+        profile_image: d.profile_image ?? "",
+        phone_num_cc: d.phone_num_cc ?? "",
+        phone_num: d.phone_num ?? "",
+        whatsapp_num_cc: d.whatsapp_num_cc ?? "",
+        whatsapp_num: d.whatsapp_num ?? "",
+        email: d.email ?? "",
+        user_post_id: d.user_post_id ?? "",
+        land_type_id: d.land_type_id ?? 0,
+        landTypeText,
+        land_categorie_id: d.land_categorie_id ?? 0,
+        landCategoryText,
+        property_name: d.property_name ?? "",
+        locality: d.locality ?? "",
+        price: d.price ?? "",
+        thumbnail: d.thumbnail ? `${process.env.SERVER_ADDRESS}${d.thumbnail}` : "",
+        video: d.video ?? "",
+        created_at: d.created_at,
+        like_count: d.like_count ?? 0,
+        comment_count: d.comment_count ?? 0,
+        is_liked: d.is_liked ?? 0,
+        is_saved: d.is_saved ?? 0,
+      };
+    });
+
+
     return res.status(200).json({
       result: rows.length ? "1" : "0",
-      data: rows,
+      data,
       totalPages,
       nxtpage,
-      recCnt: total
+      recCnt: total,
     });
 
   } catch (err) {
@@ -3459,10 +3780,8 @@ exports.get_report = async (req, res) => {
 
 exports.report_users = async (req, res) => {
   const { user_id, user_post_id, receiver_id, comment_id, status, report_sentence_id, report_sentence } = req.body;
-
-
-  try {
-    const [exit_user] = await db.query(
+  
+  const [exit_user] = await db.query(
       `SELECT U_ID FROM users WHERE U_ID = ? AND deleted_at IS NULL AND account_status = 0`,
       [user_id]
     );
@@ -3482,6 +3801,9 @@ exports.report_users = async (req, res) => {
       return res.status(200).json({ result: "0", error: "You cannot report yourself", data: [] });
     }
 
+
+  try {
+    
     if (Number(status) === 1) {
       const [report_users] = await db.query(
         `SELECT 1 FROM report WHERE user_id = ? AND receiver_id = ? AND status = 1`,
@@ -3500,7 +3822,7 @@ exports.report_users = async (req, res) => {
       if (reportCount >= 10) {
         await db.query(`UPDATE users SET account_status = 1 WHERE U_ID = ?`, [receiver_id]);
         await db.query(`UPDATE user_posts SET account_status = 1 WHERE U_ID = ?`, [receiver_id]);
-        await db.query(`UPDATE post_comments SET account_status = 1 WHERE U_ID = ?`, [receiver_id]);
+        await db.query(`UPDATE post_comments SET account_status = 1 WHERE user_id = ?`, [receiver_id]);
         return res.status(200).json({ result: "1", message: "User deleted after too many reports", data: [] });
       }
     }
@@ -3577,7 +3899,7 @@ exports.report_users = async (req, res) => {
     );
 
     if (insert_data.affectedRows === 0) {
-      return res.status(500).json({ result: "0", error: "Insert failed", data: [] });
+      return res.status(200).json({ result: "0", error: "Insert failed", data: [] });
     }
 
     return res.status(200).json({ 
@@ -3590,6 +3912,120 @@ exports.report_users = async (req, res) => {
   } catch (err) {
     console.error("report_users error:", err);
     return res.status(500).json({ result: "0", error: "server error", data: [] });
+  }
+};
+
+exports.getviews_reels = async (req,res) =>{
+  const {user_id , user_post_id} = req.body;
+  
+  const [exist_user] = await db.query(`select * from users where U_ID = ? and deleted_at is null` , [user_id]);
+  if (exist_user.length === 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "User not found",
+        data: []
+      });
+    }
+
+  const [exist_post] = await db.query(`select * from user_posts where user_post_id = ? and  deleted_at is null and account_status = 0` , [user_id , user_post_id]);
+  if (exist_post.length === 0) {
+      return res.status(200).json({
+        result: "0",
+        error: "Post not found",
+        data: []
+      });
+    }
+
+  try{
+
+    const [existingView] = await db.query(`SELECT * FROM post_views WHERE user_id = ? AND user_post_id = ?`,
+      [user_id, user_post_id]);
+    
+      if (existingView.length === 0) { 
+      await db.query(`INSERT INTO post_views (user_id, user_post_id) VALUES (?, ?)`,[user_id, user_post_id]);
+
+      await db.query(`UPDATE user_posts SET views = COALESCE(views, 0) + 1 WHERE user_post_id = ?`,[user_post_id]);
+    }
+
+    const [[updated]] = await db.query(
+      `SELECT views FROM user_posts WHERE user_post_id = ?`,
+      [user_post_id]
+    );
+
+    return res.status(200).json({
+      result: "1",
+      message:
+        existingView.length === 0
+          ? "View added successfully"
+          : "User already viewed this post",
+      views: updated.views ?? "",
+    });
+
+  }
+  catch(err){
+    console.log(err);
+    return res.status(500).json({
+      result : "0",
+      error : "Server error",
+      data : []
+    });
+  }
+
+
+}
+
+exports.popular_user = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT  
+        u.U_ID, 
+        u.name, 
+        u.username, 
+        u.profile_image,
+        COUNT(DISTINCT p.user_post_id) AS total_posts,
+        COALESCE(SUM(p.views), 0) AS total_views,
+        CASE 
+          WHEN COUNT(DISTINCT p.user_post_id) > 0 
+          THEN ROUND(SUM(p.views) / COUNT(DISTINCT p.user_post_id), 2) 
+          ELSE 0 
+        END AS avg_views,
+        COUNT(DISTINCT f1.following_id ) AS followers_count,   
+        COUNT(DISTINCT f2.user_id) AS following_count  
+      FROM users u
+      LEFT JOIN user_posts p 
+        ON u.U_ID = p.U_ID AND p.deleted_at IS NULL and status = "published"
+      LEFT JOIN followers f1 
+        ON u.U_ID = f1.user_id  
+      LEFT JOIN followers f2 
+        ON u.U_ID = f2.following_id 
+      WHERE u.deleted_at IS NULL
+      GROUP BY u.U_ID
+      ORDER BY total_views DESC, total_posts DESC
+      LIMIT 5
+    `);
+
+    const data = rows.map((r) => ({
+      user_id: r.U_ID,
+      name: r.name,
+      username: r.username,
+      profile_image: r.profile_image ?? "",
+      total_posts: r.total_posts,
+      followers: r.followers_count,
+      following: r.following_count
+    }));
+
+    return res.status(200).json({
+      result: "1",
+      message: "Popular users fetched successfully",
+      data
+    });
+  } catch (err) {
+    console.error("popular_user error:", err);
+    return res.status(500).json({
+      result: "0",
+      error: "Server error",
+      data: []
+    });
   }
 };
 

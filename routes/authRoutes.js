@@ -60,7 +60,8 @@ router.use(async (req,res,next) =>{
       "/land_categories_name",
       "/land_categories_para",
       "/decline",
-      "/get_report"
+      "/get_report",
+      "/popular_user"
     ]
     if (openRoutes.includes(req.path)) {
       return next();
@@ -78,6 +79,8 @@ router.use(async (req,res,next) =>{
     const [rows] = await db.query('SELECT account_status FROM users WHERE U_ID = ?', [userId]);
 
     if (rows.length === 0) {
+      
+      
       return res.status(200).json({ 
         result: '0', 
         error: 'User not found', 
@@ -97,6 +100,7 @@ router.use(async (req,res,next) =>{
   }
   catch (err) {
     console.error("User status check error:", err);
+    console.log('hit');
     return res.status(500).json({
       result: "0",
       error: "Server error",
@@ -168,6 +172,8 @@ router.post("/getdeclined", enquireController.getDeclinedEnquiries);
 
 router.post('/delete_post', userController.delete_post);
 router.post('/get_reels', userController.getReels);
+router.post('/getviews_reels', userController.getviews_reels);
+router.get('/popular_user',userController.popular_user);
 
 router.post('/post_like',userController.post_like);
 router.post('/getpost_like_count',userController.getPostLikeCount);
